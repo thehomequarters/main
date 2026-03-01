@@ -186,27 +186,24 @@ export default function ApplyScreen() {
             }}
           />
 
-          <View>
-            <TextInput
-              placeholder="Create a password (min 6 characters)"
-              placeholderTextColor={colors.grey}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-              autoComplete="new-password"
-              textContentType="newPassword"
-              style={{
-                backgroundColor: colors.dark,
-                borderWidth: 1,
-                borderColor: colors.darkBorder,
-                borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                color: colors.white,
-                fontSize: 15,
-              }}
-            />
-          </View>
+          <TextInput
+            placeholder="Create a password (min 6 characters)"
+            placeholderTextColor={colors.grey}
+            value={password}
+            onChangeText={setPassword}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={{
+              backgroundColor: colors.dark,
+              borderWidth: 1,
+              borderColor: colors.darkBorder,
+              borderRadius: 10,
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+              color: colors.white,
+              fontSize: 15,
+            }}
+          />
 
           <TextInput
             placeholder="Phone (optional)"
