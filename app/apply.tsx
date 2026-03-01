@@ -109,7 +109,7 @@ export default function ApplyScreen() {
             marginBottom: 12,
           }}
         >
-          Apply for Membership
+          Join HomeQuarters
         </Text>
 
         <Text
