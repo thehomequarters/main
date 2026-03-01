@@ -12,7 +12,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -39,11 +38,10 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchVenues = useCallback(async () => {
-    // Fetch active venues ordered by created_at desc
+    // Fetch active venues, sort client-side to avoid composite index
     const venuesQuery = query(
       collection(db, "venues"),
-      where("is_active", "==", true),
-      orderBy("created_at", "desc")
+      where("is_active", "==", true)
     );
     const venuesSnap = await getDocs(venuesQuery);
     const venueList: VenueWithDeal[] = [];
@@ -65,6 +63,7 @@ export default function HomeScreen() {
       venueList.push({ ...venueData, deals });
     }
 
+    venueList.sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
     setVenues(venueList);
     setLoading(false);
   }, []);
