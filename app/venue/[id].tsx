@@ -8,7 +8,15 @@ import {
   Dimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { supabase } from "@/lib/supabase";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 import type { Venue, Deal } from "@/lib/database.types";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -32,24 +40,20 @@ export default function VenueDetailScreen() {
 
   useEffect(() => {
     const fetchVenue = async () => {
-      const { data: venueData } = await supabase
-        .from("venues")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const venueSnap = await getDoc(doc(db, "venues", id));
 
-      if (venueData) {
-        setVenue(venueData);
+      if (venueSnap.exists()) {
+        setVenue({ id: venueSnap.id, ...venueSnap.data() } as Venue);
 
-        const { data: dealsData } = await supabase
-          .from("deals")
-          .select("*")
-          .eq("venue_id", id)
-          .eq("is_active", true);
-
-        if (dealsData) {
-          setDeals(dealsData);
-        }
+        const dealsQuery = query(
+          collection(db, "deals"),
+          where("venue_id", "==", id),
+          where("is_active", "==", true)
+        );
+        const dealsSnap = await getDocs(dealsQuery);
+        setDeals(
+          dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal)
+        );
       }
       setLoading(false);
     };

@@ -5,13 +5,13 @@ import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 
 export default function Index() {
-  const { session, profile, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (loading) return;
 
-    if (!session) {
+    if (!user) {
       router.replace("/apply");
       return;
     }
@@ -23,7 +23,7 @@ export default function Index() {
     } else {
       router.replace("/apply");
     }
-  }, [loading, session, profile]);
+  }, [loading, user, profile]);
 
   return (
     <View

@@ -8,8 +8,15 @@ import {
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
 import { colors } from "@/constants/theme";
 import type { VenueCategory } from "@/constants/theme";
 import type { Venue, Deal } from "@/lib/database.types";
@@ -32,15 +39,33 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchVenues = useCallback(async () => {
-    const { data } = await supabase
-      .from("venues")
-      .select("*, deals(*)")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
+    // Fetch active venues ordered by created_at desc
+    const venuesQuery = query(
+      collection(db, "venues"),
+      where("is_active", "==", true),
+      orderBy("created_at", "desc")
+    );
+    const venuesSnap = await getDocs(venuesQuery);
+    const venueList: VenueWithDeal[] = [];
 
-    if (data) {
-      setVenues(data as VenueWithDeal[]);
+    for (const venueDoc of venuesSnap.docs) {
+      const venueData = { id: venueDoc.id, ...venueDoc.data() } as Venue;
+
+      // Fetch deals for this venue
+      const dealsQuery = query(
+        collection(db, "deals"),
+        where("venue_id", "==", venueDoc.id),
+        where("is_active", "==", true)
+      );
+      const dealsSnap = await getDocs(dealsQuery);
+      const deals = dealsSnap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as Deal
+      );
+
+      venueList.push({ ...venueData, deals });
     }
+
+    setVenues(venueList);
     setLoading(false);
   }, []);
 

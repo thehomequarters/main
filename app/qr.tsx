@@ -18,7 +18,7 @@ export default function QRCodeScreen() {
   const qrSize = screenWidth * 0.6;
 
   // The QR code encodes the verification URL
-  const verificationUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL ? "https://homequarters.app" : "https://homequarters.app"}/v/${profile?.member_code}`;
+  const verificationUrl = `https://homequarters.app/v/${profile?.member_code}`;
 
   return (
     <View

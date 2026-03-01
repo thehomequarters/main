@@ -10,7 +10,9 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "@/lib/supabase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
 export default function ApplyScreen() {
@@ -18,6 +20,7 @@ export default function ApplyScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,46 +30,42 @@ export default function ApplyScreen() {
       return;
     }
 
+    if (password.length < 6) {
+      Alert.alert("Password", "Password must be at least 6 characters.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      // Sign up the user with Supabase auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Create user with Firebase Auth
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        email.trim().toLowerCase(),
+        password
+      );
+
+      // Generate member code
+      const code = `HQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
+      // Create profile in Firestore
+      await setDoc(doc(db, "profiles", user.uid), {
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
         email: email.trim().toLowerCase(),
-        password: `hq-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        options: {
-          data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            phone: phone.trim() || null,
-          },
-        },
+        phone: phone.trim() || null,
+        avatar_url: null,
+        member_code: code,
+        membership_status: "pending",
+        created_at: new Date().toISOString(),
       });
-
-      if (authError) throw authError;
-
-      if (authData.user) {
-        // Generate member code
-        const code = `HQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-
-        // Create profile
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            id: authData.user.id,
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            email: email.trim().toLowerCase(),
-            phone: phone.trim() || null,
-            member_code: code,
-            membership_status: "pending" as const,
-          } as any);
-
-        if (profileError) throw profileError;
-      }
 
       router.replace("/pending");
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Something went wrong.");
+      const msg =
+        error.code === "auth/email-already-in-use"
+          ? "This email is already registered. Try signing in instead."
+          : error.message || "Something went wrong.";
+      Alert.alert("Error", msg);
     } finally {
       setSubmitting(false);
     }
@@ -175,6 +174,24 @@ export default function ApplyScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            style={{
+              backgroundColor: colors.dark,
+              borderWidth: 1,
+              borderColor: colors.darkBorder,
+              borderRadius: 10,
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+              color: colors.white,
+              fontSize: 15,
+            }}
+          />
+
+          <TextInput
+            placeholder="Create a password"
+            placeholderTextColor={colors.grey}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
             style={{
               backgroundColor: colors.dark,
               borderWidth: 1,
