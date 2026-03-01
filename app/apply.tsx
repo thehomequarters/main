@@ -126,7 +126,7 @@ export default function ApplyScreen() {
         </Text>
 
         {/* Form */}
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 14 }}>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <TextInput
               placeholder="First name"
@@ -186,23 +186,27 @@ export default function ApplyScreen() {
             }}
           />
 
-          <TextInput
-            placeholder="Create a password"
-            placeholderTextColor={colors.grey}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
-          />
+          <View>
+            <TextInput
+              placeholder="Create a password (min 6 characters)"
+              placeholderTextColor={colors.grey}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={true}
+              autoComplete="new-password"
+              textContentType="newPassword"
+              style={{
+                backgroundColor: colors.dark,
+                borderWidth: 1,
+                borderColor: colors.darkBorder,
+                borderRadius: 10,
+                paddingHorizontal: 16,
+                paddingVertical: 16,
+                color: colors.white,
+                fontSize: 15,
+              }}
+            />
+          </View>
 
           <TextInput
             placeholder="Phone (optional)"
