@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   Pressable,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -23,6 +24,7 @@ import { MembershipCard } from "@/components/MembershipCard";
 import { VenueCard } from "@/components/VenueCard";
 import { CategoryPills } from "@/components/CategoryPills";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { seedDatabase } from "@/lib/seed";
 
 interface VenueWithDeal extends Venue {
   deals: Deal[];
@@ -36,6 +38,7 @@ export default function HomeScreen() {
     useState<VenueCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const fetchVenues = useCallback(async () => {
     // Fetch active venues, sort client-side to avoid composite index
@@ -77,6 +80,19 @@ export default function HomeScreen() {
     await fetchVenues();
     setRefreshing(false);
   }, [fetchVenues]);
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      const count = await seedDatabase();
+      Alert.alert("Done", `Added ${count} venues with deals.`);
+      await fetchVenues();
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const featuredVenues = venues.slice(0, 5);
   const filteredVenues = selectedCategory
@@ -234,7 +250,41 @@ export default function HomeScreen() {
           />
         ))}
 
-        {filteredVenues.length === 0 && (
+        {filteredVenues.length === 0 && venues.length === 0 && (
+          <View style={{ alignItems: "center", marginTop: 40, gap: 16 }}>
+            <Text
+              style={{
+                color: colors.grey,
+                fontSize: 14,
+                textAlign: "center",
+              }}
+            >
+              No venues yet. Load sample data to get started.
+            </Text>
+            <Pressable
+              onPress={handleSeed}
+              disabled={seeding}
+              style={({ pressed }) => ({
+                backgroundColor: colors.gold,
+                borderRadius: 10,
+                paddingVertical: 14,
+                paddingHorizontal: 32,
+                opacity: seeding ? 0.6 : pressed ? 0.85 : 1,
+              })}
+            >
+              <Text
+                style={{
+                  color: colors.black,
+                  fontSize: 15,
+                  fontWeight: "700",
+                }}
+              >
+                {seeding ? "Loading venues..." : "Load Sample Venues"}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+        {filteredVenues.length === 0 && venues.length > 0 && (
           <Text
             style={{
               color: colors.grey,
@@ -243,7 +293,7 @@ export default function HomeScreen() {
               marginTop: 40,
             }}
           >
-            No venues available yet.
+            No venues in this category.
           </Text>
         )}
       </View>
