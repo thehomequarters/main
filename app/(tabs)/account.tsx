@@ -6,6 +6,7 @@ import {
   Pressable,
   Alert,
   Share,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { colors } from "@/constants/theme";
@@ -152,30 +153,47 @@ export default function AccountTab() {
           }}
         >
           {/* Avatar */}
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              borderRadius: 36,
-              backgroundColor: "rgba(201, 168, 76, 0.12)",
-              borderWidth: 2,
-              borderColor: colors.gold,
-              justifyContent: "center",
-              alignItems: "center",
-              marginRight: 18,
-            }}
+          <Pressable
+            onPress={() => router.push("/profile")}
+            style={{ marginRight: 18 }}
           >
-            <Text
-              style={{
-                color: colors.gold,
-                fontSize: 26,
-                fontWeight: "700",
-                letterSpacing: 1,
-              }}
-            >
-              {initials.toUpperCase()}
-            </Text>
-          </View>
+            {profile?.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 36,
+                  borderWidth: 2,
+                  borderColor: colors.gold,
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: 36,
+                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  borderWidth: 2,
+                  borderColor: colors.gold,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.gold,
+                    fontSize: 26,
+                    fontWeight: "700",
+                    letterSpacing: 1,
+                  }}
+                >
+                  {initials.toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </Pressable>
 
           <View style={{ flex: 1 }}>
             <Text
