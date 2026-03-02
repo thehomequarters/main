@@ -37,7 +37,7 @@ export default function LoginScreen() {
         email.trim().toLowerCase(),
         password
       );
-      // Auth state listener in AuthProvider handles navigation
+      router.replace("/");
     } catch (error: any) {
       const msg =
         error.code === "auth/invalid-credential"
