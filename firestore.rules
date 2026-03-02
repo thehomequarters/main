@@ -92,6 +92,17 @@ service cloud.firestore {
         resource.data.author_id == request.auth.uid || isAdmin();
     }
 
+    // ──── Comments ────
+    match /comments/{commentId} {
+      // Any authenticated user can read comments
+      allow read: if isAuth();
+      // Active members can create comments, must set their own author_id
+      allow create: if isActiveMember() &&
+        request.resource.data.author_id == request.auth.uid;
+      // No editing or deleting comments from the client
+      allow update, delete: if false;
+    }
+
     // ──── Connections ────
     match /connections/{connectionId} {
       allow read: if isAuth();
