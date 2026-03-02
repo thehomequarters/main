@@ -24,10 +24,11 @@ interface PostCardProps {
   post: Post;
   timeAgo?: string;
   onLike?: () => void;
+  onComment?: () => void;
   onPress?: () => void;
 }
 
-export function PostCard({ post, timeAgo, onLike, onPress }: PostCardProps) {
+export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCardProps) {
   const topicColor = topicColors[post.topic];
 
   return (
@@ -178,7 +179,10 @@ export function PostCard({ post, timeAgo, onLike, onPress }: PostCardProps) {
             {post.likes}
           </Text>
         </Pressable>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Pressable
+          onPress={onComment}
+          style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        >
           <Ionicons
             name="chatbubble-outline"
             size={16}
@@ -187,7 +191,7 @@ export function PostCard({ post, timeAgo, onLike, onPress }: PostCardProps) {
           <Text style={{ color: colors.grey, fontSize: 12 }}>
             {post.comments}
           </Text>
-        </View>
+        </Pressable>
         <View style={{ flex: 1 }} />
         <Ionicons name="share-outline" size={18} color={colors.grey} />
       </View>

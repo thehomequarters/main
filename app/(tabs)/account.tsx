@@ -357,11 +357,13 @@ export default function AccountTab() {
             label="My Bookings"
             subtitle="View upcoming event bookings"
             showBadge
+            onPress={() => router.push("/bookings")}
           />
           <MenuItem
             icon="receipt-outline"
             label="Redemption History"
             subtitle="Deals you've redeemed"
+            onPress={() => router.push("/redemptions")}
           />
           <MenuItem
             icon="heart-outline"

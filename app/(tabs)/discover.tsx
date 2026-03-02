@@ -15,6 +15,7 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
+  updateDoc,
   doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -39,6 +40,9 @@ export default function DiscoverTab() {
   const router = useRouter();
   const [members, setMembers] = useState<Profile[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
+  const [inboundRequests, setInboundRequests] = useState<
+    (Connection & { fromProfile?: Profile })[]
+  >([]);
   const [selectedIndustry, setSelectedIndustry] =
     useState<MemberIndustry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +60,7 @@ export default function DiscoverTab() {
       .filter((m) => m.id !== user?.uid);
     setMembers(memberList);
 
-    // Fetch existing connections
+    // Fetch existing connections (outbound)
     if (user?.uid) {
       const connQuery = query(
         collection(db, "connections"),
@@ -66,6 +70,24 @@ export default function DiscoverTab() {
       setConnections(
         connSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Connection)
       );
+
+      // Fetch inbound pending requests
+      const inboundQuery = query(
+        collection(db, "connections"),
+        where("to_id", "==", user.uid),
+        where("status", "==", "pending")
+      );
+      const inboundSnap = await getDocs(inboundQuery);
+      const inbound = inboundSnap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as Connection
+      );
+
+      // Attach sender profile info
+      const enriched = inbound.map((conn) => {
+        const fromProfile = memberList.find((m) => m.id === conn.from_id);
+        return { ...conn, fromProfile };
+      });
+      setInboundRequests(enriched);
     }
 
     setLoading(false);
@@ -158,6 +180,36 @@ export default function DiscoverTab() {
     });
 
     router.push(`/messages/${ref.id}`);
+  };
+
+  const handleAcceptConnection = async (conn: Connection) => {
+    try {
+      await updateDoc(doc(db, "connections", conn.id), {
+        status: "accepted",
+      });
+      // Also create reverse connection so both sides see "Connected"
+      await addDoc(collection(db, "connections"), {
+        from_id: conn.to_id,
+        to_id: conn.from_id,
+        status: "accepted",
+        created_at: new Date().toISOString(),
+      });
+      setInboundRequests((prev) => prev.filter((r) => r.id !== conn.id));
+      await fetchMembers();
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    }
+  };
+
+  const handleRejectConnection = async (conn: Connection) => {
+    try {
+      await updateDoc(doc(db, "connections", conn.id), {
+        status: "rejected",
+      });
+      setInboundRequests((prev) => prev.filter((r) => r.id !== conn.id));
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    }
   };
 
   const filteredMembers = selectedIndustry
@@ -374,6 +426,168 @@ export default function DiscoverTab() {
           );
         })}
       </ScrollView>
+
+      {/* Inbound connection requests */}
+      {inboundRequests.length > 0 && (
+        <View style={{ marginBottom: 24 }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              marginBottom: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <View
+              style={{
+                width: 4,
+                height: 20,
+                borderRadius: 2,
+                backgroundColor: colors.gold,
+              }}
+            />
+            <Text
+              style={{
+                color: colors.white,
+                fontSize: 18,
+                fontWeight: "700",
+              }}
+            >
+              Connection Requests
+            </Text>
+            <View
+              style={{
+                backgroundColor: colors.gold,
+                borderRadius: 10,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                marginLeft: 4,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.black,
+                  fontSize: 11,
+                  fontWeight: "700",
+                }}
+              >
+                {inboundRequests.length}
+              </Text>
+            </View>
+          </View>
+
+          {inboundRequests.map((req) => {
+            const profile = req.fromProfile;
+            const reqInitials =
+              (profile?.first_name?.[0] ?? "?") +
+              (profile?.last_name?.[0] ?? "");
+            return (
+              <View
+                key={req.id}
+                style={{
+                  backgroundColor: colors.dark,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: "rgba(201, 168, 76, 0.2)",
+                  padding: 16,
+                  marginBottom: 10,
+                  marginHorizontal: 20,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                {/* Avatar */}
+                <View
+                  style={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 23,
+                    backgroundColor: "rgba(201, 168, 76, 0.12)",
+                    borderWidth: 1.5,
+                    borderColor: "rgba(201, 168, 76, 0.25)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginRight: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.gold,
+                      fontSize: 15,
+                      fontWeight: "700",
+                    }}
+                  >
+                    {reqInitials.toUpperCase()}
+                  </Text>
+                </View>
+
+                {/* Info */}
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      color: colors.white,
+                      fontSize: 15,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {profile?.first_name} {profile?.last_name}
+                  </Text>
+                  <Text
+                    style={{
+                      color: colors.grey,
+                      fontSize: 12,
+                      marginTop: 1,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {profile?.title || "HQ Member"}
+                    {profile?.city ? ` · ${profile.city}` : ""}
+                  </Text>
+                </View>
+
+                {/* Accept / Reject buttons */}
+                <View style={{ flexDirection: "row", gap: 8 }}>
+                  <Pressable
+                    onPress={() => handleRejectConnection(req)}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: "rgba(229, 57, 53, 0.1)",
+                      borderWidth: 1,
+                      borderColor: "rgba(229, 57, 53, 0.2)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons name="close" size={18} color={colors.red} />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleAcceptConnection(req)}
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 18,
+                      backgroundColor: "rgba(76, 175, 80, 0.15)",
+                      borderWidth: 1,
+                      borderColor: "rgba(76, 175, 80, 0.3)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="checkmark"
+                      size={18}
+                      color={colors.green}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       {/* Section label */}
       <View
