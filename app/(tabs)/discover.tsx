@@ -7,6 +7,7 @@ import {
   Alert,
   RefreshControl,
 } from "react-native";
+import { useRouter } from "expo-router";
 import {
   collection,
   query,
@@ -35,6 +36,7 @@ const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
 
 export default function DiscoverTab() {
   const { user, profile: myProfile } = useAuth();
+  const router = useRouter();
   const [members, setMembers] = useState<Profile[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedIndustry, setSelectedIndustry] =
@@ -112,6 +114,50 @@ export default function DiscoverTab() {
         },
       ]);
     }
+  };
+
+  const handleMessage = async (member: Profile) => {
+    if (!user?.uid || !myProfile) return;
+
+    // Check if a conversation already exists between these two users
+    const convQuery = query(
+      collection(db, "conversations"),
+      where("participants", "array-contains", user.uid)
+    );
+    const convSnap = await getDocs(convQuery);
+    const existing = convSnap.docs.find((d) => {
+      const participants = d.data().participants as string[];
+      return participants.includes(member.id);
+    });
+
+    if (existing) {
+      router.push(`/messages/${existing.id}`);
+      return;
+    }
+
+    // Create a new conversation
+    const myInitials =
+      (myProfile.first_name?.[0] ?? "") + (myProfile.last_name?.[0] ?? "");
+    const otherInitials =
+      (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
+
+    const ref = await addDoc(collection(db, "conversations"), {
+      participants: [user.uid, member.id],
+      participant_names: {
+        [user.uid]: `${myProfile.first_name} ${myProfile.last_name}`,
+        [member.id]: `${member.first_name} ${member.last_name}`,
+      },
+      participant_initials: {
+        [user.uid]: myInitials.toUpperCase(),
+        [member.id]: otherInitials.toUpperCase(),
+      },
+      last_message: "",
+      last_message_at: "",
+      last_sender_id: "",
+      created_at: new Date().toISOString(),
+    });
+
+    router.push(`/messages/${ref.id}`);
   };
 
   const filteredMembers = selectedIndustry
@@ -504,37 +550,65 @@ export default function DiscoverTab() {
                 )}
               </View>
 
-              {/* Connect button */}
-              <Pressable
-                onPress={() => handleConnect(member)}
-                style={{
-                  backgroundColor: connected
-                    ? "rgba(76, 175, 80, 0.15)"
-                    : "rgba(201, 168, 76, 0.12)",
-                  borderWidth: 1,
-                  borderColor: connected
-                    ? "rgba(76, 175, 80, 0.3)"
-                    : "rgba(201, 168, 76, 0.25)",
-                  borderRadius: 10,
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                  marginTop: 4,
-                }}
-              >
-                <Text
+              {/* Action buttons */}
+              <View style={{ alignItems: "flex-end", gap: 6, marginTop: 4 }}>
+                <Pressable
+                  onPress={() => handleConnect(member)}
                   style={{
-                    color: connected ? colors.green : colors.gold,
-                    fontSize: 11,
-                    fontWeight: "700",
+                    backgroundColor: connected
+                      ? "rgba(76, 175, 80, 0.15)"
+                      : "rgba(201, 168, 76, 0.12)",
+                    borderWidth: 1,
+                    borderColor: connected
+                      ? "rgba(76, 175, 80, 0.3)"
+                      : "rgba(201, 168, 76, 0.25)",
+                    borderRadius: 10,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
                   }}
                 >
-                  {status === "accepted"
-                    ? "Connected"
-                    : status === "pending"
-                      ? "Pending"
-                      : "Connect"}
-                </Text>
-              </Pressable>
+                  <Text
+                    style={{
+                      color: connected ? colors.green : colors.gold,
+                      fontSize: 11,
+                      fontWeight: "700",
+                    }}
+                  >
+                    {status === "accepted"
+                      ? "Connected"
+                      : status === "pending"
+                        ? "Pending"
+                        : "Connect"}
+                  </Text>
+                </Pressable>
+                {connected && (
+                  <Pressable
+                    onPress={() => handleMessage(member)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      backgroundColor: "rgba(201, 168, 76, 0.08)",
+                      borderWidth: 1,
+                      borderColor: "rgba(201, 168, 76, 0.2)",
+                      borderRadius: 10,
+                      paddingHorizontal: 12,
+                      paddingVertical: 7,
+                    }}
+                  >
+                    <Ionicons name="chatbubble-outline" size={12} color={colors.gold} />
+                    <Text
+                      style={{
+                        color: colors.gold,
+                        fontSize: 11,
+                        fontWeight: "600",
+                      }}
+                    >
+                      Message
+                    </Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
           </Pressable>
         );

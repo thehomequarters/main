@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, Image } from "react-native";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Post, PostTopic } from "@/lib/database.types";
@@ -131,6 +131,20 @@ export function PostCard({ post, timeAgo, onLike, onPress }: PostCardProps) {
           {topicLabels[post.topic]}
         </Text>
       </View>
+
+      {/* Post image */}
+      {post.image_url && (
+        <Image
+          source={{ uri: post.image_url }}
+          style={{
+            width: "100%",
+            height: 200,
+            borderRadius: 12,
+            marginBottom: 12,
+          }}
+          resizeMode="cover"
+        />
+      )}
 
       {/* Content */}
       <Text

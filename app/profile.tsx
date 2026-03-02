@@ -8,6 +8,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, updateDoc } from "firebase/firestore";
@@ -15,6 +17,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { pickImage, uploadAvatar } from "@/lib/storage";
 import type { MemberIndustry } from "@/lib/database.types";
 
 const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
@@ -95,9 +98,33 @@ export default function ProfileScreen() {
     (profile?.interests ?? []).join(", ")
   );
   const [saving, setSaving] = useState(false);
+  const [avatarLocal, setAvatarLocal] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
+
+  const avatarSource = avatarLocal || profile?.avatar_url;
+
+  const handlePickAvatar = async () => {
+    const uri = await pickImage();
+    if (!uri || !user?.uid) return;
+
+    setAvatarLocal(uri);
+    setUploadingAvatar(true);
+    try {
+      const downloadUrl = await uploadAvatar(user.uid, uri);
+      await updateDoc(doc(db, "profiles", user.uid), {
+        avatar_url: downloadUrl,
+      });
+      await refreshProfile();
+    } catch (e: any) {
+      Alert.alert("Upload failed", e.message);
+      setAvatarLocal(null);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   const hasChanges =
     firstName !== (profile?.first_name ?? "") ||
@@ -203,29 +230,66 @@ export default function ProfileScreen() {
         <View
           style={{ alignItems: "center", marginTop: 24, marginBottom: 36 }}
         >
-          <View
-            style={{
-              width: 100,
-              height: 100,
-              borderRadius: 50,
-              backgroundColor: "rgba(201, 168, 76, 0.15)",
-              borderWidth: 2,
-              borderColor: colors.gold,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text
+          <Pressable onPress={handlePickAvatar} style={{ position: "relative" }}>
+            {avatarSource ? (
+              <Image
+                source={{ uri: avatarSource }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
+                  borderWidth: 2,
+                  borderColor: colors.gold,
+                }}
+              />
+            ) : (
+              <View
+                style={{
+                  width: 100,
+                  height: 100,
+                  borderRadius: 50,
+                  backgroundColor: "rgba(201, 168, 76, 0.15)",
+                  borderWidth: 2,
+                  borderColor: colors.gold,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.gold,
+                    fontSize: 36,
+                    fontWeight: "700",
+                    letterSpacing: 2,
+                  }}
+                >
+                  {initials.toUpperCase()}
+                </Text>
+              </View>
+            )}
+            {/* Camera badge */}
+            <View
               style={{
-                color: colors.gold,
-                fontSize: 36,
-                fontWeight: "700",
-                letterSpacing: 2,
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: colors.gold,
+                justifyContent: "center",
+                alignItems: "center",
+                borderWidth: 3,
+                borderColor: colors.black,
               }}
             >
-              {initials.toUpperCase()}
-            </Text>
-          </View>
+              {uploadingAvatar ? (
+                <ActivityIndicator size="small" color={colors.black} />
+              ) : (
+                <Ionicons name="camera" size={14} color={colors.black} />
+              )}
+            </View>
+          </Pressable>
 
           <Text
             style={{

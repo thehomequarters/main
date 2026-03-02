@@ -10,6 +10,7 @@ import {
   Platform,
   RefreshControl,
   Modal,
+  Image,
 } from "react-native";
 import {
   collection,
@@ -26,8 +27,10 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { PostCard } from "@/components/PostCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { pickPostImage, uploadPostImage } from "@/lib/storage";
 import type { Post, PostTopic, Group, GroupMember } from "@/lib/database.types";
 
 type ConnectTabView = "noticeboard" | "groups";
@@ -50,6 +53,7 @@ const FILTER_OPTIONS: { key: PostTopic | null; label: string }[] = [
 
 export default function ConnectTab() {
   const { user, profile } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ConnectTabView>("noticeboard");
   const [topicFilter, setTopicFilter] = useState<PostTopic | null>(null);
 
@@ -68,6 +72,7 @@ export default function ConnectTab() {
   const [newPostContent, setNewPostContent] = useState("");
   const [newPostTopic, setNewPostTopic] = useState<PostTopic>("general");
   const [posting, setPosting] = useState(false);
+  const [postImageUri, setPostImageUri] = useState<string | null>(null);
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
@@ -118,11 +123,20 @@ export default function ConnectTab() {
   }, [fetchPosts, fetchGroups]);
 
   const handleCreatePost = async () => {
-    if (!user?.uid || !profile || !newPostContent.trim()) return;
+    if (!user?.uid || !profile || (!newPostContent.trim() && !postImageUri))
+      return;
 
     setPosting(true);
     try {
       const topicOption = TOPIC_OPTIONS.find((t) => t.key === newPostTopic);
+
+      // Upload image if attached
+      let imageUrl: string | null = null;
+      if (postImageUri) {
+        const tempId = `${user.uid}_${Date.now()}`;
+        imageUrl = await uploadPostImage(tempId, postImageUri);
+      }
+
       await addDoc(collection(db, "posts"), {
         author_id: user.uid,
         author_name: `${profile.first_name} ${profile.last_name}`,
@@ -132,12 +146,14 @@ export default function ConnectTab() {
         content: newPostContent.trim(),
         topic: newPostTopic,
         color: topicOption?.color || "#A0A0A0",
+        image_url: imageUrl,
         likes: 0,
         comments: 0,
         created_at: new Date().toISOString(),
       });
       setNewPostContent("");
       setNewPostTopic("general");
+      setPostImageUri(null);
       setShowCompose(false);
       await fetchPosts();
     } catch (e: any) {
@@ -145,6 +161,11 @@ export default function ConnectTab() {
     } finally {
       setPosting(false);
     }
+  };
+
+  const handlePickPostImage = async () => {
+    const uri = await pickPostImage();
+    if (uri) setPostImageUri(uri);
   };
 
   const handleLikePost = async (post: Post) => {
@@ -246,27 +267,49 @@ export default function ConnectTab() {
           paddingTop: 66,
           paddingHorizontal: 20,
           paddingBottom: 8,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
         }}
       >
-        <Text
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              color: colors.white,
+              fontSize: 30,
+              fontWeight: "700",
+              letterSpacing: 0.3,
+            }}
+          >
+            Connect
+          </Text>
+          <Text
+            style={{
+              color: colors.grey,
+              fontSize: 14,
+              marginTop: 4,
+            }}
+          >
+            Share, discover, and connect with members
+          </Text>
+        </View>
+
+        <Pressable
+          onPress={() => router.push("/messages")}
           style={{
-            color: colors.white,
-            fontSize: 30,
-            fontWeight: "700",
-            letterSpacing: 0.3,
-          }}
-        >
-          Connect
-        </Text>
-        <Text
-          style={{
-            color: colors.grey,
-            fontSize: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.dark,
+            borderWidth: 1,
+            borderColor: colors.darkBorder,
+            justifyContent: "center",
+            alignItems: "center",
             marginTop: 4,
           }}
         >
-          Share, discover, and connect with members
-        </Text>
+          <Ionicons name="chatbubble-outline" size={18} color={colors.white} />
+        </Pressable>
       </View>
 
       {/* Tab switcher */}
@@ -686,10 +729,67 @@ export default function ConnectTab() {
                   color: colors.white,
                   fontSize: 16,
                   lineHeight: 24,
-                  minHeight: 120,
+                  minHeight: 100,
                   textAlignVertical: "top",
                 }}
               />
+
+              {/* Image preview */}
+              {postImageUri && (
+                <View
+                  style={{
+                    marginTop: 12,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <Image
+                    source={{ uri: postImageUri }}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 10,
+                    }}
+                  />
+                  <Pressable onPress={() => setPostImageUri(null)}>
+                    <Ionicons
+                      name="close-circle"
+                      size={22}
+                      color={colors.red}
+                    />
+                  </Pressable>
+                </View>
+              )}
+
+              {/* Attach image button */}
+              <Pressable
+                onPress={handlePickPostImage}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 8,
+                  marginTop: 16,
+                  paddingTop: 12,
+                  borderTopWidth: 1,
+                  borderTopColor: colors.darkBorder,
+                }}
+              >
+                <Ionicons
+                  name="image-outline"
+                  size={20}
+                  color={colors.gold}
+                />
+                <Text
+                  style={{
+                    color: colors.gold,
+                    fontSize: 13,
+                    fontWeight: "500",
+                  }}
+                >
+                  Add Photo
+                </Text>
+              </Pressable>
             </View>
           </View>
         </KeyboardAvoidingView>

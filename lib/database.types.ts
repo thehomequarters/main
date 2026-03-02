@@ -93,6 +93,7 @@ export interface Post {
   content: string;
   topic: PostTopic;
   color: string;
+  image_url: string | null;
   likes: number;
   comments: number;
   created_at: string;
@@ -145,4 +146,25 @@ export interface Redemption {
   venue_id: string;
   deal_id: string;
   redeemed_at: string;
+}
+
+export interface Conversation {
+  id: string;
+  participants: [string, string];
+  participant_names: Record<string, string>;
+  participant_initials: Record<string, string>;
+  last_message: string;
+  last_message_at: string;
+  last_sender_id: string;
+  created_at: string;
+}
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  sender_name: string;
+  sender_initials: string;
+  text: string;
+  image_url: string | null;
+  created_at: string;
 }

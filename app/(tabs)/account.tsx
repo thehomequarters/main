@@ -347,6 +347,12 @@ export default function AccountTab() {
           }}
         >
           <MenuItem
+            icon="chatbubble-outline"
+            label="Messages"
+            subtitle="Chat with other members"
+            onPress={() => router.push("/messages")}
+          />
+          <MenuItem
             icon="calendar-outline"
             label="My Bookings"
             subtitle="View upcoming event bookings"
