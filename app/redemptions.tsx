@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
+  Alert,
 } from "react-native";
 import {
   collection,
@@ -35,43 +36,46 @@ export default function RedemptionsScreen() {
   const fetchRedemptions = useCallback(async () => {
     if (!user?.uid) return;
 
-    // Fetch user's redemptions
-    const redemptionsQuery = query(
-      collection(db, "redemptions"),
-      where("member_id", "==", user.uid)
-    );
-    const redemptionsSnap = await getDocs(redemptionsQuery);
-    const redemptionList = redemptionsSnap.docs.map(
-      (d) => ({ id: d.id, ...d.data() }) as Redemption
-    );
-
-    // Fetch venues and deals to enrich
-    const venuesSnap = await getDocs(collection(db, "venues"));
-    const venuesMap: Record<string, string> = {};
-    venuesSnap.docs.forEach((d) => {
-      venuesMap[d.id] = (d.data() as Venue).name;
-    });
-
-    const dealsSnap = await getDocs(collection(db, "deals"));
-    const dealsMap: Record<string, string> = {};
-    dealsSnap.docs.forEach((d) => {
-      dealsMap[d.id] = (d.data() as Deal).title;
-    });
-
-    const enriched: EnrichedRedemption[] = redemptionList
-      .map((r) => ({
-        ...r,
-        venue_name: venuesMap[r.venue_id] ?? "Unknown Venue",
-        deal_title: dealsMap[r.deal_id] ?? "Unknown Deal",
-      }))
-      .sort(
-        (a, b) =>
-          new Date(b.redeemed_at).getTime() -
-          new Date(a.redeemed_at).getTime()
+    try {
+      const redemptionsQuery = query(
+        collection(db, "redemptions"),
+        where("member_id", "==", user.uid)
+      );
+      const redemptionsSnap = await getDocs(redemptionsQuery);
+      const redemptionList = redemptionsSnap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as Redemption
       );
 
-    setRedemptions(enriched);
-    setLoading(false);
+      const venuesSnap = await getDocs(collection(db, "venues"));
+      const venuesMap: Record<string, string> = {};
+      venuesSnap.docs.forEach((d) => {
+        venuesMap[d.id] = (d.data() as Venue).name;
+      });
+
+      const dealsSnap = await getDocs(collection(db, "deals"));
+      const dealsMap: Record<string, string> = {};
+      dealsSnap.docs.forEach((d) => {
+        dealsMap[d.id] = (d.data() as Deal).title;
+      });
+
+      const enriched: EnrichedRedemption[] = redemptionList
+        .map((r) => ({
+          ...r,
+          venue_name: venuesMap[r.venue_id] ?? "Unknown Venue",
+          deal_title: dealsMap[r.deal_id] ?? "Unknown Deal",
+        }))
+        .sort(
+          (a, b) =>
+            new Date(b.redeemed_at).getTime() -
+            new Date(a.redeemed_at).getTime()
+        );
+
+      setRedemptions(enriched);
+    } catch (e: any) {
+      Alert.alert("Error", "Could not load redemption history. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, [user?.uid]);
 
   useEffect(() => {

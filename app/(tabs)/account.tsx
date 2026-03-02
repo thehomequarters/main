@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   Alert,
+  Share,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { colors } from "@/constants/theme";
@@ -118,6 +119,16 @@ export default function AccountTab() {
         },
       },
     ]);
+  };
+
+  const handleShareProfile = async () => {
+    try {
+      await Share.share({
+        message: `Connect with me on HomeQuarters! I'm ${profile?.first_name} ${profile?.last_name} (${profile?.member_code}).`,
+      });
+    } catch (e: any) {
+      // User cancelled — non-critical
+    }
   };
 
   return (
@@ -248,6 +259,9 @@ export default function AccountTab() {
             </Text>
           </Pressable>
           <Pressable
+            onPress={handleShareProfile}
+            accessibilityLabel="Share your profile"
+            accessibilityRole="button"
             style={{
               flex: 1,
               backgroundColor: "rgba(201, 168, 76, 0.1)",
@@ -308,11 +322,24 @@ export default function AccountTab() {
             icon="card-outline"
             label="Membership Details"
             subtitle="View your membership information"
+            onPress={() =>
+              Alert.alert(
+                "Membership Details",
+                `Member: ${profile?.first_name} ${profile?.last_name}\nCode: ${profile?.member_code}\nStatus: ${profile?.membership_status?.toUpperCase()}\nEmail: ${profile?.email}`,
+                [{ text: "OK" }]
+              )
+            }
           />
           <MenuItem
             icon="people-outline"
             label="Guest Invitations"
             subtitle="Invite guests to venues"
+            onPress={() =>
+              Alert.alert(
+                "Guest Invitations",
+                "Guest invitations are coming soon. You'll be able to invite friends to join you at partner venues."
+              )
+            }
           />
           <MenuItem
             icon="qr-code-outline"
@@ -369,6 +396,12 @@ export default function AccountTab() {
             icon="heart-outline"
             label="Saved Venues"
             subtitle="Your favourite spots"
+            onPress={() =>
+              Alert.alert(
+                "Saved Venues",
+                "Saved venues are coming soon. You'll be able to favourite your go-to spots for quick access."
+              )
+            }
           />
         </View>
       </View>
@@ -400,21 +433,30 @@ export default function AccountTab() {
             icon="notifications-outline"
             label="Notifications"
             subtitle="Manage notification preferences"
+            onPress={() =>
+              Alert.alert(
+                "Notifications",
+                "Push notifications are coming soon. You'll be able to customise which alerts you receive."
+              )
+            }
           />
           <MenuItem
             icon="lock-closed-outline"
             label="Privacy"
             subtitle="Control your visibility to members"
+            onPress={() => router.push("/privacy")}
           />
           <MenuItem
             icon="shield-checkmark-outline"
             label="House Rules"
             subtitle="Review the house rules"
+            onPress={() => router.push("/house-rules")}
           />
           <MenuItem
             icon="help-circle-outline"
             label="Help & Support"
             subtitle="Get help or send feedback"
+            onPress={() => router.push("/help")}
           />
         </View>
       </View>

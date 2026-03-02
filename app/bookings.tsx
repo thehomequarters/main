@@ -35,37 +35,39 @@ export default function BookingsScreen() {
   const fetchBookings = useCallback(async () => {
     if (!user?.uid) return;
 
-    // Fetch user's bookings
-    const bookingsQuery = query(
-      collection(db, "bookings"),
-      where("member_id", "==", user.uid)
-    );
-    const bookingsSnap = await getDocs(bookingsQuery);
-    const bookingList = bookingsSnap.docs.map(
-      (d) => ({ id: d.id, ...d.data() }) as Booking
-    );
+    try {
+      const bookingsQuery = query(
+        collection(db, "bookings"),
+        where("member_id", "==", user.uid)
+      );
+      const bookingsSnap = await getDocs(bookingsQuery);
+      const bookingList = bookingsSnap.docs.map(
+        (d) => ({ id: d.id, ...d.data() }) as Booking
+      );
 
-    // Fetch all events to match
-    const eventsSnap = await getDocs(collection(db, "events"));
-    const eventsMap: Record<string, HQEvent> = {};
-    eventsSnap.docs.forEach((d) => {
-      eventsMap[d.id] = { id: d.id, ...d.data() } as HQEvent;
-    });
-
-    // Combine and sort by event date
-    const combined = bookingList
-      .map((b) => ({
-        ...b,
-        event: eventsMap[b.event_id],
-      }))
-      .sort((a, b) => {
-        const dateA = a.event?.date ?? "";
-        const dateB = b.event?.date ?? "";
-        return dateA.localeCompare(dateB);
+      const eventsSnap = await getDocs(collection(db, "events"));
+      const eventsMap: Record<string, HQEvent> = {};
+      eventsSnap.docs.forEach((d) => {
+        eventsMap[d.id] = { id: d.id, ...d.data() } as HQEvent;
       });
 
-    setBookings(combined);
-    setLoading(false);
+      const combined = bookingList
+        .map((b) => ({
+          ...b,
+          event: eventsMap[b.event_id],
+        }))
+        .sort((a, b) => {
+          const dateA = a.event?.date ?? "";
+          const dateB = b.event?.date ?? "";
+          return dateA.localeCompare(dateB);
+        });
+
+      setBookings(combined);
+    } catch (e: any) {
+      Alert.alert("Error", "Could not load bookings. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, [user?.uid]);
 
   useEffect(() => {

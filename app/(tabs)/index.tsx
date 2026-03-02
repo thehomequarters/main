@@ -26,7 +26,6 @@ import { VenueCard } from "@/components/VenueCard";
 import { EventCard } from "@/components/EventCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
-import { seedDatabase } from "@/lib/seed";
 import { Ionicons } from "@expo/vector-icons";
 
 interface VenueWithDeal extends Venue {
@@ -41,49 +40,51 @@ export default function HomeTab() {
   const [venues, setVenues] = useState<VenueWithDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [seeding, setSeeding] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
 
   const fetchVenues = useCallback(async () => {
-    const venuesQuery = query(
-      collection(db, "venues"),
-      where("is_active", "==", true)
-    );
-    const venuesSnap = await getDocs(venuesQuery);
-    const venueList: VenueWithDeal[] = [];
-
-    for (const venueDoc of venuesSnap.docs) {
-      const venueData = { id: venueDoc.id, ...venueDoc.data() } as Venue;
-      const dealsQuery = query(
-        collection(db, "deals"),
-        where("venue_id", "==", venueDoc.id),
+    try {
+      const venuesQuery = query(
+        collection(db, "venues"),
         where("is_active", "==", true)
       );
-      const dealsSnap = await getDocs(dealsQuery);
-      const deals = dealsSnap.docs.map(
-        (d) => ({ id: d.id, ...d.data() }) as Deal
+      const venuesSnap = await getDocs(venuesQuery);
+      const venueList: VenueWithDeal[] = [];
+
+      for (const venueDoc of venuesSnap.docs) {
+        const venueData = { id: venueDoc.id, ...venueDoc.data() } as Venue;
+        const dealsQuery = query(
+          collection(db, "deals"),
+          where("venue_id", "==", venueDoc.id),
+          where("is_active", "==", true)
+        );
+        const dealsSnap = await getDocs(dealsQuery);
+        const deals = dealsSnap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Deal
+        );
+        venueList.push({ ...venueData, deals });
+      }
+
+      venueList.sort(
+        (a, b) => (b.created_at || "").localeCompare(a.created_at || "")
       );
-      venueList.push({ ...venueData, deals });
+      setVenues(venueList);
+
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("is_active", "==", true)
+      );
+      const eventsSnap = await getDocs(eventsQuery);
+      const eventList = eventsSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(0, 4);
+      setUpcomingEvents(eventList);
+    } catch (e: any) {
+      Alert.alert("Error", "Could not load data. Pull down to try again.");
+    } finally {
+      setLoading(false);
     }
-
-    venueList.sort(
-      (a, b) => (b.created_at || "").localeCompare(a.created_at || "")
-    );
-    setVenues(venueList);
-
-    // Fetch upcoming events from Firestore
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("is_active", "==", true)
-    );
-    const eventsSnap = await getDocs(eventsQuery);
-    const eventList = eventsSnap.docs
-      .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(0, 4);
-    setUpcomingEvents(eventList);
-
-    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -95,19 +96,6 @@ export default function HomeTab() {
     await fetchVenues();
     setRefreshing(false);
   }, [fetchVenues]);
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      const count = await seedDatabase();
-      Alert.alert("Done", `Added ${count} venues with deals, events, posts & groups.`);
-      await fetchVenues();
-    } catch (e: any) {
-      Alert.alert("Error", e.message);
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   const featuredVenues = venues.slice(0, 5);
 
@@ -197,6 +185,14 @@ export default function HomeTab() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 4 }}>
           {/* Notifications bell */}
           <Pressable
+            onPress={() =>
+              Alert.alert(
+                "Notifications",
+                "Push notifications are coming soon. You'll be notified about new messages, event reminders, and connection requests."
+              )
+            }
+            accessibilityLabel="Notifications"
+            accessibilityRole="button"
             style={{
               width: 38,
               height: 38,
@@ -364,37 +360,22 @@ export default function HomeTab() {
         ))}
 
         {venues.length === 0 && (
-          <View style={{ alignItems: "center", marginTop: 40, gap: 16 }}>
+          <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
+            <Ionicons
+              name="storefront-outline"
+              size={48}
+              color={colors.darkBorder}
+            />
             <Text
               style={{
                 color: colors.grey,
                 fontSize: 14,
                 textAlign: "center",
+                paddingHorizontal: 20,
               }}
             >
-              No data yet. Load sample venues, events, posts & groups.
+              Partner venues are being added. Check back soon!
             </Text>
-            <Pressable
-              onPress={handleSeed}
-              disabled={seeding}
-              style={{
-                backgroundColor: colors.gold,
-                borderRadius: 10,
-                paddingVertical: 14,
-                paddingHorizontal: 32,
-                opacity: seeding ? 0.6 : 1,
-              }}
-            >
-              <Text
-                style={{
-                  color: colors.black,
-                  fontSize: 15,
-                  fontWeight: "700",
-                }}
-              >
-                {seeding ? "Loading data..." : "Load Sample Data"}
-              </Text>
-            </Pressable>
           </View>
         )}
       </View>
