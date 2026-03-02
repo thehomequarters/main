@@ -45,12 +45,11 @@ function ActionButton({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         alignItems: "center",
         gap: 6,
-        opacity: pressed ? 0.7 : 1,
         flex: 1,
-      })}
+      }}
     >
       <View
         style={{
@@ -411,13 +410,11 @@ export default function VenueDetailScreen() {
                 `/qr?venueId=${venue.id}&venueName=${encodeURIComponent(venue.name)}&dealTitle=${encodeURIComponent(deals[0].title)}&dealId=${deals[0].id}`
               )
             }
-            style={({ pressed }) => ({
+            style={{
               backgroundColor: colors.gold,
               borderRadius: 12,
               paddingVertical: 16,
-              opacity: pressed ? 0.85 : 1,
-              transform: [{ scale: pressed ? 0.98 : 1 }],
-            })}
+            }}
           >
             <Text
               style={{

@@ -284,13 +284,13 @@ export default function HomeScreen() {
             <Pressable
               onPress={handleSeed}
               disabled={seeding}
-              style={({ pressed }) => ({
+              style={{
                 backgroundColor: colors.gold,
                 borderRadius: 10,
                 paddingVertical: 14,
                 paddingHorizontal: 32,
-                opacity: seeding ? 0.6 : pressed ? 0.85 : 1,
-              })}
+                opacity: seeding ? 0.6 : 1,
+              }}
             >
               <Text
                 style={{
