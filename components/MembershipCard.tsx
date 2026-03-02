@@ -25,7 +25,7 @@ export function MembershipCard({
   return (
     <Pressable
       onPress={() => router.push("/qr")}
-      style={({ pressed }) => ({
+      style={{
         aspectRatio: CARD_ASPECT_RATIO,
         backgroundColor: colors.dark,
         borderRadius: 14,
@@ -39,8 +39,7 @@ export function MembershipCard({
         elevation: 6,
         justifyContent: "space-between",
         overflow: "hidden",
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-      })}
+      }}
     >
       {/* Top row: HQ logo + NFC icon */}
       <View
