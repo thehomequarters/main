@@ -8,6 +8,25 @@ service firebase.storage {
     }
 
     // ──── Avatars ────
+    // Users can read any avatar, but can only upload their own
+    match /avatars/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth() &&
+        fileName.matches(request.auth.uid + '_.*\\.jpg');
+    }
+
+    // ──── Post images ────
+    // Authenticated users can read any post image; active members can upload
+    match /posts/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ──── Chat images ────
+    // Authenticated users can read and upload chat images
+    match /chat/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth();
     match /avatars/{fileName} {
       allow read: if isAuth();
       allow write: if isAuth()

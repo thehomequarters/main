@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "./firebase";
+import { registerPushToken } from "./notifications";
 import type { Profile } from "./database.types";
 import type { User } from "firebase/auth";
 
@@ -29,7 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = async (uid: string) => {
     const snap = await getDoc(doc(db, "profiles", uid));
     if (snap.exists()) {
-      setProfile({ id: snap.id, ...snap.data() } as Profile);
+      const profileData = { id: snap.id, ...snap.data() } as Profile;
+      setProfile(profileData);
+      // Register push token for active members
+      if (profileData.membership_status === "active") {
+        registerPushToken(uid).catch(() => {});
+      }
     } else {
       setProfile(null);
     }

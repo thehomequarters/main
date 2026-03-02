@@ -10,6 +10,7 @@ import Members from "./pages/Members";
 import Venues from "./pages/Venues";
 import Events from "./pages/Events";
 import Posts from "./pages/Posts";
+import Invites from "./pages/Invites";
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
@@ -32,6 +33,7 @@ function ProtectedRoutes() {
         <Route path="/venues" element={<Venues />} />
         <Route path="/events" element={<Events />} />
         <Route path="/posts" element={<Posts />} />
+        <Route path="/invites" element={<Invites />} />
       </Routes>
     </Layout>
   );

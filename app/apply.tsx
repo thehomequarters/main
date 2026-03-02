@@ -11,12 +11,13 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
 export default function ApplyScreen() {
   const router = useRouter();
+  const [inviteCode, setInviteCode] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,6 +26,13 @@ export default function ApplyScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    const code = inviteCode.trim().toUpperCase();
+
+    if (!code) {
+      Alert.alert("Invite Required", "Please enter your invite code to apply.");
+      return;
+    }
+
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       Alert.alert("Required Fields", "Please fill in your name and email.");
       return;
@@ -37,6 +45,27 @@ export default function ApplyScreen() {
 
     setSubmitting(true);
     try {
+      // Validate the invite code against Firestore
+      const inviteSnap = await getDoc(doc(db, "invites", code));
+      if (!inviteSnap.exists()) {
+        Alert.alert(
+          "Invalid Invite",
+          "This invite code doesn't exist. Please check the code and try again."
+        );
+        setSubmitting(false);
+        return;
+      }
+
+      const invite = inviteSnap.data();
+      if (invite.used) {
+        Alert.alert(
+          "Invite Used",
+          "This invite code has already been used. Please request a new one."
+        );
+        setSubmitting(false);
+        return;
+      }
+
       // Create user with Firebase Auth
       const { user } = await createUserWithEmailAndPassword(
         auth,
@@ -45,7 +74,14 @@ export default function ApplyScreen() {
       );
 
       // Generate member code
-      const code = `HQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      const memberCode = `HQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+
+      // Mark invite as used
+      await updateDoc(doc(db, "invites", code), {
+        used: true,
+        used_by: user.uid,
+        used_at: new Date().toISOString(),
+      });
 
       // Create profile in Firestore
       await setDoc(doc(db, "profiles", user.uid), {
@@ -54,8 +90,9 @@ export default function ApplyScreen() {
         email: email.trim().toLowerCase(),
         phone: phone.trim() || null,
         avatar_url: null,
-        member_code: code,
+        member_code: memberCode,
         membership_status: "pending",
+        push_token: null,
         created_at: new Date().toISOString(),
       });
 
@@ -69,6 +106,17 @@ export default function ApplyScreen() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const inputStyle = {
+    backgroundColor: colors.dark,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: colors.white,
+    fontSize: 15,
   };
 
   return (
@@ -122,11 +170,50 @@ export default function ApplyScreen() {
           }}
         >
           HomeQuarters is a private community for the diaspora. Membership is by
-          application only.
+          invite only.
         </Text>
 
         {/* Form */}
         <View style={{ gap: 14 }}>
+          {/* Invite code — highlighted at top */}
+          <View>
+            <Text
+              style={{
+                color: colors.gold,
+                fontSize: 11,
+                fontWeight: "600",
+                letterSpacing: 1.5,
+                textTransform: "uppercase",
+                marginBottom: 8,
+              }}
+            >
+              Invite Code
+            </Text>
+            <TextInput
+              placeholder="e.g. HQ-XXXX-XXXX"
+              placeholderTextColor={colors.grey}
+              value={inviteCode}
+              onChangeText={(t) => setInviteCode(t.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={{
+                ...inputStyle,
+                borderColor: inviteCode ? colors.gold : colors.darkBorder,
+                color: colors.gold,
+                fontWeight: "700",
+                letterSpacing: 2,
+              }}
+            />
+          </View>
+
+          <View
+            style={{
+              height: 1,
+              backgroundColor: colors.darkBorder,
+              marginVertical: 4,
+            }}
+          />
+
           <View style={{ flexDirection: "row", gap: 12 }}>
             <TextInput
               placeholder="First name"
@@ -134,17 +221,7 @@ export default function ApplyScreen() {
               value={firstName}
               onChangeText={setFirstName}
               autoCapitalize="words"
-              style={{
-                flex: 1,
-                backgroundColor: colors.dark,
-                borderWidth: 1,
-                borderColor: colors.darkBorder,
-                borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                color: colors.white,
-                fontSize: 15,
-              }}
+              style={{ ...inputStyle, flex: 1 }}
             />
             <TextInput
               placeholder="Last name"
@@ -152,17 +229,7 @@ export default function ApplyScreen() {
               value={lastName}
               onChangeText={setLastName}
               autoCapitalize="words"
-              style={{
-                flex: 1,
-                backgroundColor: colors.dark,
-                borderWidth: 1,
-                borderColor: colors.darkBorder,
-                borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                color: colors.white,
-                fontSize: 15,
-              }}
+              style={{ ...inputStyle, flex: 1 }}
             />
           </View>
 
@@ -174,16 +241,7 @@ export default function ApplyScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
+            style={inputStyle}
           />
 
           <TextInput
@@ -194,16 +252,7 @@ export default function ApplyScreen() {
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
+            style={inputStyle}
           />
 
           <TextInput
@@ -212,16 +261,7 @@ export default function ApplyScreen() {
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
+            style={inputStyle}
           />
         </View>
 
@@ -250,7 +290,7 @@ export default function ApplyScreen() {
           </Text>
         </Pressable>
 
-        {/* Login link for returning members */}
+        {/* Login link */}
         <Pressable
           onPress={() => router.push("/login")}
           style={{ marginTop: 24 }}

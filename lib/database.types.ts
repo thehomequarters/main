@@ -1,4 +1,4 @@
-export type MembershipStatus = "pending" | "active" | "rejected";
+export type MembershipStatus = "pending" | "active" | "rejected" | "suspended";
 export type VenueCategory = "restaurant" | "bar" | "cafe" | "experience";
 export type EventCategory = "social" | "dining" | "wellness" | "music" | "arts";
 export type PostTopic =
@@ -32,6 +32,20 @@ export interface Profile {
   city: string | null;
   industry: MemberIndustry | null;
   interests: string[];
+  // Push notifications
+  push_token: string | null;
+}
+
+export interface Invite {
+  id: string;
+  code: string;
+  created_by: string;
+  created_at: string;
+  expires_at: string | null;
+  used: boolean;
+  used_by: string | null;
+  used_at: string | null;
+  note: string | null;
 }
 
 export interface Venue {
