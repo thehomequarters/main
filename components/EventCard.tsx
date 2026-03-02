@@ -2,11 +2,13 @@ import React from "react";
 import { View, Text, Image, Pressable, Dimensions } from "react-native";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import type { HQEvent } from "@/data/events";
+import type { HQEvent } from "@/lib/database.types";
 
 interface EventCardProps {
   event: HQEvent;
   variant?: "compact" | "full";
+  attendees?: number;
+  isBooked?: boolean;
   onPress?: () => void;
   onBook?: () => void;
 }
@@ -32,6 +34,8 @@ function formatTime(time: string): string {
 export function EventCard({
   event,
   variant = "full",
+  attendees = 0,
+  isBooked = false,
   onPress,
   onBook,
 }: EventCardProps) {
@@ -39,7 +43,7 @@ export function EventCard({
   const isCompact = variant === "compact";
   const cardWidth = isCompact ? screenWidth * 0.72 : screenWidth - 40;
   const { day, month, weekday } = formatDate(event.date);
-  const spotsLeft = event.capacity - event.attendees;
+  const spotsLeft = event.capacity - attendees;
 
   return (
     <Pressable
@@ -202,7 +206,7 @@ export function EventCard({
                     marginLeft: 4,
                   }}
                 >
-                  {event.attendees} going
+                  {attendees} going
                 </Text>
               </View>
               <Text style={{ color: colors.darkBorder, fontSize: 12 }}>
@@ -222,11 +226,11 @@ export function EventCard({
             <Pressable
               onPress={onBook}
               style={{
-                backgroundColor: event.is_booked
+                backgroundColor: isBooked
                   ? "rgba(76, 175, 80, 0.15)"
                   : "rgba(201, 168, 76, 0.15)",
                 borderWidth: 1,
-                borderColor: event.is_booked
+                borderColor: isBooked
                   ? "rgba(76, 175, 80, 0.3)"
                   : "rgba(201, 168, 76, 0.3)",
                 borderRadius: 8,
@@ -236,13 +240,13 @@ export function EventCard({
             >
               <Text
                 style={{
-                  color: event.is_booked ? colors.green : colors.gold,
+                  color: isBooked ? colors.green : colors.gold,
                   fontSize: 12,
                   fontWeight: "700",
                   letterSpacing: 0.5,
                 }}
               >
-                {event.is_booked ? "Booked" : "Book"}
+                {isBooked ? "Booked" : "Book"}
               </Text>
             </Pressable>
           </View>

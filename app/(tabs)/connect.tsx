@@ -1,53 +1,244 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
+  Alert,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  Modal,
 } from "react-native";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  updateDoc,
+  doc,
+  orderBy,
+  increment,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuth } from "@/lib/auth";
 import { PostCard } from "@/components/PostCard";
-import { POSTS } from "@/data/posts";
-import type { PostTopic } from "@/data/posts";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
+import type { Post, PostTopic, Group, GroupMember } from "@/lib/database.types";
 
-type ConnectTab = "noticeboard" | "groups";
+type ConnectTabView = "noticeboard" | "groups";
 
-const GROUPS = [
-  { id: "g1", name: "Creatives Hub", members: 234, icon: "brush-outline" as const },
-  { id: "g2", name: "Foodies Harare", members: 187, icon: "restaurant-outline" as const },
-  { id: "g3", name: "Tech & Startups", members: 156, icon: "code-slash-outline" as const },
-  { id: "g4", name: "Wellness Circle", members: 98, icon: "leaf-outline" as const },
-  { id: "g5", name: "Music Scene", members: 312, icon: "musical-notes-outline" as const },
-  { id: "g6", name: "Flat Swaps", members: 76, icon: "home-outline" as const },
+const TOPIC_OPTIONS: { key: PostTopic; label: string; color: string }[] = [
+  { key: "general", label: "General", color: "#A0A0A0" },
+  { key: "collaboration", label: "Collaboration", color: "#C9A84C" },
+  { key: "meetup", label: "Meetup", color: "#FF6B6B" },
+  { key: "flat-swap", label: "Flat Swap", color: "#4ECDC4" },
+  { key: "recommendation", label: "Recommendation", color: "#7B68EE" },
+];
+
+const FILTER_OPTIONS: { key: PostTopic | null; label: string }[] = [
+  { key: null, label: "All" },
+  { key: "collaboration", label: "Collabs" },
+  { key: "meetup", label: "Meetups" },
+  { key: "flat-swap", label: "Flat Swaps" },
+  { key: "recommendation", label: "Recs" },
 ];
 
 export default function ConnectTab() {
-  const { profile } = useAuth();
-  const [activeTab, setActiveTab] = useState<ConnectTab>("noticeboard");
+  const { user, profile } = useAuth();
+  const [activeTab, setActiveTab] = useState<ConnectTabView>("noticeboard");
   const [topicFilter, setTopicFilter] = useState<PostTopic | null>(null);
+
+  // Posts state
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Groups state
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
+  const [loadingGroups, setLoadingGroups] = useState(true);
+
+  // Compose state
+  const [showCompose, setShowCompose] = useState(false);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [newPostTopic, setNewPostTopic] = useState<PostTopic>("general");
+  const [posting, setPosting] = useState(false);
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
 
-  const filteredPosts = topicFilter
-    ? POSTS.filter((p) => p.topic === topicFilter)
-    : POSTS;
+  const fetchPosts = useCallback(async () => {
+    const postsSnap = await getDocs(collection(db, "posts"));
+    const postList = postsSnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as Post)
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    setPosts(postList);
+    setLoadingPosts(false);
+  }, []);
 
-  const topics: { key: PostTopic | null; label: string }[] = [
-    { key: null, label: "All" },
-    { key: "collaboration", label: "Collabs" },
-    { key: "meetup", label: "Meetups" },
-    { key: "flat-swap", label: "Flat Swaps" },
-    { key: "recommendation", label: "Recs" },
-  ];
+  const fetchGroups = useCallback(async () => {
+    const groupsSnap = await getDocs(collection(db, "groups"));
+    const groupList = groupsSnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as Group)
+      .sort((a, b) => b.member_count - a.member_count);
+    setGroups(groupList);
+
+    // Check which groups the user has joined
+    if (user?.uid) {
+      const membershipQuery = query(
+        collection(db, "group_members"),
+        where("member_id", "==", user.uid)
+      );
+      const membershipSnap = await getDocs(membershipQuery);
+      const ids = new Set(
+        membershipSnap.docs.map((d) => d.data().group_id as string)
+      );
+      setMyGroupIds(ids);
+    }
+    setLoadingGroups(false);
+  }, [user?.uid]);
+
+  useEffect(() => {
+    fetchPosts();
+    fetchGroups();
+  }, [fetchPosts, fetchGroups]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchPosts(), fetchGroups()]);
+    setRefreshing(false);
+  }, [fetchPosts, fetchGroups]);
+
+  const handleCreatePost = async () => {
+    if (!user?.uid || !profile || !newPostContent.trim()) return;
+
+    setPosting(true);
+    try {
+      const topicOption = TOPIC_OPTIONS.find((t) => t.key === newPostTopic);
+      await addDoc(collection(db, "posts"), {
+        author_id: user.uid,
+        author_name: `${profile.first_name} ${profile.last_name}`,
+        author_initials: initials.toUpperCase(),
+        author_title: profile.title || "HQ Member",
+        author_city: profile.city || "Harare",
+        content: newPostContent.trim(),
+        topic: newPostTopic,
+        color: topicOption?.color || "#A0A0A0",
+        likes: 0,
+        comments: 0,
+        created_at: new Date().toISOString(),
+      });
+      setNewPostContent("");
+      setNewPostTopic("general");
+      setShowCompose(false);
+      await fetchPosts();
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleLikePost = async (post: Post) => {
+    try {
+      await updateDoc(doc(db, "posts", post.id), {
+        likes: increment(1),
+      });
+      // Update local state immediately
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === post.id ? { ...p, likes: p.likes + 1 } : p
+        )
+      );
+    } catch (e: any) {
+      // Silently fail — non-critical
+    }
+  };
+
+  const handleJoinGroup = async (group: Group) => {
+    if (!user?.uid) return;
+
+    if (myGroupIds.has(group.id)) {
+      // Leave group
+      const membershipQuery = query(
+        collection(db, "group_members"),
+        where("group_id", "==", group.id),
+        where("member_id", "==", user.uid)
+      );
+      const snap = await getDocs(membershipQuery);
+      for (const d of snap.docs) {
+        const { deleteDoc: delDoc } = await import("firebase/firestore");
+        await delDoc(doc(db, "group_members", d.id));
+      }
+      await updateDoc(doc(db, "groups", group.id), {
+        member_count: increment(-1),
+      });
+      setMyGroupIds((prev) => {
+        const next = new Set(prev);
+        next.delete(group.id);
+        return next;
+      });
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === group.id
+            ? { ...g, member_count: g.member_count - 1 }
+            : g
+        )
+      );
+    } else {
+      // Join group
+      await addDoc(collection(db, "group_members"), {
+        group_id: group.id,
+        member_id: user.uid,
+        joined_at: new Date().toISOString(),
+      });
+      await updateDoc(doc(db, "groups", group.id), {
+        member_count: increment(1),
+      });
+      setMyGroupIds((prev) => new Set(prev).add(group.id));
+      setGroups((prev) =>
+        prev.map((g) =>
+          g.id === group.id
+            ? { ...g, member_count: g.member_count + 1 }
+            : g
+        )
+      );
+    }
+  };
+
+  const filteredPosts = topicFilter
+    ? posts.filter((p) => p.topic === topicFilter)
+    : posts;
+
+  function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  }
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.black }}
       contentContainerStyle={{ paddingBottom: 30 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.gold}
+        />
+      }
     >
       {/* Header */}
       <View
@@ -92,7 +283,7 @@ export default function ConnectTab() {
           borderColor: colors.darkBorder,
         }}
       >
-        {(["noticeboard", "groups"] as ConnectTab[]).map((tab) => (
+        {(["noticeboard", "groups"] as ConnectTabView[]).map((tab) => (
           <Pressable
             key={tab}
             onPress={() => setActiveTab(tab)}
@@ -101,7 +292,9 @@ export default function ConnectTab() {
               paddingVertical: 10,
               borderRadius: 10,
               backgroundColor:
-                activeTab === tab ? "rgba(201, 168, 76, 0.12)" : "transparent",
+                activeTab === tab
+                  ? "rgba(201, 168, 76, 0.12)"
+                  : "transparent",
             }}
           >
             <Text
@@ -123,6 +316,7 @@ export default function ConnectTab() {
         <>
           {/* Compose prompt */}
           <Pressable
+            onPress={() => setShowCompose(true)}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -167,7 +361,7 @@ export default function ConnectTab() {
             >
               What's on your mind?
             </Text>
-            <Ionicons name="image-outline" size={20} color={colors.grey} />
+            <Ionicons name="create-outline" size={20} color={colors.grey} />
           </Pressable>
 
           {/* Topic filters */}
@@ -180,7 +374,7 @@ export default function ConnectTab() {
               marginBottom: 20,
             }}
           >
-            {topics.map((topic) => {
+            {FILTER_OPTIONS.map((topic) => {
               const isSelected = topicFilter === topic.key;
               return (
                 <Pressable
@@ -213,12 +407,26 @@ export default function ConnectTab() {
             })}
           </ScrollView>
 
-          {/* Posts feed */}
-          {filteredPosts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
+          {/* Loading state */}
+          {loadingPosts && (
+            <View style={{ paddingHorizontal: 20, gap: 14 }}>
+              <SkeletonLoader width="100%" height={180} borderRadius={16} />
+              <SkeletonLoader width="100%" height={180} borderRadius={16} />
+            </View>
+          )}
 
-          {filteredPosts.length === 0 && (
+          {/* Posts feed */}
+          {!loadingPosts &&
+            filteredPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                timeAgo={timeAgo(post.created_at)}
+                onLike={() => handleLikePost(post)}
+              />
+            ))}
+
+          {!loadingPosts && filteredPosts.length === 0 && (
             <View
               style={{
                 alignItems: "center",
@@ -239,7 +447,7 @@ export default function ConnectTab() {
                   marginTop: 16,
                 }}
               >
-                No posts in this category yet.
+                No posts yet. Be the first to share!
               </Text>
             </View>
           )}
@@ -258,79 +466,234 @@ export default function ConnectTab() {
             Join groups to connect with members who share your interests.
           </Text>
 
-          {GROUPS.map((group) => (
-            <Pressable
-              key={group.id}
+          {loadingGroups && (
+            <View style={{ gap: 12 }}>
+              <SkeletonLoader width="100%" height={80} borderRadius={14} />
+              <SkeletonLoader width="100%" height={80} borderRadius={14} />
+              <SkeletonLoader width="100%" height={80} borderRadius={14} />
+            </View>
+          )}
+
+          {!loadingGroups &&
+            groups.map((group) => {
+              const joined = myGroupIds.has(group.id);
+              return (
+                <Pressable
+                  key={group.id}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: colors.dark,
+                    borderRadius: 14,
+                    borderWidth: 1,
+                    borderColor: colors.darkBorder,
+                    padding: 16,
+                    marginBottom: 12,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
+                      backgroundColor: "rgba(201, 168, 76, 0.1)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginRight: 14,
+                    }}
+                  >
+                    <Ionicons
+                      name={group.icon as any}
+                      size={22}
+                      color={colors.gold}
+                    />
+                  </View>
+
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        color: colors.white,
+                        fontSize: 15,
+                        fontWeight: "600",
+                        marginBottom: 2,
+                      }}
+                    >
+                      {group.name}
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.grey,
+                        fontSize: 12,
+                      }}
+                    >
+                      {group.member_count} members
+                    </Text>
+                  </View>
+
+                  <Pressable
+                    onPress={() => handleJoinGroup(group)}
+                    style={{
+                      backgroundColor: joined
+                        ? "rgba(76, 175, 80, 0.15)"
+                        : "rgba(201, 168, 76, 0.12)",
+                      borderWidth: 1,
+                      borderColor: joined
+                        ? "rgba(76, 175, 80, 0.3)"
+                        : "rgba(201, 168, 76, 0.25)",
+                      borderRadius: 10,
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: joined ? colors.green : colors.gold,
+                        fontSize: 12,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {joined ? "Joined" : "Join"}
+                    </Text>
+                  </Pressable>
+                </Pressable>
+              );
+            })}
+        </View>
+      )}
+
+      {/* Compose Modal */}
+      <Modal visible={showCompose} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.7)",
+              justifyContent: "flex-end",
+            }}
+          >
+            <View
               style={{
-                flexDirection: "row",
-                alignItems: "center",
                 backgroundColor: colors.dark,
-                borderRadius: 14,
-                borderWidth: 1,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                padding: 24,
+                paddingBottom: 40,
+                borderTopWidth: 1,
                 borderColor: colors.darkBorder,
-                padding: 16,
-                marginBottom: 12,
               }}
             >
+              {/* Header */}
               <View
                 style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 14,
-                  backgroundColor: "rgba(201, 168, 76, 0.1)",
-                  justifyContent: "center",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  marginRight: 14,
+                  marginBottom: 20,
                 }}
               >
-                <Ionicons name={group.icon} size={22} color={colors.gold} />
-              </View>
-
-              <View style={{ flex: 1 }}>
+                <Pressable onPress={() => setShowCompose(false)}>
+                  <Text style={{ color: colors.grey, fontSize: 15 }}>
+                    Cancel
+                  </Text>
+                </Pressable>
                 <Text
                   style={{
                     color: colors.white,
-                    fontSize: 15,
+                    fontSize: 17,
                     fontWeight: "600",
-                    marginBottom: 2,
                   }}
                 >
-                  {group.name}
+                  New Post
                 </Text>
-                <Text
+                <Pressable
+                  onPress={handleCreatePost}
+                  disabled={posting || !newPostContent.trim()}
                   style={{
-                    color: colors.grey,
-                    fontSize: 12,
+                    backgroundColor:
+                      newPostContent.trim()
+                        ? colors.gold
+                        : "rgba(201, 168, 76, 0.3)",
+                    borderRadius: 8,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
                   }}
                 >
-                  {group.members} members
-                </Text>
+                  <Text
+                    style={{
+                      color: colors.black,
+                      fontSize: 14,
+                      fontWeight: "700",
+                    }}
+                  >
+                    {posting ? "Posting..." : "Post"}
+                  </Text>
+                </Pressable>
               </View>
 
-              <View
-                style={{
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
-                  borderWidth: 1,
-                  borderColor: "rgba(201, 168, 76, 0.25)",
-                  borderRadius: 10,
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
-                }}
+              {/* Topic selector */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8, marginBottom: 16 }}
               >
-                <Text
-                  style={{
-                    color: colors.gold,
-                    fontSize: 12,
-                    fontWeight: "700",
-                  }}
-                >
-                  Join
-                </Text>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-      )}
+                {TOPIC_OPTIONS.map((topic) => (
+                  <Pressable
+                    key={topic.key}
+                    onPress={() => setNewPostTopic(topic.key)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      borderColor:
+                        newPostTopic === topic.key
+                          ? topic.color
+                          : colors.darkBorder,
+                      backgroundColor:
+                        newPostTopic === topic.key
+                          ? `${topic.color}15`
+                          : "transparent",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color:
+                          newPostTopic === topic.key
+                            ? topic.color
+                            : colors.grey,
+                        fontSize: 12,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {topic.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+
+              {/* Text input */}
+              <TextInput
+                value={newPostContent}
+                onChangeText={setNewPostContent}
+                placeholder="Share something with the community..."
+                placeholderTextColor="rgba(160, 160, 160, 0.5)"
+                multiline
+                autoFocus
+                style={{
+                  color: colors.white,
+                  fontSize: 16,
+                  lineHeight: 24,
+                  minHeight: 120,
+                  textAlignVertical: "top",
+                }}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 }

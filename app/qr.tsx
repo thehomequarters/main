@@ -1,6 +1,8 @@
-import React from "react";
-import { View, Text, Pressable, Dimensions } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Pressable, Dimensions, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,10 +15,12 @@ export default function QRCodeScreen() {
     venueId: string;
     dealId: string;
   }>();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const screenWidth = Dimensions.get("window").width;
   const qrSize = screenWidth * 0.5;
+  const [redeemed, setRedeemed] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
 
   // Encode full redemption payload — staff scan this to validate + redeem
   const qrPayload = JSON.stringify({
@@ -28,6 +32,26 @@ export default function QRCodeScreen() {
     deal_id: dealId,
     ts: new Date().toISOString(),
   });
+
+  const handleRedeem = async () => {
+    if (!user?.uid || !venueId || !dealId || redeemed) return;
+
+    setRedeeming(true);
+    try {
+      await addDoc(collection(db, "redemptions"), {
+        member_id: user.uid,
+        venue_id: venueId,
+        deal_id: dealId,
+        redeemed_at: new Date().toISOString(),
+      });
+      setRedeemed(true);
+      Alert.alert("Redeemed", "This benefit has been recorded.");
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setRedeeming(false);
+    }
+  };
 
   return (
     <View
@@ -157,14 +181,43 @@ export default function QRCodeScreen() {
         </View>
       </View>
 
-      {/* How it works */}
-      <View style={{ marginTop: 32, gap: 8, alignItems: "center" }}>
-        <View
+      {/* Mark as redeemed button (for when staff confirms) */}
+      {venueId && dealId && (
+        <Pressable
+          onPress={handleRedeem}
+          disabled={redeemed || redeeming}
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
+            marginTop: 24,
+            backgroundColor: redeemed
+              ? "rgba(76, 175, 80, 0.15)"
+              : colors.gold,
+            borderRadius: 12,
+            paddingVertical: 14,
+            paddingHorizontal: 40,
+            opacity: redeeming ? 0.6 : 1,
           }}
+        >
+          <Text
+            style={{
+              color: redeemed ? colors.green : colors.black,
+              fontSize: 15,
+              fontWeight: "700",
+              textAlign: "center",
+            }}
+          >
+            {redeemed
+              ? "Redeemed"
+              : redeeming
+                ? "Recording..."
+                : "Mark as Redeemed"}
+          </Text>
+        </Pressable>
+      )}
+
+      {/* How it works */}
+      <View style={{ marginTop: 24, gap: 8, alignItems: "center" }}>
+        <View
+          style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
         >
           <Ionicons name="scan-outline" size={16} color={colors.grey} />
           <Text style={{ color: colors.grey, fontSize: 12 }}>
@@ -172,11 +225,7 @@ export default function QRCodeScreen() {
           </Text>
         </View>
         <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-          }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
         >
           <Ionicons
             name="checkmark-circle-outline"
@@ -184,7 +233,7 @@ export default function QRCodeScreen() {
             color={colors.grey}
           />
           <Text style={{ color: colors.grey, fontSize: 12 }}>
-            Benefit applied automatically
+            Tap "Mark as Redeemed" once staff confirms
           </Text>
         </View>
       </View>

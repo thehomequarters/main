@@ -20,14 +20,13 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
-import type { Venue, Deal } from "@/lib/database.types";
+import type { Venue, Deal, HQEvent } from "@/lib/database.types";
 import { MembershipCard } from "@/components/MembershipCard";
 import { VenueCard } from "@/components/VenueCard";
 import { EventCard } from "@/components/EventCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { seedDatabase } from "@/lib/seed";
-import { getUpcomingEvents } from "@/data/events";
 import { Ionicons } from "@expo/vector-icons";
 
 interface VenueWithDeal extends Venue {
@@ -43,8 +42,7 @@ export default function HomeTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [seeding, setSeeding] = useState(false);
-
-  const upcomingEvents = getUpcomingEvents(4);
+  const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
 
   const fetchVenues = useCallback(async () => {
     const venuesQuery = query(
@@ -72,6 +70,19 @@ export default function HomeTab() {
       (a, b) => (b.created_at || "").localeCompare(a.created_at || "")
     );
     setVenues(venueList);
+
+    // Fetch upcoming events from Firestore
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("is_active", "==", true)
+    );
+    const eventsSnap = await getDocs(eventsQuery);
+    const eventList = eventsSnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 4);
+    setUpcomingEvents(eventList);
+
     setLoading(false);
   }, []);
 
@@ -89,7 +100,7 @@ export default function HomeTab() {
     setSeeding(true);
     try {
       const count = await seedDatabase();
-      Alert.alert("Done", `Added ${count} venues with deals.`);
+      Alert.alert("Done", `Added ${count} venues with deals, events, posts & groups.`);
       await fetchVenues();
     } catch (e: any) {
       Alert.alert("Error", e.message);
@@ -361,7 +372,7 @@ export default function HomeTab() {
                 textAlign: "center",
               }}
             >
-              No venues yet. Load sample data to get started.
+              No data yet. Load sample venues, events, posts & groups.
             </Text>
             <Pressable
               onPress={handleSeed}
@@ -381,7 +392,7 @@ export default function HomeTab() {
                   fontWeight: "700",
                 }}
               >
-                {seeding ? "Loading venues..." : "Load Sample Venues"}
+                {seeding ? "Loading data..." : "Load Sample Data"}
               </Text>
             </Pressable>
           </View>

@@ -15,6 +15,68 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import type { MemberIndustry } from "@/lib/database.types";
+
+const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
+  { key: "creative", label: "Creative" },
+  { key: "tech", label: "Tech" },
+  { key: "hospitality", label: "Hospitality" },
+  { key: "music", label: "Music" },
+  { key: "business", label: "Business" },
+  { key: "wellness", label: "Wellness" },
+];
+
+function FieldLabel({ label }: { label: string }) {
+  return (
+    <Text
+      style={{
+        color: colors.grey,
+        fontSize: 12,
+        fontWeight: "500",
+        marginBottom: 6,
+        letterSpacing: 0.5,
+      }}
+    >
+      {label}
+    </Text>
+  );
+}
+
+function FieldInput({
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType,
+  multiline,
+}: {
+  value: string;
+  onChangeText: (t: string) => void;
+  placeholder?: string;
+  keyboardType?: "default" | "phone-pad" | "email-address";
+  multiline?: boolean;
+}) {
+  return (
+    <TextInput
+      value={value}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      keyboardType={keyboardType}
+      multiline={multiline}
+      style={{
+        backgroundColor: colors.dark,
+        borderRadius: 10,
+        padding: 14,
+        color: colors.white,
+        fontSize: 15,
+        borderWidth: 1,
+        borderColor: colors.darkBorder,
+        marginBottom: 16,
+        ...(multiline ? { minHeight: 80, textAlignVertical: "top" as const } : {}),
+      }}
+      placeholderTextColor={colors.grey}
+    />
+  );
+}
 
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -23,6 +85,15 @@ export default function ProfileScreen() {
   const [firstName, setFirstName] = useState(profile?.first_name ?? "");
   const [lastName, setLastName] = useState(profile?.last_name ?? "");
   const [phone, setPhone] = useState(profile?.phone ?? "");
+  const [title, setTitle] = useState(profile?.title ?? "");
+  const [bio, setBio] = useState(profile?.bio ?? "");
+  const [city, setCity] = useState(profile?.city ?? "");
+  const [industry, setIndustry] = useState<MemberIndustry | null>(
+    profile?.industry ?? null
+  );
+  const [interestsText, setInterestsText] = useState(
+    (profile?.interests ?? []).join(", ")
+  );
   const [saving, setSaving] = useState(false);
 
   const initials =
@@ -31,7 +102,12 @@ export default function ProfileScreen() {
   const hasChanges =
     firstName !== (profile?.first_name ?? "") ||
     lastName !== (profile?.last_name ?? "") ||
-    phone !== (profile?.phone ?? "");
+    phone !== (profile?.phone ?? "") ||
+    title !== (profile?.title ?? "") ||
+    bio !== (profile?.bio ?? "") ||
+    city !== (profile?.city ?? "") ||
+    industry !== (profile?.industry ?? null) ||
+    interestsText !== (profile?.interests ?? []).join(", ");
 
   const handleSave = async () => {
     if (!user?.uid) return;
@@ -42,10 +118,20 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
+      const interests = interestsText
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
       await updateDoc(doc(db, "profiles", user.uid), {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         phone: phone.trim() || null,
+        title: title.trim() || null,
+        bio: bio.trim() || null,
+        city: city.trim() || null,
+        industry: industry,
+        interests: interests,
       });
       await refreshProfile();
       Alert.alert("Saved", "Your profile has been updated.");
@@ -109,12 +195,14 @@ export default function ProfileScreen() {
               fontWeight: "600",
             }}
           >
-            Profile
+            Edit Profile
           </Text>
         </View>
 
         {/* Avatar */}
-        <View style={{ alignItems: "center", marginTop: 24, marginBottom: 36 }}>
+        <View
+          style={{ alignItems: "center", marginTop: 24, marginBottom: 36 }}
+        >
           <View
             style={{
               width: 100,
@@ -190,7 +278,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Form */}
+        {/* Personal Details */}
         <View style={{ paddingHorizontal: 20 }}>
           <Text
             style={{
@@ -203,104 +291,21 @@ export default function ProfileScreen() {
             Personal Details
           </Text>
 
-          {/* First Name */}
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 12,
-              fontWeight: "500",
-              marginBottom: 6,
-              letterSpacing: 0.5,
-            }}
-          >
-            FIRST NAME
-          </Text>
-          <TextInput
-            value={firstName}
-            onChangeText={setFirstName}
-            style={{
-              backgroundColor: colors.dark,
-              borderRadius: 10,
-              padding: 14,
-              color: colors.white,
-              fontSize: 15,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              marginBottom: 16,
-            }}
-            placeholderTextColor={colors.grey}
-          />
+          <FieldLabel label="FIRST NAME" />
+          <FieldInput value={firstName} onChangeText={setFirstName} />
 
-          {/* Last Name */}
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 12,
-              fontWeight: "500",
-              marginBottom: 6,
-              letterSpacing: 0.5,
-            }}
-          >
-            LAST NAME
-          </Text>
-          <TextInput
-            value={lastName}
-            onChangeText={setLastName}
-            style={{
-              backgroundColor: colors.dark,
-              borderRadius: 10,
-              padding: 14,
-              color: colors.white,
-              fontSize: 15,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              marginBottom: 16,
-            }}
-            placeholderTextColor={colors.grey}
-          />
+          <FieldLabel label="LAST NAME" />
+          <FieldInput value={lastName} onChangeText={setLastName} />
 
-          {/* Phone */}
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 12,
-              fontWeight: "500",
-              marginBottom: 6,
-              letterSpacing: 0.5,
-            }}
-          >
-            PHONE
-          </Text>
-          <TextInput
+          <FieldLabel label="PHONE" />
+          <FieldInput
             value={phone}
             onChangeText={setPhone}
-            keyboardType="phone-pad"
             placeholder="+263 77 000 0000"
-            style={{
-              backgroundColor: colors.dark,
-              borderRadius: 10,
-              padding: 14,
-              color: colors.white,
-              fontSize: 15,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              marginBottom: 16,
-            }}
-            placeholderTextColor={colors.grey}
+            keyboardType="phone-pad"
           />
 
-          {/* Email (read-only) */}
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 12,
-              fontWeight: "500",
-              marginBottom: 6,
-              letterSpacing: 0.5,
-            }}
-          >
-            EMAIL
-          </Text>
+          <FieldLabel label="EMAIL" />
           <View
             style={{
               backgroundColor: colors.dark,
@@ -325,6 +330,104 @@ export default function ProfileScreen() {
           >
             Email cannot be changed.
           </Text>
+
+          {/* Social / Discovery Details */}
+          <View
+            style={{
+              height: 1,
+              backgroundColor: colors.darkBorder,
+              marginBottom: 28,
+            }}
+          />
+          <Text
+            style={{
+              color: colors.white,
+              fontSize: 16,
+              fontWeight: "600",
+              marginBottom: 6,
+            }}
+          >
+            Social Profile
+          </Text>
+          <Text
+            style={{
+              color: colors.grey,
+              fontSize: 12,
+              marginBottom: 20,
+            }}
+          >
+            Visible to other members on the Discover tab.
+          </Text>
+
+          <FieldLabel label="TITLE / ROLE" />
+          <FieldInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="e.g. Photographer & Visual Artist"
+          />
+
+          <FieldLabel label="BIO" />
+          <FieldInput
+            value={bio}
+            onChangeText={setBio}
+            placeholder="Tell members about yourself..."
+            multiline
+          />
+
+          <FieldLabel label="CITY" />
+          <FieldInput
+            value={city}
+            onChangeText={setCity}
+            placeholder="e.g. Harare"
+          />
+
+          <FieldLabel label="INDUSTRY" />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, marginBottom: 16 }}
+          >
+            {INDUSTRIES.map((ind) => {
+              const isSelected = industry === ind.key;
+              return (
+                <Pressable
+                  key={ind.key}
+                  onPress={() =>
+                    setIndustry(isSelected ? null : ind.key)
+                  }
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 9,
+                    borderRadius: 20,
+                    borderWidth: 1,
+                    borderColor: isSelected
+                      ? colors.gold
+                      : "rgba(160, 160, 160, 0.25)",
+                    backgroundColor: isSelected
+                      ? "rgba(201, 168, 76, 0.12)"
+                      : "transparent",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: isSelected ? colors.gold : colors.grey,
+                      fontSize: 13,
+                      fontWeight: "600",
+                    }}
+                  >
+                    {ind.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+
+          <FieldLabel label="INTERESTS" />
+          <FieldInput
+            value={interestsText}
+            onChangeText={setInterestsText}
+            placeholder="Photography, Music, Startups (comma separated)"
+          />
 
           {/* Save Button */}
           {hasChanges && (
@@ -364,9 +467,7 @@ export default function ProfileScreen() {
           {/* Sign Out */}
           <Pressable
             onPress={handleSignOut}
-            style={{
-              paddingVertical: 16,
-            }}
+            style={{ paddingVertical: 16 }}
           >
             <Text
               style={{

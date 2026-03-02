@@ -2,15 +2,32 @@ import React from "react";
 import { View, Text, Pressable } from "react-native";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import type { Post } from "@/data/posts";
-import { topicLabels, topicColors } from "@/data/posts";
+import type { Post, PostTopic } from "@/lib/database.types";
+
+const topicLabels: Record<PostTopic, string> = {
+  collaboration: "Collaboration",
+  "flat-swap": "Flat Swap",
+  meetup: "Meetup",
+  general: "General",
+  recommendation: "Recommendation",
+};
+
+const topicColors: Record<PostTopic, string> = {
+  collaboration: "#C9A84C",
+  "flat-swap": "#4ECDC4",
+  meetup: "#FF6B6B",
+  general: "#A0A0A0",
+  recommendation: "#7B68EE",
+};
 
 interface PostCardProps {
   post: Post;
+  timeAgo?: string;
+  onLike?: () => void;
   onPress?: () => void;
 }
 
-export function PostCard({ post, onPress }: PostCardProps) {
+export function PostCard({ post, timeAgo, onLike, onPress }: PostCardProps) {
   const topicColor = topicColors[post.topic];
 
   return (
@@ -55,7 +72,7 @@ export function PostCard({ post, onPress }: PostCardProps) {
               fontWeight: "700",
             }}
           >
-            {post.author.initials}
+            {post.author_initials}
           </Text>
         </View>
 
@@ -67,7 +84,7 @@ export function PostCard({ post, onPress }: PostCardProps) {
               fontWeight: "600",
             }}
           >
-            {post.author.name}
+            {post.author_name}
           </Text>
           <Text
             style={{
@@ -76,7 +93,7 @@ export function PostCard({ post, onPress }: PostCardProps) {
             }}
             numberOfLines={1}
           >
-            {post.author.title} · {post.author.city}
+            {post.author_title} · {post.author_city}
           </Text>
         </View>
 
@@ -87,7 +104,7 @@ export function PostCard({ post, onPress }: PostCardProps) {
             opacity: 0.7,
           }}
         >
-          {post.created_at}
+          {timeAgo ?? ""}
         </Text>
       </View>
 
@@ -138,12 +155,15 @@ export function PostCard({ post, onPress }: PostCardProps) {
           paddingTop: 12,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <Pressable
+          onPress={onLike}
+          style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        >
           <Ionicons name="heart-outline" size={18} color={colors.grey} />
           <Text style={{ color: colors.grey, fontSize: 12 }}>
             {post.likes}
           </Text>
-        </View>
+        </Pressable>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
           <Ionicons
             name="chatbubble-outline"
@@ -155,11 +175,7 @@ export function PostCard({ post, onPress }: PostCardProps) {
           </Text>
         </View>
         <View style={{ flex: 1 }} />
-        <Ionicons
-          name="share-outline"
-          size={18}
-          color={colors.grey}
-        />
+        <Ionicons name="share-outline" size={18} color={colors.grey} />
       </View>
     </Pressable>
   );

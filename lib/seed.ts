@@ -1,5 +1,6 @@
 import { collection, doc, setDoc } from "firebase/firestore";
 import { db } from "./firebase";
+import type { EventCategory, PostTopic } from "./database.types";
 
 const VENUES = [
   {
@@ -283,6 +284,323 @@ const DEALS: Record<
   ],
 };
 
+const EVENTS: Array<{
+  title: string;
+  description: string;
+  venue: string;
+  date: string;
+  time: string;
+  end_time: string;
+  image_url: string;
+  category: EventCategory;
+  capacity: number;
+}> = [
+  {
+    title: "Sundowner Sessions",
+    description:
+      "Weekly DJ set on the rooftop with Harare's finest selectors spinning Afrobeats, amapiano, and deep house as the sun goes down. Complimentary welcome drink for HQ members.",
+    venue: "Pariah State",
+    date: "2026-03-06",
+    time: "17:00",
+    end_time: "22:00",
+    image_url:
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80",
+    category: "music",
+    capacity: 80,
+  },
+  {
+    title: "Farm-to-Table Dinner",
+    description:
+      "An intimate five-course dinner showcasing the best seasonal produce from Zimbabwean farms. Chef Tari presents a menu that celebrates local flavours with modern technique.",
+    venue: "Amanzi Restaurant",
+    date: "2026-03-07",
+    time: "19:00",
+    end_time: "22:30",
+    image_url:
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
+    category: "dining",
+    capacity: 30,
+  },
+  {
+    title: "Morning Yoga in the Gardens",
+    description:
+      "Start your Saturday with a rejuvenating vinyasa flow session in the msasa woodland gardens. Mats provided. All levels welcome. Herbal tea served afterwards.",
+    venue: "Maarera Wellness",
+    date: "2026-03-07",
+    time: "07:00",
+    end_time: "08:30",
+    image_url:
+      "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80",
+    category: "wellness",
+    capacity: 25,
+  },
+  {
+    title: "Creatives Connect Mixer",
+    description:
+      "Monthly networking mixer for HQ members in creative industries. Meet photographers, designers, musicians, and entrepreneurs over cocktails and canapés.",
+    venue: "Shoko Festival Lounge",
+    date: "2026-03-08",
+    time: "18:00",
+    end_time: "21:00",
+    image_url:
+      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80",
+    category: "social",
+    capacity: 60,
+  },
+  {
+    title: "Wine & Canvas Night",
+    description:
+      "Guided painting session paired with South African wines. No experience needed — just bring your creativity. Take home your masterpiece at the end of the evening.",
+    venue: "Pariah State",
+    date: "2026-03-10",
+    time: "18:30",
+    end_time: "21:00",
+    image_url:
+      "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80",
+    category: "arts",
+    capacity: 25,
+  },
+  {
+    title: "Saturday Jazz Brunch",
+    description:
+      "Live jazz trio accompanies a lavish brunch spread featuring Zimbabwean and continental dishes. Free-flowing mimosas for HQ members.",
+    venue: "Amanzi Restaurant",
+    date: "2026-03-14",
+    time: "10:00",
+    end_time: "14:00",
+    image_url:
+      "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80",
+    category: "dining",
+    capacity: 50,
+  },
+  {
+    title: "Spoken Word Evening",
+    description:
+      "An evening of powerful spoken word performances from Zimbabwe's most exciting poets. Open mic slots available — sign up at the door.",
+    venue: "Shoko Festival Lounge",
+    date: "2026-03-14",
+    time: "19:00",
+    end_time: "22:00",
+    image_url:
+      "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&q=80",
+    category: "arts",
+    capacity: 70,
+  },
+  {
+    title: "HQ Members' Braai",
+    description:
+      "Our signature social braai bringing HQ members together for an afternoon of good food, good music, and great company. Families welcome.",
+    venue: "The Sunday Market",
+    date: "2026-03-15",
+    time: "12:00",
+    end_time: "17:00",
+    image_url:
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
+    category: "social",
+    capacity: 100,
+  },
+  {
+    title: "Meditation & Sound Bath",
+    description:
+      "A deeply relaxing guided meditation followed by a crystal singing bowl sound bath. Release the stress of the week and find your centre.",
+    venue: "Maarera Wellness",
+    date: "2026-03-18",
+    time: "18:00",
+    end_time: "19:30",
+    image_url:
+      "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80",
+    category: "wellness",
+    capacity: 20,
+  },
+  {
+    title: "Amapiano Night",
+    description:
+      "Harare's biggest amapiano night returns. Two rooms, four DJs, one unforgettable vibe. Dress code: smart casual. No cover for HQ members.",
+    venue: "Shoko Festival Lounge",
+    date: "2026-03-21",
+    time: "21:00",
+    end_time: "03:00",
+    image_url:
+      "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80",
+    category: "music",
+    capacity: 120,
+  },
+  {
+    title: "Coffee Cupping Workshop",
+    description:
+      "Learn to taste and evaluate specialty Zimbabwean coffee with our head roaster. Discover the difference between Chipinge and Honde Valley beans.",
+    venue: "Kaldora's Coffee",
+    date: "2026-03-22",
+    time: "09:00",
+    end_time: "11:00",
+    image_url:
+      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
+    category: "dining",
+    capacity: 15,
+  },
+  {
+    title: "Photography Walk: Old Harare",
+    description:
+      "Guided photography walk through Harare's historic centre. Capture the architecture, street life, and hidden gems of the city with fellow creatives.",
+    venue: "The Boma",
+    date: "2026-03-28",
+    time: "08:00",
+    end_time: "11:00",
+    image_url:
+      "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80",
+    category: "arts",
+    capacity: 20,
+  },
+];
+
+const SEED_POSTS: Array<{
+  author_name: string;
+  author_initials: string;
+  author_title: string;
+  author_city: string;
+  content: string;
+  topic: PostTopic;
+  color: string;
+  likes: number;
+  comments: number;
+}> = [
+  {
+    author_name: "Tanya Moyo",
+    author_initials: "TM",
+    author_title: "Photographer & Visual Artist",
+    author_city: "Harare",
+    content:
+      "Looking for a creative collaborator for a photography series documenting Harare's music scene. Need someone with video editing skills — happy to share credits and revenue. DM me if interested!",
+    topic: "collaboration",
+    color: "#C9A84C",
+    likes: 24,
+    comments: 8,
+  },
+  {
+    author_name: "James Okonkwo",
+    author_initials: "JO",
+    author_title: "Architect",
+    author_city: "London",
+    content:
+      "London ↔ Harare flat swap anyone? I have a 1-bed in Shoreditch available 15-30 March. Looking for somewhere in Borrowdale or Avondale. Professional, non-smoker, tidy.",
+    topic: "flat-swap",
+    color: "#4ECDC4",
+    likes: 31,
+    comments: 12,
+  },
+  {
+    author_name: "Rudo Chikanza",
+    author_initials: "RC",
+    author_title: "Marketing Director",
+    author_city: "Harare",
+    content:
+      "Heading to Pariah State this Friday for the Sundowner Sessions. Who's coming? Let's get a big HQ table going — the more the merrier. Drop a comment if you're in!",
+    topic: "meetup",
+    color: "#FF6B6B",
+    likes: 45,
+    comments: 19,
+  },
+  {
+    author_name: "Kuda Masiiwa",
+    author_initials: "KM",
+    author_title: "Software Developer",
+    author_city: "Harare",
+    content:
+      "Just moved back to Harare after 5 years in Cape Town. Excited to reconnect with the creative scene here. Looking to meet other tech and design people — coffee this week?",
+    topic: "general",
+    color: "#A0A0A0",
+    likes: 38,
+    comments: 15,
+  },
+  {
+    author_name: "Nyasha Tafirenyika",
+    author_initials: "NT",
+    author_title: "Brand Strategist",
+    author_city: "Harare",
+    content:
+      "Running a free workshop on personal branding for creatives next week at Shoko. Limited to 20 people. HQ members get priority. Who's interested?",
+    topic: "collaboration",
+    color: "#C9A84C",
+    likes: 52,
+    comments: 23,
+  },
+  {
+    author_name: "Chenai Mutasa",
+    author_initials: "CM",
+    author_title: "Interior Designer",
+    author_city: "Harare",
+    content:
+      "Best coffee spots in Borrowdale? Just moved to the area and need my morning fix sorted. Bonus points if they have good wifi for working!",
+    topic: "recommendation",
+    color: "#7B68EE",
+    likes: 16,
+    comments: 22,
+  },
+  {
+    author_name: "Tapiwa Murisa",
+    author_initials: "TM",
+    author_title: "Graphic Designer",
+    author_city: "Harare",
+    content:
+      "Need a graphic designer for an event poster? I'm offering discounted rates for fellow HQ members this month. Portfolio in my profile — check it out.",
+    topic: "collaboration",
+    color: "#C9A84C",
+    likes: 19,
+    comments: 7,
+  },
+  {
+    author_name: "Farai Nhamo",
+    author_initials: "FN",
+    author_title: "Events Producer",
+    author_city: "Harare",
+    content:
+      "Anyone else heading to The Sunday Market this weekend? Planning to check out the new food truck section. Let's meet at the VIP lounge around 11am.",
+    topic: "meetup",
+    color: "#FF6B6B",
+    likes: 27,
+    comments: 11,
+  },
+];
+
+const GROUPS = [
+  {
+    name: "Creatives Hub",
+    description: "A space for photographers, designers, artists, and filmmakers to connect and collaborate.",
+    icon: "brush-outline",
+    member_count: 234,
+  },
+  {
+    name: "Foodies Harare",
+    description: "Discover the best food spots, share recipes, and organize dinners together.",
+    icon: "restaurant-outline",
+    member_count: 187,
+  },
+  {
+    name: "Tech & Startups",
+    description: "For developers, founders, and tech enthusiasts building the future.",
+    icon: "code-slash-outline",
+    member_count: 156,
+  },
+  {
+    name: "Wellness Circle",
+    description: "Yoga, meditation, fitness, and mental health conversations.",
+    icon: "leaf-outline",
+    member_count: 98,
+  },
+  {
+    name: "Music Scene",
+    description: "From amapiano to jazz — connect with musicians, DJs, and music lovers.",
+    icon: "musical-notes-outline",
+    member_count: 312,
+  },
+  {
+    name: "Flat Swaps",
+    description: "Coordinate home swaps with members in cities around the world.",
+    icon: "home-outline",
+    member_count: 76,
+  },
+];
+
 export async function seedDatabase() {
   const venueIds: Record<string, string> = {};
 
@@ -312,6 +630,35 @@ export async function seedDatabase() {
         created_at: new Date().toISOString(),
       });
     }
+  }
+
+  // Create events
+  for (const event of EVENTS) {
+    const eventRef = doc(collection(db, "events"));
+    await setDoc(eventRef, {
+      ...event,
+      is_active: true,
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  // Create posts (with placeholder author_id — these are community seed posts)
+  for (const post of SEED_POSTS) {
+    const postRef = doc(collection(db, "posts"));
+    await setDoc(postRef, {
+      ...post,
+      author_id: "seed",
+      created_at: new Date().toISOString(),
+    });
+  }
+
+  // Create groups
+  for (const group of GROUPS) {
+    const groupRef = doc(collection(db, "groups"));
+    await setDoc(groupRef, {
+      ...group,
+      created_at: new Date().toISOString(),
+    });
   }
 
   return Object.keys(venueIds).length;

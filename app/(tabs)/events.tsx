@@ -1,61 +1,212 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
-  FlatList,
   Alert,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCard } from "@/components/EventCard";
-import { SectionHeader } from "@/components/SectionHeader";
-import {
-  EVENTS,
-  getThisWeekEvents,
-  getThisMonthEvents,
-  eventCategories,
-} from "@/data/events";
-import type { EventCategory, HQEvent } from "@/data/events";
+import { SkeletonLoader } from "@/components/SkeletonLoader";
+import type { HQEvent, Booking, EventCategory } from "@/lib/database.types";
+
+const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
+  { key: null, label: "All" },
+  { key: "social", label: "Social" },
+  { key: "dining", label: "Dining" },
+  { key: "wellness", label: "Wellness" },
+  { key: "music", label: "Music" },
+  { key: "arts", label: "Arts" },
+];
 
 export default function EventsTab() {
+  const { user } = useAuth();
+  const [events, setEvents] = useState<HQEvent[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookingCounts, setBookingCounts] = useState<Record<string, number>>(
+    {}
+  );
   const [selectedCategory, setSelectedCategory] =
     useState<EventCategory | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const thisWeek = getThisWeekEvents();
-  const thisMonth = getThisMonthEvents();
+  const fetchEvents = useCallback(async () => {
+    // Fetch all active events
+    const eventsQuery = query(
+      collection(db, "events"),
+      where("is_active", "==", true)
+    );
+    const eventsSnap = await getDocs(eventsQuery);
+    const eventList = eventsSnap.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    setEvents(eventList);
 
-  const filterEvents = (events: HQEvent[]) => {
-    if (!selectedCategory) return events;
-    return events.filter((e) => e.category === selectedCategory);
-  };
+    // Fetch current user's bookings
+    if (user?.uid) {
+      const bookingsQuery = query(
+        collection(db, "bookings"),
+        where("member_id", "==", user.uid)
+      );
+      const bookingsSnap = await getDocs(bookingsQuery);
+      setBookings(
+        bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking)
+      );
+    }
 
-  const filteredThisWeek = filterEvents(thisWeek);
-  const filteredThisMonth = filterEvents(thisMonth);
+    // Fetch booking counts per event
+    const allBookingsSnap = await getDocs(collection(db, "bookings"));
+    const counts: Record<string, number> = {};
+    allBookingsSnap.docs.forEach((d) => {
+      const eventId = d.data().event_id;
+      counts[eventId] = (counts[eventId] || 0) + 1;
+    });
+    setBookingCounts(counts);
 
-  const handleBook = (event: HQEvent) => {
-    if (event.is_booked) {
-      Alert.alert("Already Booked", "You've already booked this event.");
+    setLoading(false);
+  }, [user?.uid]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchEvents();
+    setRefreshing(false);
+  }, [fetchEvents]);
+
+  const isEventBooked = (eventId: string) =>
+    bookings.some((b) => b.event_id === eventId);
+
+  const handleBook = async (event: HQEvent) => {
+    if (!user?.uid) return;
+
+    if (isEventBooked(event.id)) {
+      // Cancel booking
+      Alert.alert(
+        "Cancel Booking",
+        `Remove your booking for "${event.title}"?`,
+        [
+          { text: "Keep", style: "cancel" },
+          {
+            text: "Cancel Booking",
+            style: "destructive",
+            onPress: async () => {
+              const booking = bookings.find(
+                (b) => b.event_id === event.id
+              );
+              if (booking) {
+                await deleteDoc(doc(db, "bookings", booking.id));
+                await fetchEvents();
+              }
+            },
+          },
+        ]
+      );
       return;
     }
+
+    // Check capacity
+    const currentCount = bookingCounts[event.id] || 0;
+    if (currentCount >= event.capacity) {
+      Alert.alert("Full", "This event has reached capacity.");
+      return;
+    }
+
     Alert.alert(
       "Book Event",
-      `Would you like to book "${event.title}" at ${event.venue}?`,
+      `Book your spot at "${event.title}" at ${event.venue}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Book",
-          onPress: () => Alert.alert("Confirmed", "You're on the list!"),
+          onPress: async () => {
+            await addDoc(collection(db, "bookings"), {
+              member_id: user.uid,
+              event_id: event.id,
+              created_at: new Date().toISOString(),
+            });
+            await fetchEvents();
+            Alert.alert("Confirmed", "You're on the list!");
+          },
         },
       ]
     );
   };
 
+  // Split events into this week vs later this month
+  const now = new Date();
+  const endOfWeek = new Date(now);
+  endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
+
+  const filteredEvents = selectedCategory
+    ? events.filter((e) => e.category === selectedCategory)
+    : events;
+
+  const thisWeek = filteredEvents.filter(
+    (e) => new Date(e.date) <= endOfWeek
+  );
+  const thisMonth = filteredEvents.filter(
+    (e) => new Date(e.date) > endOfWeek
+  );
+
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.black,
+          paddingTop: 80,
+          paddingHorizontal: 20,
+        }}
+      >
+        <SkeletonLoader width="40%" height={28} style={{ marginBottom: 8 }} />
+        <SkeletonLoader width="60%" height={14} style={{ marginBottom: 28 }} />
+        <SkeletonLoader
+          width="100%"
+          height={280}
+          borderRadius={16}
+          style={{ marginBottom: 20 }}
+        />
+        <SkeletonLoader
+          width="100%"
+          height={280}
+          borderRadius={16}
+          style={{ marginBottom: 20 }}
+        />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.black }}
       contentContainerStyle={{ paddingBottom: 30 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.gold}
+        />
+      }
     >
       {/* Header */}
       <View
@@ -96,7 +247,7 @@ export default function EventsTab() {
           marginBottom: 28,
         }}
       >
-        {eventCategories.map((cat) => {
+        {EVENT_CATEGORIES.map((cat) => {
           const isSelected = selectedCategory === cat.key;
           return (
             <Pressable
@@ -130,7 +281,7 @@ export default function EventsTab() {
       </ScrollView>
 
       {/* This Week */}
-      {filteredThisWeek.length > 0 && (
+      {thisWeek.length > 0 && (
         <View style={{ marginBottom: 32 }}>
           <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
             <View
@@ -162,11 +313,13 @@ export default function EventsTab() {
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
-            {filteredThisWeek.map((event) => (
+            {thisWeek.map((event) => (
               <EventCard
                 key={event.id}
                 event={event}
                 variant="full"
+                attendees={bookingCounts[event.id] || 0}
+                isBooked={isEventBooked(event.id)}
                 onBook={() => handleBook(event)}
               />
             ))}
@@ -175,7 +328,7 @@ export default function EventsTab() {
       )}
 
       {/* This Month */}
-      {filteredThisMonth.length > 0 && (
+      {thisMonth.length > 0 && (
         <View style={{ marginBottom: 16 }}>
           <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
             <View
@@ -207,11 +360,13 @@ export default function EventsTab() {
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
-            {filteredThisMonth.map((event) => (
+            {thisMonth.map((event) => (
               <EventCard
                 key={event.id}
                 event={event}
                 variant="full"
+                attendees={bookingCounts[event.id] || 0}
+                isBooked={isEventBooked(event.id)}
                 onBook={() => handleBook(event)}
               />
             ))}
@@ -220,9 +375,19 @@ export default function EventsTab() {
       )}
 
       {/* Empty state */}
-      {filteredThisWeek.length === 0 && filteredThisMonth.length === 0 && (
-        <View style={{ alignItems: "center", marginTop: 60, paddingHorizontal: 40 }}>
-          <Ionicons name="calendar-outline" size={48} color={colors.darkBorder} />
+      {filteredEvents.length === 0 && (
+        <View
+          style={{
+            alignItems: "center",
+            marginTop: 60,
+            paddingHorizontal: 40,
+          }}
+        >
+          <Ionicons
+            name="calendar-outline"
+            size={48}
+            color={colors.darkBorder}
+          />
           <Text
             style={{
               color: colors.grey,

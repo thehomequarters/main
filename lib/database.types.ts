@@ -1,5 +1,20 @@
 export type MembershipStatus = "pending" | "active" | "rejected";
 export type VenueCategory = "restaurant" | "bar" | "cafe" | "experience";
+export type EventCategory = "social" | "dining" | "wellness" | "music" | "arts";
+export type PostTopic =
+  | "collaboration"
+  | "flat-swap"
+  | "meetup"
+  | "general"
+  | "recommendation";
+export type ConnectionStatus = "pending" | "accepted" | "rejected";
+export type MemberIndustry =
+  | "creative"
+  | "tech"
+  | "hospitality"
+  | "music"
+  | "business"
+  | "wellness";
 
 export interface Profile {
   id: string;
@@ -11,6 +26,12 @@ export interface Profile {
   member_code: string;
   membership_status: MembershipStatus;
   created_at: string;
+  // Social fields (set via profile editing)
+  title: string | null;
+  bio: string | null;
+  city: string | null;
+  industry: MemberIndustry | null;
+  interests: string[];
 }
 
 export interface Venue {
@@ -40,6 +61,84 @@ export interface Deal {
   created_at: string;
 }
 
+export interface HQEvent {
+  id: string;
+  title: string;
+  description: string;
+  venue: string;
+  date: string;
+  time: string;
+  end_time: string;
+  image_url: string;
+  category: EventCategory;
+  capacity: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface Booking {
+  id: string;
+  member_id: string;
+  event_id: string;
+  created_at: string;
+}
+
+export interface Post {
+  id: string;
+  author_id: string;
+  author_name: string;
+  author_initials: string;
+  author_title: string;
+  author_city: string;
+  content: string;
+  topic: PostTopic;
+  color: string;
+  likes: number;
+  comments: number;
+  created_at: string;
+}
+
+export interface PostLike {
+  id: string;
+  post_id: string;
+  member_id: string;
+  created_at: string;
+}
+
+export interface Comment {
+  id: string;
+  post_id: string;
+  author_id: string;
+  author_name: string;
+  author_initials: string;
+  content: string;
+  created_at: string;
+}
+
+export interface Connection {
+  id: string;
+  from_id: string;
+  to_id: string;
+  status: ConnectionStatus;
+  created_at: string;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  member_count: number;
+  created_at: string;
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  member_id: string;
+  joined_at: string;
+}
+
 export interface Redemption {
   id: string;
   member_id: string;
@@ -47,4 +146,3 @@ export interface Redemption {
   deal_id: string;
   redeemed_at: string;
 }
-
