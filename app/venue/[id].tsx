@@ -6,6 +6,8 @@ import {
   Image,
   Pressable,
   Dimensions,
+  Linking,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -30,6 +32,52 @@ const PLACEHOLDER_IMAGES: Record<string, string> = {
   experience:
     "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
 };
+
+function ActionButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => ({
+        alignItems: "center",
+        gap: 6,
+        opacity: pressed ? 0.7 : 1,
+        flex: 1,
+      })}
+    >
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: "rgba(201, 168, 76, 0.12)",
+          borderWidth: 1,
+          borderColor: "rgba(201, 168, 76, 0.25)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Ionicons name={icon} size={20} color={colors.gold} />
+      </View>
+      <Text
+        style={{
+          color: colors.grey,
+          fontSize: 11,
+          fontWeight: "500",
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -62,6 +110,26 @@ export default function VenueDetailScreen() {
   }, [id]);
 
   const screenWidth = Dimensions.get("window").width;
+
+  const openMap = () => {
+    if (!venue) return;
+    const label = encodeURIComponent(venue.name);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${label}@${venue.latitude},${venue.longitude}`,
+      default: `geo:${venue.latitude},${venue.longitude}?q=${venue.latitude},${venue.longitude}(${label})`,
+    });
+    Linking.openURL(url);
+  };
+
+  const callVenue = () => {
+    if (!venue?.phone) return;
+    Linking.openURL(`tel:${venue.phone}`);
+  };
+
+  const openMenu = () => {
+    if (!venue?.menu_url) return;
+    Linking.openURL(venue.menu_url);
+  };
 
   if (loading) {
     return (
@@ -114,7 +182,7 @@ export default function VenueDetailScreen() {
             style={{ width: "100%", height: "100%" }}
             resizeMode="cover"
           />
-          {/* Gradient */}
+          {/* Gradient overlay */}
           <View
             style={{
               position: "absolute",
@@ -171,21 +239,27 @@ export default function VenueDetailScreen() {
             {venue.name}
           </Text>
 
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 14,
-              marginBottom: 4,
-            }}
+          <Pressable
+            onPress={openMap}
+            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 }}
           >
-            {venue.address}
-          </Text>
+            <Ionicons name="location-outline" size={14} color={colors.grey} />
+            <Text
+              style={{
+                color: colors.grey,
+                fontSize: 14,
+              }}
+            >
+              {venue.address}
+            </Text>
+          </Pressable>
 
           <Text
             style={{
               color: colors.grey,
               fontSize: 14,
               marginBottom: 20,
+              paddingLeft: 18,
             }}
           >
             {venue.city}, {venue.country}
@@ -197,12 +271,48 @@ export default function VenueDetailScreen() {
                 color: colors.grey,
                 fontSize: 14,
                 lineHeight: 22,
-                marginBottom: 20,
+                marginBottom: 24,
               }}
             >
               {venue.description}
             </Text>
           ) : null}
+
+          {/* Action Buttons */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-around",
+              backgroundColor: colors.dark,
+              borderRadius: 14,
+              paddingVertical: 18,
+              borderWidth: 1,
+              borderColor: colors.darkBorder,
+              marginBottom: 24,
+            }}
+          >
+            <ActionButton icon="map-outline" label="Map" onPress={openMap} />
+            <ActionButton
+              icon="call-outline"
+              label="Call"
+              onPress={callVenue}
+            />
+            {venue.menu_url ? (
+              <ActionButton
+                icon="restaurant-outline"
+                label="Menu"
+                onPress={openMenu}
+              />
+            ) : (
+              <ActionButton
+                icon="share-outline"
+                label="Share"
+                onPress={() => {
+                  /* future */
+                }}
+              />
+            )}
+          </View>
 
           {/* Divider */}
           <View
@@ -318,7 +428,7 @@ export default function VenueDetailScreen() {
                 letterSpacing: 0.5,
               }}
             >
-              Show QR Code
+              Redeem Benefit
             </Text>
           </Pressable>
         </View>

@@ -1,6 +1,8 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 interface MembershipCardProps {
   firstName: string;
@@ -9,103 +11,167 @@ interface MembershipCardProps {
   status: string;
 }
 
+// Standard credit card aspect ratio: 85.6mm × 53.98mm ≈ 1.586:1
+const CARD_ASPECT_RATIO = 1.586;
+
 export function MembershipCard({
   firstName,
   lastName,
   memberCode,
   status,
 }: MembershipCardProps) {
+  const router = useRouter();
+
   return (
-    <View
-      style={{
+    <Pressable
+      onPress={() => router.push("/qr")}
+      style={({ pressed }) => ({
+        aspectRatio: CARD_ASPECT_RATIO,
         backgroundColor: colors.dark,
-        borderRadius: 16,
-        padding: 28,
+        borderRadius: 14,
+        padding: 24,
         borderWidth: 1,
         borderColor: colors.darkBorder,
         shadowColor: colors.gold,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
-      }}
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 6,
+        justifyContent: "space-between",
+        overflow: "hidden",
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      })}
     >
-      {/* HQ Logo */}
+      {/* Top row: HQ logo + NFC icon */}
       <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          marginBottom: 32,
         }}
       >
         <Text
           style={{
             color: colors.gold,
-            fontSize: 28,
+            fontSize: 30,
             fontWeight: "700",
             letterSpacing: 4,
           }}
         >
           HQ
         </Text>
+
+        {/* NFC contactless icon (WiFi rotated 90°) */}
         <View
           style={{
-            backgroundColor: status === "active" ? "rgba(76, 175, 80, 0.15)" : "rgba(201, 168, 76, 0.15)",
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 4,
+            transform: [{ rotate: "90deg" }],
+            opacity: 0.6,
+          }}
+        >
+          <Ionicons name="wifi" size={28} color={colors.gold} />
+        </View>
+      </View>
+
+      {/* Chip */}
+      <View
+        style={{
+          width: 42,
+          height: 32,
+          borderRadius: 6,
+          backgroundColor: "rgba(201, 168, 76, 0.2)",
+          borderWidth: 1,
+          borderColor: "rgba(201, 168, 76, 0.35)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {/* Chip lines */}
+        <View
+          style={{
+            width: 28,
+            height: 0,
+            borderTopWidth: 1,
+            borderColor: "rgba(201, 168, 76, 0.4)",
+            marginBottom: 4,
+          }}
+        />
+        <View
+          style={{
+            width: 28,
+            height: 0,
+            borderTopWidth: 1,
+            borderColor: "rgba(201, 168, 76, 0.4)",
+            marginBottom: 4,
+          }}
+        />
+        <View
+          style={{
+            width: 28,
+            height: 0,
+            borderTopWidth: 1,
+            borderColor: "rgba(201, 168, 76, 0.4)",
+          }}
+        />
+      </View>
+
+      {/* Bottom section: Name, code, status */}
+      <View>
+        <Text
+          style={{
+            color: colors.white,
+            fontSize: 18,
+            fontWeight: "600",
+            letterSpacing: 1.5,
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          {firstName} {lastName}
+        </Text>
+
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <Text
             style={{
-              color: status === "active" ? colors.green : colors.gold,
-              fontSize: 10,
-              fontWeight: "600",
-              letterSpacing: 2,
-              textTransform: "uppercase",
+              color: colors.grey,
+              fontSize: 12,
+              letterSpacing: 3,
+              fontWeight: "400",
             }}
           >
-            {status}
+            {memberCode}
           </Text>
+
+          <View
+            style={{
+              backgroundColor:
+                status === "active"
+                  ? "rgba(76, 175, 80, 0.15)"
+                  : "rgba(201, 168, 76, 0.15)",
+              paddingHorizontal: 10,
+              paddingVertical: 3,
+              borderRadius: 4,
+            }}
+          >
+            <Text
+              style={{
+                color: status === "active" ? colors.green : colors.gold,
+                fontSize: 9,
+                fontWeight: "700",
+                letterSpacing: 2,
+                textTransform: "uppercase",
+              }}
+            >
+              {status}
+            </Text>
+          </View>
         </View>
       </View>
-
-      {/* Member Name */}
-      <Text
-        style={{
-          color: colors.white,
-          fontSize: 20,
-          fontWeight: "600",
-          letterSpacing: 1,
-          marginBottom: 6,
-        }}
-      >
-        {firstName} {lastName}
-      </Text>
-
-      {/* Member Code */}
-      <Text
-        style={{
-          color: colors.grey,
-          fontSize: 13,
-          letterSpacing: 2,
-          fontWeight: "400",
-        }}
-      >
-        {memberCode}
-      </Text>
-
-      {/* Bottom accent line */}
-      <View
-        style={{
-          height: 2,
-          backgroundColor: colors.gold,
-          borderRadius: 1,
-          marginTop: 24,
-          opacity: 0.4,
-        }}
-      />
-    </View>
+    </Pressable>
   );
 }

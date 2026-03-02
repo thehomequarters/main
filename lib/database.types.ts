@@ -23,6 +23,8 @@ export interface Venue {
   address: string;
   latitude: number;
   longitude: number;
+  phone: string | null;
+  menu_url: string | null;
   image_url: string | null;
   is_active: boolean;
   created_at: string;

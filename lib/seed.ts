@@ -3,180 +3,222 @@ import { db } from "./firebase";
 
 const VENUES = [
   {
-    name: "Chishuru",
+    name: "The Boma",
     description:
-      "Award-winning West African fine dining in Brixton. Chef Joké Bakare serves bold, inventive plates rooted in the flavours of Nigeria and across the continent.",
+      "Iconic Harare restaurant serving traditional Zimbabwean cuisine with a modern twist. Known for their sadza ne nyama, oxtail stew, and rooftop views of the city.",
     category: "restaurant",
-    city: "London",
-    country: "United Kingdom",
-    address: "388 Coldharbour Lane, Brixton",
-    latitude: 51.4613,
-    longitude: -0.1156,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "5 Livingstone Avenue, Harare CBD",
+    latitude: -17.8292,
+    longitude: 31.0522,
+    phone: "+263 242 700 100",
+    menu_url: "https://theboma.co.zw/menu",
     image_url:
       "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
     is_active: true,
   },
   {
-    name: "Ikoyi",
+    name: "Amanzi Restaurant",
     description:
-      "Michelin-starred restaurant celebrating West African spices and ingredients through a modern tasting menu. A must-visit culinary experience.",
+      "Upscale pan-African dining in the heart of Borrowdale. Fresh farm-to-table ingredients, an exceptional wine list, and live jazz on weekends.",
     category: "restaurant",
-    city: "London",
-    country: "United Kingdom",
-    address: "1 St James's Market, St James's",
-    latitude: 51.5085,
-    longitude: -0.1339,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "22 Borrowdale Road, Borrowdale",
+    latitude: -17.7734,
+    longitude: 31.0853,
+    phone: "+263 242 882 441",
+    menu_url: "https://amanzi.co.zw/menu",
     image_url:
       "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
     is_active: true,
   },
   {
-    name: "Tatale",
+    name: "Pariah State",
     description:
-      "Plant-forward dining inspired by Ghanaian cuisine. Fresh, seasonal, and entirely unique — named after the beloved Ghanaian plantain pancake.",
-    category: "restaurant",
-    city: "London",
-    country: "United Kingdom",
-    address: "25 Lordship Lane, East Dulwich",
-    latitude: 51.4551,
-    longitude: -0.0767,
-    image_url:
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
-    is_active: true,
-  },
-  {
-    name: "Sweetbean Coffee",
-    description:
-      "Specialty Ethiopian coffee roasters serving single-origin brews and homemade pastries in a warm, minimalist space.",
-    category: "cafe",
-    city: "London",
-    country: "United Kingdom",
-    address: "17 Peckham Rye, Peckham",
-    latitude: 51.4693,
-    longitude: -0.0693,
-    image_url:
-      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80",
-    is_active: true,
-  },
-  {
-    name: "Kadie's Club",
-    description:
-      "A stylish cocktail lounge with live Afrobeats, jazz, and soul nights. Intimate setting, world-class cocktails, and a vibrant crowd.",
+      "Harare's coolest cocktail bar and creative hub. Craft cocktails, local art on the walls, and a killer weekend DJ lineup spinning Afrobeats and amapiano.",
     category: "bar",
-    city: "London",
-    country: "United Kingdom",
-    address: "22 Kingly Court, Carnaby",
-    latitude: 51.5131,
-    longitude: -0.1393,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "14 Sam Nujoma Street, Avondale",
+    latitude: -17.7944,
+    longitude: 31.0397,
+    phone: "+263 77 234 5678",
+    menu_url: null,
     image_url:
       "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80",
     is_active: true,
   },
   {
-    name: "TEN Lagos Bar",
+    name: "Gava's Restaurant",
     description:
-      "Lagos-inspired cocktail bar bringing Nigerian nightlife energy to Shoreditch. Suya bites, Chapman cocktails, and Afrobeats on rotation.",
+      "A Harare institution for over two decades. Serving generous portions of traditional Shona dishes alongside South African braai platters in a warm, family-friendly setting.",
+    category: "restaurant",
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "8 Mazowe Street, Harare CBD",
+    latitude: -17.8316,
+    longitude: 31.0485,
+    phone: "+263 242 751 000",
+    menu_url: "https://gavas.co.zw/menu",
+    image_url:
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
+    is_active: true,
+  },
+  {
+    name: "Kaldora's Coffee",
+    description:
+      "Specialty Zimbabwean coffee roasters in Avondale. Single-origin beans from Chipinge and Honde Valley, homemade scones, and a quiet courtyard perfect for work.",
+    category: "cafe",
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "3 King George Road, Avondale",
+    latitude: -17.7978,
+    longitude: 31.0409,
+    phone: "+263 71 456 7890",
+    menu_url: null,
+    image_url:
+      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80",
+    is_active: true,
+  },
+  {
+    name: "Shoko Festival Lounge",
+    description:
+      "Year-round creative space and bar inspired by the famous SHOKO Festival. Live music, spoken word, and Harare's most eclectic cocktail menu.",
     category: "bar",
-    city: "London",
-    country: "United Kingdom",
-    address: "10 Rivington Street, Shoreditch",
-    latitude: 51.5265,
-    longitude: -0.0793,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "17 Fife Avenue, Harare",
+    latitude: -17.8172,
+    longitude: 31.0459,
+    phone: "+263 77 567 8901",
+    menu_url: null,
     image_url:
       "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80",
     is_active: true,
   },
   {
-    name: "Nok by Alara",
+    name: "Chang Thai",
     description:
-      "Contemporary pan-African cuisine in a beautifully designed space. From jollof arancini to plantain desserts — African flavours reimagined.",
+      "Harare's favourite Thai restaurant. Authentic flavours, fresh ingredients, and a serene garden setting in the heart of Borrowdale.",
     category: "restaurant",
-    city: "London",
-    country: "United Kingdom",
-    address: "12 Upper St Martin's Lane, Covent Garden",
-    latitude: 51.5128,
-    longitude: -0.1266,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "Sam Levy's Village, Borrowdale",
+    latitude: -17.7716,
+    longitude: 31.0910,
+    phone: "+263 242 885 600",
+    menu_url: "https://changthai.co.zw/menu",
     image_url:
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
     is_active: true,
   },
   {
-    name: "Jamii Wellness",
+    name: "Maarera Wellness",
     description:
-      "Holistic wellness studio offering yoga, breathwork, and sound healing sessions rooted in African and Eastern traditions. Community-centred healing.",
+      "Holistic wellness studio offering yoga, meditation, and traditional healing sessions. Find your balance in a beautiful Msasa woodland setting.",
     category: "experience",
-    city: "London",
-    country: "United Kingdom",
-    address: "44 Dalston Lane, Dalston",
-    latitude: 51.5462,
-    longitude: -0.0751,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "45 Enterprise Road, Highlands",
+    latitude: -17.8100,
+    longitude: 31.0780,
+    phone: "+263 71 890 1234",
+    menu_url: null,
     image_url:
       "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=80",
     is_active: true,
   },
   {
-    name: "Iya London",
+    name: "Vibe Cafe",
     description:
-      "All-day cafe and bakery serving Nigerian-inspired brunch, pastries, and specialty drinks. Think chin chin French toast and zobo mimosas.",
+      "All-day brunch spot and bakery in Avondale. Fresh juices, stuffed croissants, and the best flat white in Harare. A must for weekend mornings.",
     category: "cafe",
-    city: "London",
-    country: "United Kingdom",
-    address: "67 Atlantic Road, Brixton",
-    latitude: 51.4617,
-    longitude: -0.1148,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "12 Maasdorp Avenue, Avondale",
+    latitude: -17.7963,
+    longitude: 31.0371,
+    phone: "+263 77 321 6540",
+    menu_url: null,
     image_url:
       "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80",
     is_active: true,
   },
   {
-    name: "The Afrobeats Experience",
+    name: "The Sunday Market",
     description:
-      "Monthly curated events featuring live Afrobeats, amapiano DJs, art showcases, and networking. The ultimate diaspora social experience.",
+      "Weekly curated market with live music, food trucks, local designers, and craft beer. Every Sunday at Borrowdale Racecourse — the place to be.",
     category: "experience",
-    city: "London",
-    country: "United Kingdom",
-    address: "Boxpark Croydon, 99 George St",
-    latitude: 51.3762,
-    longitude: -0.0987,
+    city: "Harare",
+    country: "Zimbabwe",
+    address: "Borrowdale Racecourse, Borrowdale",
+    latitude: -17.7680,
+    longitude: 31.0925,
+    phone: "+263 77 999 0000",
+    menu_url: null,
     image_url:
       "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     is_active: true,
   },
 ];
 
-const DEALS: Record<string, Array<{ title: string; description: string; terms: string }>> = {
-  Chishuru: [
+const DEALS: Record<
+  string,
+  Array<{ title: string; description: string; terms: string }>
+> = {
+  "The Boma": [
     {
-      title: "Complimentary starter with any tasting menu",
-      description: "Enjoy a free starter dish when you order the tasting menu.",
+      title: "Complimentary starter with any main",
+      description:
+        "Enjoy a free traditional starter when you order any main course.",
       terms: "Valid Mon-Thu. Cannot be combined with other offers.",
     },
     {
       title: "15% off your total bill",
       description: "Show your HQ membership card for 15% off food and drinks.",
-      terms: "Valid for parties of up to 4. Excludes bank holidays.",
+      terms: "Valid for parties of up to 4. Excludes public holidays.",
     },
   ],
-  Ikoyi: [
+  "Amanzi Restaurant": [
     {
       title: "Complimentary welcome cocktail",
-      description: "Start your evening with a signature cocktail, on the house.",
+      description:
+        "Start your evening with a signature cocktail, on the house.",
       terms: "One per member per visit. Must show HQ card.",
     },
+    {
+      title: "20% off Saturday jazz brunch",
+      description: "Exclusive HQ discount on the popular Saturday brunch.",
+      terms: "Booking required. Valid Saturdays 10am-2pm.",
+    },
   ],
-  Tatale: [
+  "Pariah State": [
+    {
+      title: "2-for-1 cocktails at happy hour",
+      description: "Double up on craft cocktails from 5-8pm every day.",
+      terms: "Valid Mon-Fri, 5-8pm only.",
+    },
+    {
+      title: "Free entry to all DJ nights",
+      description: "Skip the cover charge for all weekend events.",
+      terms: "Must show HQ card at door. Max 2 guests.",
+    },
+  ],
+  "Gava's Restaurant": [
     {
       title: "Free dessert with any main course",
       description: "End your meal with a complimentary dessert of your choice.",
       terms: "Valid all week. One per member per visit.",
     },
     {
-      title: "2-for-1 brunch on weekends",
-      description: "Bring a friend — the second brunch is on us.",
-      terms: "Sat-Sun only, 10am-2pm. Booking required.",
+      title: "2-for-1 lunch special",
+      description: "Bring a friend — the second lunch main is on us.",
+      terms: "Mon-Fri only, 11:30am-2:30pm. Booking required.",
     },
   ],
-  "Sweetbean Coffee": [
+  "Kaldora's Coffee": [
     {
       title: "Free coffee upgrade",
       description: "Upgrade any drink to a large, free of charge.",
@@ -188,7 +230,7 @@ const DEALS: Record<string, Array<{ title: string; description: string; terms: s
       terms: "Tracked via HQ app. Cannot combine with other loyalty cards.",
     },
   ],
-  "Kadie's Club": [
+  "Shoko Festival Lounge": [
     {
       title: "Skip the queue + free entry",
       description: "Priority entry and no cover charge for HQ members.",
@@ -200,29 +242,17 @@ const DEALS: Record<string, Array<{ title: string; description: string; terms: s
       terms: "Must book 24h in advance. Subject to availability.",
     },
   ],
-  "TEN Lagos Bar": [
+  "Chang Thai": [
     {
-      title: "2-for-1 cocktails during happy hour",
-      description: "Double up on cocktails from 5-8pm every day.",
-      terms: "Valid Mon-Fri, 5-8pm only.",
-    },
-    {
-      title: "Free suya platter with drinks",
-      description: "Order 4+ drinks and get a suya platter on the house.",
-      terms: "One per table per visit.",
-    },
-  ],
-  "Nok by Alara": [
-    {
-      title: "10% off à la carte dining",
-      description: "Enjoy a discount on the full à la carte menu.",
+      title: "10% off the full menu",
+      description: "Enjoy a discount on all à la carte dishes.",
       terms: "Valid all week. Excludes set menus and special events.",
     },
   ],
-  "Jamii Wellness": [
+  "Maarera Wellness": [
     {
       title: "First class free",
-      description: "Try any yoga or breathwork class free of charge.",
+      description: "Try any yoga or meditation class free of charge.",
       terms: "New members only. Book via HQ app.",
     },
     {
@@ -231,23 +261,24 @@ const DEALS: Record<string, Array<{ title: string; description: string; terms: s
       terms: "Minimum 3 month commitment. Cancel anytime after.",
     },
   ],
-  "Iya London": [
+  "Vibe Cafe": [
     {
       title: "Free pastry with any hot drink",
-      description: "Choose any pastry when you order a coffee or chai.",
+      description: "Choose any pastry when you order a coffee or tea.",
       terms: "Valid daily until 12pm. One per visit.",
     },
   ],
-  "The Afrobeats Experience": [
+  "The Sunday Market": [
     {
-      title: "Free entry to all monthly events",
-      description: "Skip the ticket — HQ members always enter free.",
-      terms: "Must show HQ card at door. Non-transferable.",
+      title: "Free entry to all Sunday events",
+      description: "Skip the gate fee — HQ members always enter free.",
+      terms: "Must show HQ card at gate. Non-transferable.",
     },
     {
-      title: "VIP area access",
-      description: "Exclusive access to the VIP lounge at every event.",
-      terms: "Subject to capacity. Arrive before 10pm for guaranteed access.",
+      title: "VIP lounge access",
+      description:
+        "Exclusive access to the shaded VIP area with seating and bar.",
+      terms: "Subject to capacity. Arrive before 11am for guaranteed access.",
     },
   ],
 };

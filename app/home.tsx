@@ -31,7 +31,7 @@ interface VenueWithDeal extends Venue {
 }
 
 export default function HomeScreen() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const router = useRouter();
   const [venues, setVenues] = useState<VenueWithDeal[]>([]);
   const [selectedCategory, setSelectedCategory] =
@@ -167,8 +167,28 @@ export default function HomeScreen() {
         >
           Welcome, {profile?.first_name}.
         </Text>
-        <Pressable onPress={signOut}>
-          <Text style={{ color: colors.grey, fontSize: 13 }}>Sign Out</Text>
+        <Pressable
+          onPress={() => router.push("/profile")}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            backgroundColor: "rgba(201, 168, 76, 0.15)",
+            borderWidth: 1,
+            borderColor: "rgba(201, 168, 76, 0.3)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              color: colors.gold,
+              fontSize: 14,
+              fontWeight: "700",
+            }}
+          >
+            {(profile?.first_name?.[0] ?? "")}{(profile?.last_name?.[0] ?? "")}
+          </Text>
         </Pressable>
       </View>
 
