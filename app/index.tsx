@@ -17,7 +17,7 @@ export default function Index() {
     }
 
     if (profile?.membership_status === "active") {
-      router.replace("/home");
+      router.replace("/(tabs)");
     } else if (profile?.membership_status === "pending") {
       router.replace("/pending");
     } else {

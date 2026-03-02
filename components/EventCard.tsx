@@ -1,0 +1,253 @@
+import React from "react";
+import { View, Text, Image, Pressable, Dimensions } from "react-native";
+import { colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import type { HQEvent } from "@/data/events";
+
+interface EventCardProps {
+  event: HQEvent;
+  variant?: "compact" | "full";
+  onPress?: () => void;
+  onBook?: () => void;
+}
+
+function formatDate(dateStr: string): { day: string; month: string; weekday: string } {
+  const date = new Date(dateStr + "T00:00:00");
+  const day = date.getDate().toString();
+  const month = date
+    .toLocaleDateString("en-US", { month: "short" })
+    .toUpperCase();
+  const weekday = date.toLocaleDateString("en-US", { weekday: "short" });
+  return { day, month, weekday };
+}
+
+function formatTime(time: string): string {
+  const [h, m] = time.split(":");
+  const hour = parseInt(h, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${m} ${ampm}`;
+}
+
+export function EventCard({
+  event,
+  variant = "full",
+  onPress,
+  onBook,
+}: EventCardProps) {
+  const screenWidth = Dimensions.get("window").width;
+  const isCompact = variant === "compact";
+  const cardWidth = isCompact ? screenWidth * 0.72 : screenWidth - 40;
+  const { day, month, weekday } = formatDate(event.date);
+  const spotsLeft = event.capacity - event.attendees;
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        width: cardWidth,
+        borderRadius: 16,
+        overflow: "hidden",
+        backgroundColor: colors.dark,
+        borderWidth: 1,
+        borderColor: colors.darkBorder,
+        marginRight: isCompact ? 16 : 0,
+        marginBottom: isCompact ? 0 : 20,
+      }}
+    >
+      {/* Image */}
+      <View style={{ height: isCompact ? 140 : 180, position: "relative" }}>
+        <Image
+          source={{ uri: event.image_url }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
+        {/* Gradient */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "50%",
+            backgroundColor: "rgba(0,0,0,0.5)",
+          }}
+        />
+
+        {/* Date badge */}
+        <View
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            backgroundColor: "rgba(0,0,0,0.75)",
+            borderRadius: 10,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            alignItems: "center",
+            minWidth: 48,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.gold,
+              fontSize: 18,
+              fontWeight: "800",
+              lineHeight: 20,
+            }}
+          >
+            {day}
+          </Text>
+          <Text
+            style={{
+              color: colors.grey,
+              fontSize: 9,
+              fontWeight: "600",
+              letterSpacing: 1,
+            }}
+          >
+            {month}
+          </Text>
+        </View>
+
+        {/* Category badge */}
+        <View
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 12,
+            backgroundColor: "rgba(201, 168, 76, 0.2)",
+            borderRadius: 6,
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.gold,
+              fontSize: 9,
+              fontWeight: "700",
+              letterSpacing: 1.5,
+              textTransform: "uppercase",
+            }}
+          >
+            {event.category}
+          </Text>
+        </View>
+      </View>
+
+      {/* Content */}
+      <View style={{ padding: 16 }}>
+        <Text
+          style={{
+            color: colors.white,
+            fontSize: isCompact ? 16 : 18,
+            fontWeight: "700",
+            marginBottom: 6,
+          }}
+          numberOfLines={isCompact ? 1 : 2}
+        >
+          {event.title}
+        </Text>
+
+        {/* Venue & time */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: isCompact ? 0 : 12,
+            gap: 12,
+          }}
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Ionicons
+              name="location-outline"
+              size={13}
+              color={colors.grey}
+            />
+            <Text style={{ color: colors.grey, fontSize: 12 }}>
+              {event.venue}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Ionicons name="time-outline" size={13} color={colors.grey} />
+            <Text style={{ color: colors.grey, fontSize: 12 }}>
+              {weekday} {formatTime(event.time)}
+            </Text>
+          </View>
+        </View>
+
+        {/* Bottom row (full only) */}
+        {!isCompact && (
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 4,
+            }}
+          >
+            {/* Attendees */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="people-outline"
+                  size={14}
+                  color={colors.grey}
+                />
+                <Text
+                  style={{
+                    color: colors.grey,
+                    fontSize: 12,
+                    marginLeft: 4,
+                  }}
+                >
+                  {event.attendees} going
+                </Text>
+              </View>
+              <Text style={{ color: colors.darkBorder, fontSize: 12 }}>
+                ·
+              </Text>
+              <Text
+                style={{
+                  color: spotsLeft < 10 ? colors.red : colors.grey,
+                  fontSize: 12,
+                }}
+              >
+                {spotsLeft} spots left
+              </Text>
+            </View>
+
+            {/* Book button */}
+            <Pressable
+              onPress={onBook}
+              style={{
+                backgroundColor: event.is_booked
+                  ? "rgba(76, 175, 80, 0.15)"
+                  : "rgba(201, 168, 76, 0.15)",
+                borderWidth: 1,
+                borderColor: event.is_booked
+                  ? "rgba(76, 175, 80, 0.3)"
+                  : "rgba(201, 168, 76, 0.3)",
+                borderRadius: 8,
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+              }}
+            >
+              <Text
+                style={{
+                  color: event.is_booked ? colors.green : colors.gold,
+                  fontSize: 12,
+                  fontWeight: "700",
+                  letterSpacing: 0.5,
+                }}
+              >
+                {event.is_booked ? "Booked" : "Book"}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+    </Pressable>
+  );
+}

@@ -331,13 +331,13 @@ export default function ProfileScreen() {
             <Pressable
               onPress={handleSave}
               disabled={saving}
-              style={({ pressed }) => ({
+              style={{
                 backgroundColor: colors.gold,
                 borderRadius: 12,
                 paddingVertical: 16,
-                opacity: saving ? 0.6 : pressed ? 0.85 : 1,
+                opacity: saving ? 0.6 : 1,
                 marginBottom: 16,
-              })}
+              }}
             >
               <Text
                 style={{
@@ -364,10 +364,9 @@ export default function ProfileScreen() {
           {/* Sign Out */}
           <Pressable
             onPress={handleSignOut}
-            style={({ pressed }) => ({
+            style={{
               paddingVertical: 16,
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
           >
             <Text
               style={{
