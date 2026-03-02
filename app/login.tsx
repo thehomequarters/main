@@ -146,14 +146,13 @@ export default function LoginScreen() {
         <Pressable
           onPress={handleLogin}
           disabled={loading}
-          style={({ pressed }) => ({
+          style={{
             backgroundColor: colors.gold,
             borderRadius: 10,
             paddingVertical: 16,
             marginTop: 24,
-            opacity: loading ? 0.6 : pressed ? 0.85 : 1,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
+            opacity: loading ? 0.6 : 1,
+          }}
         >
           <Text
             style={{
