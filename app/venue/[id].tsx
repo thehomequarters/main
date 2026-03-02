@@ -7,6 +7,7 @@ import {
   Pressable,
   Dimensions,
   Linking,
+  Share,
   Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -307,7 +308,9 @@ export default function VenueDetailScreen() {
                 icon="share-outline"
                 label="Share"
                 onPress={() => {
-                  /* future */
+                  Share.share({
+                    message: `Check out ${venue.name} on HomeQuarters — ${venue.address}, ${venue.city}`,
+                  });
                 }}
               />
             )}

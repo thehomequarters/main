@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  FlatList,
   Pressable,
   Alert,
   TextInput,
@@ -11,6 +12,7 @@ import {
   RefreshControl,
   Modal,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import {
   collection,
@@ -31,7 +33,7 @@ import { useRouter } from "expo-router";
 import { PostCard } from "@/components/PostCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { pickPostImage, uploadPostImage } from "@/lib/storage";
-import type { Post, PostTopic, Group, GroupMember } from "@/lib/database.types";
+import type { Post, PostTopic, Group, GroupMember, Comment } from "@/lib/database.types";
 
 type ConnectTabView = "noticeboard" | "groups";
 
@@ -66,6 +68,13 @@ export default function ConnectTab() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
   const [loadingGroups, setLoadingGroups] = useState(true);
+
+  // Comments state
+  const [commentPost, setCommentPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   // Compose state
   const [showCompose, setShowCompose] = useState(false);
@@ -166,6 +175,78 @@ export default function ConnectTab() {
   const handlePickPostImage = async () => {
     const uri = await pickPostImage();
     if (uri) setPostImageUri(uri);
+  };
+
+  const handleOpenComments = async (post: Post) => {
+    setCommentPost(post);
+    setLoadingComments(true);
+    setComments([]);
+    try {
+      const commentsQuery = query(
+        collection(db, "comments"),
+        where("post_id", "==", post.id)
+      );
+      const snap = await getDocs(commentsQuery);
+      const list = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as Comment)
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      setComments(list);
+    } catch (e: any) {
+      // Silently fail
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!user?.uid || !profile || !commentPost || !newComment.trim()) return;
+
+    setSubmittingComment(true);
+    try {
+      const commentInitials =
+        (profile.first_name?.[0] ?? "") + (profile.last_name?.[0] ?? "");
+      await addDoc(collection(db, "comments"), {
+        post_id: commentPost.id,
+        author_id: user.uid,
+        author_name: `${profile.first_name} ${profile.last_name}`,
+        author_initials: commentInitials.toUpperCase(),
+        content: newComment.trim(),
+        created_at: new Date().toISOString(),
+      });
+      await updateDoc(doc(db, "posts", commentPost.id), {
+        comments: increment(1),
+      });
+      // Update local post state
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === commentPost.id ? { ...p, comments: p.comments + 1 } : p
+        )
+      );
+      setCommentPost((prev) =>
+        prev ? { ...prev, comments: prev.comments + 1 } : prev
+      );
+      // Add to local comments list
+      setComments((prev) => [
+        ...prev,
+        {
+          id: `temp_${Date.now()}`,
+          post_id: commentPost.id,
+          author_id: user.uid,
+          author_name: `${profile.first_name} ${profile.last_name}`,
+          author_initials: commentInitials.toUpperCase(),
+          content: newComment.trim(),
+          created_at: new Date().toISOString(),
+        },
+      ]);
+      setNewComment("");
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setSubmittingComment(false);
+    }
   };
 
   const handleLikePost = async (post: Post) => {
@@ -466,6 +547,7 @@ export default function ConnectTab() {
                 post={post}
                 timeAgo={timeAgo(post.created_at)}
                 onLike={() => handleLikePost(post)}
+                onComment={() => handleOpenComments(post)}
               />
             ))}
 
@@ -603,6 +685,267 @@ export default function ConnectTab() {
             })}
         </View>
       )}
+
+      {/* Comments Modal */}
+      <Modal
+        visible={!!commentPost}
+        animationType="slide"
+        transparent
+        onRequestClose={() => {
+          setCommentPost(null);
+          setNewComment("");
+        }}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+            onPress={() => {
+              setCommentPost(null);
+              setNewComment("");
+            }}
+          />
+          <View
+            style={{
+              backgroundColor: colors.dark,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              maxHeight: "70%",
+              borderTopWidth: 1,
+              borderColor: colors.darkBorder,
+            }}
+          >
+            {/* Handle bar */}
+            <View style={{ alignItems: "center", paddingTop: 12 }}>
+              <View
+                style={{
+                  width: 36,
+                  height: 4,
+                  borderRadius: 2,
+                  backgroundColor: colors.darkBorder,
+                }}
+              />
+            </View>
+
+            {/* Header */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.darkBorder,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 17,
+                  fontWeight: "600",
+                }}
+              >
+                Comments{" "}
+                <Text style={{ color: colors.grey, fontWeight: "400" }}>
+                  ({commentPost?.comments ?? 0})
+                </Text>
+              </Text>
+              <Pressable
+                onPress={() => {
+                  setCommentPost(null);
+                  setNewComment("");
+                }}
+              >
+                <Ionicons name="close" size={22} color={colors.grey} />
+              </Pressable>
+            </View>
+
+            {/* Comments list */}
+            {loadingComments ? (
+              <View style={{ padding: 40, alignItems: "center" }}>
+                <ActivityIndicator color={colors.gold} />
+              </View>
+            ) : comments.length === 0 ? (
+              <View
+                style={{
+                  padding: 40,
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="chatbubble-outline"
+                  size={32}
+                  color={colors.darkBorder}
+                />
+                <Text
+                  style={{
+                    color: colors.grey,
+                    fontSize: 14,
+                    marginTop: 12,
+                    textAlign: "center",
+                  }}
+                >
+                  No comments yet. Be the first!
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={comments}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 12 }}
+                renderItem={({ item }) => (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      marginBottom: 16,
+                      gap: 10,
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: 17,
+                        backgroundColor: "rgba(201, 168, 76, 0.12)",
+                        borderWidth: 1,
+                        borderColor: "rgba(201, 168, 76, 0.25)",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: colors.gold,
+                          fontSize: 11,
+                          fontWeight: "700",
+                        }}
+                      >
+                        {item.author_initials}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: colors.white,
+                            fontSize: 13,
+                            fontWeight: "600",
+                          }}
+                        >
+                          {item.author_name}
+                        </Text>
+                        <Text
+                          style={{
+                            color: colors.grey,
+                            fontSize: 11,
+                            opacity: 0.7,
+                          }}
+                        >
+                          {timeAgo(item.created_at)}
+                        </Text>
+                      </View>
+                      <Text
+                        style={{
+                          color: colors.white,
+                          fontSize: 13,
+                          lineHeight: 19,
+                          marginTop: 3,
+                          opacity: 0.9,
+                        }}
+                      >
+                        {item.content}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              />
+            )}
+
+            {/* Comment input */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                paddingBottom: Platform.OS === "ios" ? 32 : 12,
+                borderTopWidth: 1,
+                borderTopColor: colors.darkBorder,
+                gap: 10,
+              }}
+            >
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  borderWidth: 1,
+                  borderColor: "rgba(201, 168, 76, 0.25)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.gold,
+                    fontSize: 10,
+                    fontWeight: "700",
+                  }}
+                >
+                  {initials}
+                </Text>
+              </View>
+              <TextInput
+                value={newComment}
+                onChangeText={setNewComment}
+                placeholder="Add a comment..."
+                placeholderTextColor="rgba(160, 160, 160, 0.5)"
+                style={{
+                  flex: 1,
+                  color: colors.white,
+                  fontSize: 14,
+                  backgroundColor: colors.black,
+                  borderRadius: 20,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderWidth: 1,
+                  borderColor: colors.darkBorder,
+                }}
+              />
+              <Pressable
+                onPress={handleSubmitComment}
+                disabled={!newComment.trim() || submittingComment}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 18,
+                  backgroundColor: newComment.trim()
+                    ? colors.gold
+                    : "rgba(201, 168, 76, 0.2)",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="arrow-up"
+                  size={18}
+                  color={newComment.trim() ? colors.black : colors.grey}
+                />
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Compose Modal */}
       <Modal visible={showCompose} animationType="slide" transparent>
