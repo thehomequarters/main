@@ -34,6 +34,32 @@ export interface Profile {
   interests: string[];
   // Push notifications
   push_token: string | null;
+  // Nomination system
+  vouchers: string[];        // UIDs of members who have vouched
+  voucher_count: number;     // denormalised length of vouchers
+  application_code: string;  // short code applicants share to collect vouches
+  nominations_used: number;  // how many nominations this member has sent
+}
+
+export interface Notification {
+  id: string;
+  recipient_id: string;
+  type: "connection_request" | "connection_accepted" | "new_message" | "nomination_received" | "event_reminder" | "membership_approved" | "membership_suspended";
+  title: string;
+  body: string;
+  data: Record<string, string>;
+  read: boolean;
+  created_at: string;
+}
+
+export interface GroupMessage {
+  id: string;
+  group_id: string;
+  author_id: string;
+  author_name: string;
+  author_initials: string;
+  content: string;
+  created_at: string;
 }
 
 export interface Invite {

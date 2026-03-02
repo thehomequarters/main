@@ -605,13 +605,18 @@ export default function ConnectTab() {
               return (
                 <Pressable
                   key={group.id}
+                  onPress={() =>
+                    joined
+                      ? router.push(`/group/${group.id}` as any)
+                      : handleJoinGroup(group)
+                  }
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
                     backgroundColor: colors.dark,
                     borderRadius: 14,
                     borderWidth: 1,
-                    borderColor: colors.darkBorder,
+                    borderColor: joined ? "rgba(201,168,76,0.2)" : colors.darkBorder,
                     padding: 16,
                     marginBottom: 12,
                   }}

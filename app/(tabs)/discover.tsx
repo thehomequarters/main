@@ -630,6 +630,7 @@ export default function DiscoverTab() {
         return (
           <Pressable
             key={member.id}
+            onPress={() => router.push(`/member/${member.id}` as any)}
             style={{
               backgroundColor: colors.dark,
               borderRadius: 16,

@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -15,9 +16,22 @@ import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
+/** Generate a random code like HQ-XXXX-XXXX */
+function genCode(prefix: string) {
+  const s = () => Math.random().toString(36).slice(2, 6).toUpperCase();
+  return `${prefix}-${s()}-${s()}`;
+}
+
 export default function ApplyScreen() {
   const router = useRouter();
+
+  // Step 1: verify invite code
   const [inviteCode, setInviteCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [inviteData, setInviteData] = useState<any>(null);
+
+  // Step 2: fill out details
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -25,65 +39,70 @@ export default function ApplyScreen() {
   const [phone, setPhone] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleVerifyCode = async () => {
     const code = inviteCode.trim().toUpperCase();
-
     if (!code) {
-      Alert.alert("Invite Required", "Please enter your invite code to apply.");
+      Alert.alert("Enter your invitation code to continue.");
       return;
     }
+    setVerifying(true);
+    try {
+      const snap = await getDoc(doc(db, "invites", code));
+      if (!snap.exists()) {
+        Alert.alert(
+          "Invalid Code",
+          "This invitation code is not recognised. Check the code and try again."
+        );
+        return;
+      }
+      const data = snap.data();
+      if (data.used) {
+        Alert.alert(
+          "Code Already Used",
+          "This invitation has already been claimed. Request a new one from your contact."
+        );
+        return;
+      }
+      setInviteData({ ...data, id: code });
+      setVerified(true);
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setVerifying(false);
+    }
+  };
 
+  const handleSubmit = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      Alert.alert("Required Fields", "Please fill in your name and email.");
+      Alert.alert("Please complete all required fields.");
       return;
     }
-
     if (password.length < 6) {
-      Alert.alert("Password", "Password must be at least 6 characters.");
+      Alert.alert("Password must be at least 6 characters.");
       return;
     }
-
     setSubmitting(true);
     try {
-      // Validate the invite code against Firestore
-      const inviteSnap = await getDoc(doc(db, "invites", code));
-      if (!inviteSnap.exists()) {
-        Alert.alert(
-          "Invalid Invite",
-          "This invite code doesn't exist. Please check the code and try again."
-        );
-        setSubmitting(false);
-        return;
-      }
-
-      const invite = inviteSnap.data();
-      if (invite.used) {
-        Alert.alert(
-          "Invite Used",
-          "This invite code has already been used. Please request a new one."
-        );
-        setSubmitting(false);
-        return;
-      }
-
-      // Create user with Firebase Auth
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email.trim().toLowerCase(),
         password
       );
 
-      // Generate member code
-      const memberCode = `HQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      const memberCode = genCode("HQ");
+      const applicationCode = genCode("APP");
 
       // Mark invite as used
-      await updateDoc(doc(db, "invites", code), {
+      await updateDoc(doc(db, "invites", inviteData.id), {
         used: true,
         used_by: user.uid,
         used_at: new Date().toISOString(),
       });
 
-      // Create profile in Firestore
+      // Determine inviter UID from the invite (created_by field)
+      const inviterUid: string = inviteData.created_by ?? null;
+      const initialVouchers = inviterUid ? [inviterUid] : [];
+
       await setDoc(doc(db, "profiles", user.uid), {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -91,9 +110,20 @@ export default function ApplyScreen() {
         phone: phone.trim() || null,
         avatar_url: null,
         member_code: memberCode,
+        application_code: applicationCode,
         membership_status: "pending",
         push_token: null,
         created_at: new Date().toISOString(),
+        // nomination fields
+        vouchers: initialVouchers,
+        voucher_count: initialVouchers.length,
+        nominations_used: 0,
+        // social fields
+        title: null,
+        bio: null,
+        city: null,
+        industry: null,
+        interests: [],
       });
 
       router.replace("/pending");
@@ -108,205 +138,322 @@ export default function ApplyScreen() {
     }
   };
 
-  const inputStyle = {
+  return (
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Wordmark */}
+        <Text style={styles.wordmark}>HQ</Text>
+
+        {!verified ? (
+          /* ─── Step 1: Enter invitation code ─── */
+          <>
+            <View style={styles.sealWrap}>
+              <View style={styles.seal}>
+                <Text style={styles.sealSymbol}>✦</Text>
+              </View>
+            </View>
+
+            <Text style={styles.headline}>By invitation only.</Text>
+            <Text style={styles.subtext}>
+              HomeQuarters is a private community. Access requires a personal
+              invitation from a current member.
+            </Text>
+            <Text style={styles.subtext2}>
+              Your invitation is strictly confidential and non-transferable.
+            </Text>
+
+            <View style={styles.divider} />
+
+            <Text style={styles.fieldLabel}>INVITATION CODE</Text>
+            <TextInput
+              placeholder="e.g. HQ-XXXX-XXXX"
+              placeholderTextColor="rgba(201,168,76,0.35)"
+              value={inviteCode}
+              onChangeText={(t) => setInviteCode(t.toUpperCase())}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              style={[
+                styles.codeInput,
+                inviteCode.length > 0 && styles.codeInputActive,
+              ]}
+            />
+
+            <Pressable
+              onPress={handleVerifyCode}
+              disabled={verifying}
+              style={[styles.btn, { opacity: verifying ? 0.6 : 1 }]}
+            >
+              <Text style={styles.btnText}>
+                {verifying ? "Verifying..." : "Verify Invitation"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/login")}
+              style={styles.signinRow}
+            >
+              <Text style={styles.signinText}>
+                Already a member?{" "}
+                <Text style={styles.signinLink}>Sign in</Text>
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          /* ─── Step 2: Complete your application ─── */
+          <>
+            <View style={styles.verifiedBadge}>
+              <Text style={styles.verifiedBadgeText}>✓ INVITATION VERIFIED</Text>
+            </View>
+
+            <Text style={styles.headline2}>Complete your{"\n"}application.</Text>
+            <Text style={styles.subtext}>
+              Your details are kept strictly private. Only you and the
+              membership committee will have access.
+            </Text>
+
+            <View style={styles.divider} />
+
+            <View style={styles.formRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>FIRST NAME</Text>
+                <TextInput
+                  placeholder="First"
+                  placeholderTextColor={colors.grey}
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  autoCapitalize="words"
+                  style={styles.input}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>LAST NAME</Text>
+                <TextInput
+                  placeholder="Last"
+                  placeholderTextColor={colors.grey}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  autoCapitalize="words"
+                  style={styles.input}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
+            <TextInput
+              placeholder="your@email.com"
+              placeholderTextColor={colors.grey}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>CREATE PASSWORD</Text>
+            <TextInput
+              placeholder="Minimum 6 characters"
+              placeholderTextColor={colors.grey}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>PHONE (OPTIONAL)</Text>
+            <TextInput
+              placeholder="+263 77 000 0000"
+              placeholderTextColor={colors.grey}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              style={styles.input}
+            />
+
+            <Pressable
+              onPress={handleSubmit}
+              disabled={submitting}
+              style={[styles.btn, { opacity: submitting ? 0.6 : 1 }]}
+            >
+              <Text style={styles.btnText}>
+                {submitting ? "Submitting..." : "Submit Application"}
+              </Text>
+            </Pressable>
+
+            <Text style={styles.disclaimer}>
+              Applications are reviewed by the membership committee. You will
+              be notified of your decision.
+            </Text>
+          </>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: colors.black,
+  },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingVertical: 70,
+  },
+  wordmark: {
+    color: colors.gold,
+    fontSize: 24,
+    fontWeight: "800",
+    letterSpacing: 7,
+    marginBottom: 48,
+  },
+  // Seal / icon
+  sealWrap: {
+    alignItems: "flex-start",
+    marginBottom: 32,
+  },
+  seal: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "rgba(201,168,76,0.4)",
+    backgroundColor: "rgba(201,168,76,0.07)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sealSymbol: {
+    color: colors.gold,
+    fontSize: 24,
+  },
+  headline: {
+    color: colors.white,
+    fontSize: 34,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    lineHeight: 40,
+    marginBottom: 16,
+  },
+  headline2: {
+    color: colors.white,
+    fontSize: 30,
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    lineHeight: 36,
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  subtext: {
+    color: "rgba(160,160,160,0.8)",
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 8,
+  },
+  subtext2: {
+    color: "rgba(160,160,160,0.45)",
+    fontSize: 12,
+    lineHeight: 18,
+    fontStyle: "italic",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "rgba(42,42,42,0.8)",
+    marginVertical: 28,
+  },
+  fieldLabel: {
+    color: "rgba(160,160,160,0.6)",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  codeInput: {
+    backgroundColor: "rgba(26,26,26,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.2)",
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    color: colors.gold,
+    fontSize: 20,
+    fontWeight: "700",
+    letterSpacing: 4,
+    textAlign: "center",
+    marginBottom: 28,
+  },
+  codeInputActive: {
+    borderColor: "rgba(201,168,76,0.55)",
+  },
+  input: {
     backgroundColor: colors.dark,
     borderWidth: 1,
     borderColor: colors.darkBorder,
     borderRadius: 10,
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 15,
     color: colors.white,
     fontSize: 15,
-  };
-
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.black }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          paddingHorizontal: 28,
-          paddingVertical: 60,
-        }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* HQ Logo */}
-        <Text
-          style={{
-            color: colors.gold,
-            fontSize: 40,
-            fontWeight: "700",
-            letterSpacing: 8,
-            textAlign: "center",
-            marginBottom: 48,
-          }}
-        >
-          HQ
-        </Text>
-
-        {/* Headline */}
-        <Text
-          style={{
-            color: colors.white,
-            fontSize: 24,
-            fontWeight: "700",
-            textAlign: "center",
-            marginBottom: 12,
-          }}
-        >
-          Apply for Membership
-        </Text>
-
-        <Text
-          style={{
-            color: colors.grey,
-            fontSize: 15,
-            textAlign: "center",
-            lineHeight: 22,
-            marginBottom: 40,
-          }}
-        >
-          HomeQuarters is a private community for the diaspora. Membership is by
-          invite only.
-        </Text>
-
-        {/* Form */}
-        <View style={{ gap: 14 }}>
-          {/* Invite code — highlighted at top */}
-          <View>
-            <Text
-              style={{
-                color: colors.gold,
-                fontSize: 11,
-                fontWeight: "600",
-                letterSpacing: 1.5,
-                textTransform: "uppercase",
-                marginBottom: 8,
-              }}
-            >
-              Invite Code
-            </Text>
-            <TextInput
-              placeholder="e.g. HQ-XXXX-XXXX"
-              placeholderTextColor={colors.grey}
-              value={inviteCode}
-              onChangeText={(t) => setInviteCode(t.toUpperCase())}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              style={{
-                ...inputStyle,
-                borderColor: inviteCode ? colors.gold : colors.darkBorder,
-                color: colors.gold,
-                fontWeight: "700",
-                letterSpacing: 2,
-              }}
-            />
-          </View>
-
-          <View
-            style={{
-              height: 1,
-              backgroundColor: colors.darkBorder,
-              marginVertical: 4,
-            }}
-          />
-
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <TextInput
-              placeholder="First name"
-              placeholderTextColor={colors.grey}
-              value={firstName}
-              onChangeText={setFirstName}
-              autoCapitalize="words"
-              style={{ ...inputStyle, flex: 1 }}
-            />
-            <TextInput
-              placeholder="Last name"
-              placeholderTextColor={colors.grey}
-              value={lastName}
-              onChangeText={setLastName}
-              autoCapitalize="words"
-              style={{ ...inputStyle, flex: 1 }}
-            />
-          </View>
-
-          <TextInput
-            placeholder="Email address"
-            placeholderTextColor={colors.grey}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={inputStyle}
-          />
-
-          <TextInput
-            placeholder="Create a password (min 6 characters)"
-            placeholderTextColor={colors.grey}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={inputStyle}
-          />
-
-          <TextInput
-            placeholder="Phone (optional)"
-            placeholderTextColor={colors.grey}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            style={inputStyle}
-          />
-        </View>
-
-        {/* Submit Button */}
-        <Pressable
-          onPress={handleSubmit}
-          disabled={submitting}
-          style={{
-            backgroundColor: colors.gold,
-            borderRadius: 10,
-            paddingVertical: 16,
-            marginTop: 32,
-            opacity: submitting ? 0.6 : 1,
-          }}
-        >
-          <Text
-            style={{
-              color: colors.black,
-              fontSize: 16,
-              fontWeight: "700",
-              textAlign: "center",
-              letterSpacing: 0.5,
-            }}
-          >
-            {submitting ? "Submitting..." : "Submit Application"}
-          </Text>
-        </Pressable>
-
-        {/* Login link */}
-        <Pressable
-          onPress={() => router.push("/login")}
-          style={{ marginTop: 24 }}
-        >
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 13,
-              textAlign: "center",
-            }}
-          >
-            Already a member?{" "}
-            <Text style={{ color: colors.gold }}>Sign in</Text>
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
-}
+    marginBottom: 16,
+  },
+  formRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  btn: {
+    backgroundColor: colors.gold,
+    borderRadius: 12,
+    paddingVertical: 17,
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  btnText: {
+    color: colors.black,
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
+  signinRow: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  signinText: {
+    color: "rgba(160,160,160,0.5)",
+    fontSize: 13,
+  },
+  signinLink: {
+    color: colors.gold,
+    fontWeight: "600",
+  },
+  verifiedBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(76,175,80,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(76,175,80,0.3)",
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginBottom: 20,
+  },
+  verifiedBadgeText: {
+    color: "#4CAF50",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 2,
+  },
+  disclaimer: {
+    color: "rgba(160,160,160,0.4)",
+    fontSize: 11,
+    textAlign: "center",
+    lineHeight: 17,
+    fontStyle: "italic",
+  },
+});

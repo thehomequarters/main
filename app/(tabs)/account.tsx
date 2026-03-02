@@ -349,15 +349,10 @@ export default function AccountTab() {
             }
           />
           <MenuItem
-            icon="people-outline"
-            label="Guest Invitations"
-            subtitle="Invite guests to venues"
-            onPress={() =>
-              Alert.alert(
-                "Guest Invitations",
-                "Guest invitations are coming soon. You'll be able to invite friends to join you at partner venues."
-              )
-            }
+            icon="star-outline"
+            label="Nominate a Member"
+            subtitle="Extend an invitation to someone you know"
+            onPress={() => router.push("/nominate")}
           />
           <MenuItem
             icon="qr-code-outline"
@@ -450,13 +445,8 @@ export default function AccountTab() {
           <MenuItem
             icon="notifications-outline"
             label="Notifications"
-            subtitle="Manage notification preferences"
-            onPress={() =>
-              Alert.alert(
-                "Notifications",
-                "Push notifications are coming soon. You'll be able to customise which alerts you receive."
-              )
-            }
+            subtitle="Connection requests, messages, and updates"
+            onPress={() => router.push("/notifications")}
           />
           <MenuItem
             icon="lock-closed-outline"

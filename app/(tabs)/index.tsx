@@ -185,12 +185,7 @@ export default function HomeTab() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 4 }}>
           {/* Notifications bell */}
           <Pressable
-            onPress={() =>
-              Alert.alert(
-                "Notifications",
-                "Push notifications are coming soon. You'll be notified about new messages, event reminders, and connection requests."
-              )
-            }
+            onPress={() => router.push("/notifications")}
             accessibilityLabel="Notifications"
             accessibilityRole="button"
             style={{

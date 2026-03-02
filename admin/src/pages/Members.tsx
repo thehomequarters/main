@@ -25,6 +25,9 @@ interface Profile {
   industry: string | null;
   interests: string[];
   created_at: string;
+  voucher_count?: number;
+  vouchers?: string[];
+  application_code?: string;
 }
 
 type FilterTab = "all" | "pending" | "active" | "rejected" | "suspended";
@@ -261,8 +264,19 @@ export default function Members() {
                       {member.city && ` · ${member.city}`}
                       {member.industry && ` · ${member.industry}`}
                     </div>
-                    <div className="text-gray-600 text-xs font-mono mt-0.5">
+                    <div className="text-gray-600 text-xs font-mono mt-0.5 flex items-center gap-2">
                       {member.member_code}
+                      {member.membership_status === "pending" && (
+                        <span
+                          className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                            (member.voucher_count ?? 0) >= 2
+                              ? "bg-green-900/40 text-green-400"
+                              : "bg-yellow-900/40 text-yellow-400"
+                          }`}
+                        >
+                          {member.voucher_count ?? 0}/2 nominations
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -394,6 +408,15 @@ export default function Members() {
             <div className="space-y-3 text-sm mb-5">
               <DetailRow label="Email" value={selected.email} />
               <DetailRow label="Code" value={selected.member_code} mono />
+              {selected.membership_status === "pending" && (
+                <DetailRow
+                  label="Nominations"
+                  value={`${selected.voucher_count ?? 0} / 2 ${(selected.voucher_count ?? 0) >= 2 ? "✓ ready to review" : "— needs more"}`}
+                />
+              )}
+              {selected.application_code && selected.membership_status === "pending" && (
+                <DetailRow label="App. Code" value={selected.application_code} mono />
+              )}
               {selected.phone && (
                 <DetailRow label="Phone" value={selected.phone} />
               )}
