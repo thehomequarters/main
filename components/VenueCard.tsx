@@ -38,7 +38,7 @@ export function VenueCard({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         width: cardWidth,
         height: cardHeight,
         borderRadius: 12,
@@ -46,8 +46,7 @@ export function VenueCard({
         backgroundColor: colors.dark,
         marginRight: isFeatured ? 16 : 0,
         marginBottom: isFeatured ? 0 : 16,
-        transform: [{ scale: pressed ? 0.97 : 1 }],
-      })}
+      }}
     >
       <Image
         source={{ uri: imgSource }}

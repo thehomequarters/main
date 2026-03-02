@@ -1,0 +1,196 @@
+import React from "react";
+import { View, Text, Pressable, Image } from "react-native";
+import { colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+import type { Post, PostTopic } from "@/lib/database.types";
+
+const topicLabels: Record<PostTopic, string> = {
+  collaboration: "Collaboration",
+  "flat-swap": "Flat Swap",
+  meetup: "Meetup",
+  general: "General",
+  recommendation: "Recommendation",
+};
+
+const topicColors: Record<PostTopic, string> = {
+  collaboration: "#C9A84C",
+  "flat-swap": "#4ECDC4",
+  meetup: "#FF6B6B",
+  general: "#A0A0A0",
+  recommendation: "#7B68EE",
+};
+
+interface PostCardProps {
+  post: Post;
+  timeAgo?: string;
+  onLike?: () => void;
+  onPress?: () => void;
+}
+
+export function PostCard({ post, timeAgo, onLike, onPress }: PostCardProps) {
+  const topicColor = topicColors[post.topic];
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        backgroundColor: colors.dark,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: colors.darkBorder,
+        padding: 18,
+        marginBottom: 14,
+        marginHorizontal: 20,
+      }}
+    >
+      {/* Author row */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          marginBottom: 14,
+        }}
+      >
+        {/* Avatar */}
+        <View
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: "rgba(201, 168, 76, 0.12)",
+            borderWidth: 1,
+            borderColor: "rgba(201, 168, 76, 0.25)",
+            justifyContent: "center",
+            alignItems: "center",
+            marginRight: 12,
+          }}
+        >
+          <Text
+            style={{
+              color: colors.gold,
+              fontSize: 14,
+              fontWeight: "700",
+            }}
+          >
+            {post.author_initials}
+          </Text>
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <Text
+            style={{
+              color: colors.white,
+              fontSize: 14,
+              fontWeight: "600",
+            }}
+          >
+            {post.author_name}
+          </Text>
+          <Text
+            style={{
+              color: colors.grey,
+              fontSize: 11,
+            }}
+            numberOfLines={1}
+          >
+            {post.author_title} · {post.author_city}
+          </Text>
+        </View>
+
+        <Text
+          style={{
+            color: colors.grey,
+            fontSize: 11,
+            opacity: 0.7,
+          }}
+        >
+          {timeAgo ?? ""}
+        </Text>
+      </View>
+
+      {/* Topic badge */}
+      <View
+        style={{
+          alignSelf: "flex-start",
+          backgroundColor: `${topicColor}15`,
+          borderRadius: 6,
+          paddingHorizontal: 8,
+          paddingVertical: 3,
+          marginBottom: 10,
+        }}
+      >
+        <Text
+          style={{
+            color: topicColor,
+            fontSize: 10,
+            fontWeight: "700",
+            letterSpacing: 1,
+            textTransform: "uppercase",
+          }}
+        >
+          {topicLabels[post.topic]}
+        </Text>
+      </View>
+
+      {/* Post image */}
+      {post.image_url && (
+        <Image
+          source={{ uri: post.image_url }}
+          style={{
+            width: "100%",
+            height: 200,
+            borderRadius: 12,
+            marginBottom: 12,
+          }}
+          resizeMode="cover"
+        />
+      )}
+
+      {/* Content */}
+      <Text
+        style={{
+          color: colors.white,
+          fontSize: 14,
+          lineHeight: 21,
+          marginBottom: 16,
+        }}
+      >
+        {post.content}
+      </Text>
+
+      {/* Actions row */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 20,
+          borderTopWidth: 1,
+          borderTopColor: colors.darkBorder,
+          paddingTop: 12,
+        }}
+      >
+        <Pressable
+          onPress={onLike}
+          style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+        >
+          <Ionicons name="heart-outline" size={18} color={colors.grey} />
+          <Text style={{ color: colors.grey, fontSize: 12 }}>
+            {post.likes}
+          </Text>
+        </Pressable>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Ionicons
+            name="chatbubble-outline"
+            size={16}
+            color={colors.grey}
+          />
+          <Text style={{ color: colors.grey, fontSize: 12 }}>
+            {post.comments}
+          </Text>
+        </View>
+        <View style={{ flex: 1 }} />
+        <Ionicons name="share-outline" size={18} color={colors.grey} />
+      </View>
+    </Pressable>
+  );
+}

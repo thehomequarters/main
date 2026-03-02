@@ -109,7 +109,7 @@ export default function ApplyScreen() {
             marginBottom: 12,
           }}
         >
-          Join HomeQuarters
+          Apply for Membership
         </Text>
 
         <Text
@@ -191,6 +191,7 @@ export default function ApplyScreen() {
             placeholderTextColor={colors.grey}
             value={password}
             onChangeText={setPassword}
+            secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
             style={{
@@ -228,14 +229,13 @@ export default function ApplyScreen() {
         <Pressable
           onPress={handleSubmit}
           disabled={submitting}
-          style={({ pressed }) => ({
+          style={{
             backgroundColor: colors.gold,
             borderRadius: 10,
             paddingVertical: 16,
             marginTop: 32,
-            opacity: submitting ? 0.6 : pressed ? 0.85 : 1,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-          })}
+            opacity: submitting ? 0.6 : 1,
+          }}
         >
           <Text
             style={{
