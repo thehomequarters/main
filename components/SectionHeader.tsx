@@ -25,7 +25,7 @@ export function SectionHeader({
     >
       <Text
         style={{
-          color: colors.white,
+          color: colors.dark,
           fontSize: 20,
           fontWeight: "700",
           letterSpacing: 0.3,
@@ -37,7 +37,7 @@ export function SectionHeader({
         <Pressable onPress={onAction}>
           <Text
             style={{
-              color: colors.gold,
+              color: colors.stone,
               fontSize: 13,
               fontWeight: "500",
             }}
