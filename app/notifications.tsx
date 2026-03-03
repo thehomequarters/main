@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -14,7 +15,9 @@ import {
   query,
   where,
   getDocs,
-  orderBy,
+  updateDoc,
+  addDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
@@ -42,6 +45,8 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const [items, setItems] = useState<NotifItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // Track request IDs that have been acted on so we can hide them immediately
+  const [handledIds, setHandledIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -146,6 +151,31 @@ export default function NotificationsScreen() {
     load();
   }, [user?.uid]);
 
+  const handleAccept = async (conn: Connection) => {
+    try {
+      await updateDoc(doc(db, "connections", conn.id), { status: "accepted" });
+      // Create the reverse accepted connection so both sides see "Connected"
+      await addDoc(collection(db, "connections"), {
+        from_id: conn.to_id,
+        to_id: conn.from_id,
+        status: "accepted",
+        created_at: new Date().toISOString(),
+      });
+      setHandledIds((prev) => new Set(prev).add(conn.id));
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    }
+  };
+
+  const handleReject = async (conn: Connection) => {
+    try {
+      await updateDoc(doc(db, "connections", conn.id), { status: "rejected" });
+      setHandledIds((prev) => new Set(prev).add(conn.id));
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    }
+  };
+
   return (
     <View style={styles.root}>
       {/* Header */}
@@ -176,13 +206,13 @@ export default function NotificationsScreen() {
         <ScrollView contentContainerStyle={styles.list}>
           {items.map((item, index) => {
             if (item.kind === "connection_request") {
+              if (handledIds.has(item.conn.id)) return null;
               const initials =
                 (item.from.first_name?.[0] ?? "") +
                 (item.from.last_name?.[0] ?? "");
               return (
-                <Pressable
+                <View
                   key={`cr-${item.conn.id}`}
-                  onPress={() => router.push("/(tabs)/discover")}
                   style={styles.notifRow}
                 >
                   <View style={[styles.avatar, styles.avatarRequest]}>
@@ -203,9 +233,22 @@ export default function NotificationsScreen() {
                     <Text style={styles.notifTime}>
                       {timeAgo(item.conn.created_at)}
                     </Text>
+                    <View style={styles.inlineActions}>
+                      <Pressable
+                        onPress={() => handleReject(item.conn)}
+                        style={styles.rejectBtn}
+                      >
+                        <Text style={styles.rejectBtnText}>Decline</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => handleAccept(item.conn)}
+                        style={styles.acceptBtn}
+                      >
+                        <Text style={styles.acceptBtnText}>Accept</Text>
+                      </Pressable>
+                    </View>
                   </View>
-                  <View style={styles.dot} />
-                </Pressable>
+                </View>
               );
             }
 
@@ -398,5 +441,36 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.gold,
     flexShrink: 0,
+  },
+  inlineActions: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 10,
+  },
+  rejectBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: "rgba(229,57,53,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(229,57,53,0.2)",
+  },
+  rejectBtnText: {
+    color: colors.red,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  acceptBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: "rgba(76,175,80,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(76,175,80,0.3)",
+  },
+  acceptBtnText: {
+    color: "#4CAF50",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

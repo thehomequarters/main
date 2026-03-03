@@ -6,6 +6,7 @@ import {
   Pressable,
   Alert,
   RefreshControl,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -498,29 +499,43 @@ export default function DiscoverTab() {
                 }}
               >
                 {/* Avatar */}
-                <View
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 23,
-                    backgroundColor: "rgba(201, 168, 76, 0.12)",
-                    borderWidth: 1.5,
-                    borderColor: "rgba(201, 168, 76, 0.25)",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginRight: 12,
-                  }}
-                >
-                  <Text
+                {profile?.avatar_url ? (
+                  <Image
+                    source={{ uri: profile.avatar_url }}
                     style={{
-                      color: colors.gold,
-                      fontSize: 15,
-                      fontWeight: "700",
+                      width: 46,
+                      height: 46,
+                      borderRadius: 23,
+                      borderWidth: 1.5,
+                      borderColor: "rgba(201,168,76,0.25)",
+                      marginRight: 12,
+                    }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 23,
+                      backgroundColor: "rgba(201, 168, 76, 0.12)",
+                      borderWidth: 1.5,
+                      borderColor: "rgba(201, 168, 76, 0.25)",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginRight: 12,
                     }}
                   >
-                    {reqInitials.toUpperCase()}
-                  </Text>
-                </View>
+                    <Text
+                      style={{
+                        color: colors.gold,
+                        fontSize: 15,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {reqInitials.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
 
                 {/* Info */}
                 <View style={{ flex: 1 }}>
@@ -643,30 +658,44 @@ export default function DiscoverTab() {
           >
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
               {/* Avatar */}
-              <View
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
-                  borderWidth: 1.5,
-                  borderColor: "rgba(201, 168, 76, 0.25)",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  marginRight: 14,
-                }}
-              >
-                <Text
+              {member.avatar_url ? (
+                <Image
+                  source={{ uri: member.avatar_url }}
                   style={{
-                    color: colors.gold,
-                    fontSize: 17,
-                    fontWeight: "700",
-                    letterSpacing: 1,
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    borderWidth: 1.5,
+                    borderColor: "rgba(201, 168, 76, 0.25)",
+                    marginRight: 14,
+                  }}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    backgroundColor: "rgba(201, 168, 76, 0.12)",
+                    borderWidth: 1.5,
+                    borderColor: "rgba(201, 168, 76, 0.25)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    marginRight: 14,
                   }}
                 >
-                  {memberInitials.toUpperCase()}
-                </Text>
-              </View>
+                  <Text
+                    style={{
+                      color: colors.gold,
+                      fontSize: 17,
+                      fontWeight: "700",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {memberInitials.toUpperCase()}
+                  </Text>
+                </View>
+              )}
 
               {/* Info */}
               <View style={{ flex: 1 }}>

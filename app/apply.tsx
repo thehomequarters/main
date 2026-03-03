@@ -124,6 +124,8 @@ export default function ApplyScreen() {
         city: null,
         industry: null,
         interests: [],
+        instagram_handle: null,
+        linkedin_handle: null,
       });
 
       router.replace("/pending");

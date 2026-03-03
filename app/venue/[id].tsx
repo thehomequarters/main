@@ -85,6 +85,7 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mapFailed, setMapFailed] = useState(false);
 
   useEffect(() => {
     const fetchVenue = async () => {
@@ -279,7 +280,7 @@ export default function VenueDetailScreen() {
           ) : null}
 
           {/* Embedded map preview */}
-          {venue.latitude && venue.longitude && (
+          {venue.latitude && venue.longitude && !mapFailed && (
             <Pressable
               onPress={openMap}
               style={{
@@ -295,6 +296,7 @@ export default function VenueDetailScreen() {
                 }}
                 style={{ width: "100%", height: "100%" }}
                 resizeMode="cover"
+                onError={() => setMapFailed(true)}
               />
               <View
                 style={{

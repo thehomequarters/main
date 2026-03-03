@@ -1,10 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { View } from "react-native";
+import { useAuth } from "@/lib/auth";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setPendingCount(0);
+      return;
+    }
+    const q = query(
+      collection(db, "connections"),
+      where("to_id", "==", user.uid),
+      where("status", "==", "pending")
+    );
+    getDocs(q).then((snap) => setPendingCount(snap.size)).catch(() => {});
+  }, [user?.uid]);
+
   return (
     <Tabs
       screenOptions={{
@@ -60,6 +79,13 @@ export default function TabLayout() {
         name="discover"
         options={{
           title: "Discover",
+          tabBarBadge: pendingCount > 0 ? pendingCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: colors.gold,
+            color: colors.black,
+            fontSize: 10,
+            fontWeight: "700",
+          },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="compass" size={22} color={color} />
           ),
