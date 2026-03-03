@@ -34,6 +34,12 @@ interface VenueWithDeal extends Venue {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+const CATEGORY_PILLS = [
+  { key: "venues", label: "Venues", icon: "storefront-outline" as const },
+  { key: "events", label: "Events", icon: "calendar-outline" as const },
+  { key: "members", label: "Members", icon: "people-outline" as const },
+];
+
 export default function HomeTab() {
   const { profile } = useAuth();
   const router = useRouter();
@@ -41,6 +47,7 @@ export default function HomeTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
+  const [activeCategory, setActiveCategory] = useState("venues");
 
   const fetchVenues = useCallback(async () => {
     try {
@@ -97,21 +104,12 @@ export default function HomeTab() {
     setRefreshing(false);
   }, [fetchVenues]);
 
-  const featuredVenues = venues.slice(0, 5);
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
-
   if (loading) {
     return (
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.black,
+          backgroundColor: colors.bg,
           paddingTop: 80,
           paddingHorizontal: 20,
         }}
@@ -137,17 +135,17 @@ export default function HomeTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 30 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
-      {/* Header */}
+      {/* Top row: Avatar left, search + bell right */}
       <View
         style={{
           paddingTop: 66,
@@ -155,83 +153,141 @@ export default function HomeTab() {
           paddingBottom: 6,
           flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "flex-start",
+          alignItems: "center",
         }}
       >
-        <View>
+        {/* Avatar circle */}
+        <Pressable
+          onPress={() => router.push("/profile")}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: 21,
+            backgroundColor: colors.sand,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Text
             style={{
-              color: colors.grey,
-              fontSize: 13,
-              fontWeight: "400",
-              marginBottom: 4,
-              letterSpacing: 0.5,
-            }}
-          >
-            {getGreeting()}
-          </Text>
-          <Text
-            style={{
-              color: colors.white,
-              fontSize: 26,
+              color: colors.dark,
+              fontSize: 14,
               fontWeight: "700",
-              letterSpacing: 0.3,
             }}
           >
-            {profile?.first_name}
+            {(profile?.first_name?.[0] ?? "")}
+            {(profile?.last_name?.[0] ?? "")}
           </Text>
-        </View>
+        </Pressable>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginTop: 4 }}>
-          {/* Notifications bell */}
+        {/* Right icons */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Pressable
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: colors.white,
+              justifyContent: "center",
+              alignItems: "center",
+              shadowColor: colors.dark,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 6,
+              elevation: 3,
+            }}
+          >
+            <Ionicons name="search-outline" size={20} color={colors.dark} />
+          </Pressable>
           <Pressable
             onPress={() => router.push("/notifications")}
             accessibilityLabel="Notifications"
             accessibilityRole="button"
             style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: colors.white,
               justifyContent: "center",
               alignItems: "center",
+              shadowColor: colors.dark,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 6,
+              elevation: 3,
             }}
           >
-            <Ionicons name="notifications-outline" size={18} color={colors.white} />
-          </Pressable>
-
-          {/* Profile avatar */}
-          <Pressable
-            onPress={() => router.push("/profile")}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: "rgba(201, 168, 76, 0.15)",
-              borderWidth: 1,
-              borderColor: "rgba(201, 168, 76, 0.3)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{
-                color: colors.gold,
-                fontSize: 13,
-                fontWeight: "700",
-              }}
-            >
-              {(profile?.first_name?.[0] ?? "")}
-              {(profile?.last_name?.[0] ?? "")}
-            </Text>
+            <Ionicons name="notifications-outline" size={20} color={colors.dark} />
           </Pressable>
         </View>
       </View>
 
+      {/* Large bold heading */}
+      <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 24 }}>
+        <Text
+          style={{
+            color: colors.dark,
+            fontSize: 34,
+            fontWeight: "800",
+            lineHeight: 40,
+            letterSpacing: -0.5,
+          }}
+        >
+          {"Discover Your\nCity, Members &\nMore"}
+        </Text>
+      </View>
+
+      {/* Category pills */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          gap: 10,
+          marginBottom: 28,
+        }}
+      >
+        {CATEGORY_PILLS.map((cat) => {
+          const isActive = activeCategory === cat.key;
+          return (
+            <Pressable
+              key={cat.key}
+              onPress={() => setActiveCategory(cat.key)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                borderRadius: 24,
+                backgroundColor: isActive ? colors.dark : colors.white,
+                borderWidth: isActive ? 0 : 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Ionicons
+                name={cat.icon}
+                size={15}
+                color={isActive ? colors.white : colors.dark}
+              />
+              <Text
+                style={{
+                  color: isActive ? colors.white : colors.dark,
+                  fontSize: 14,
+                  fontWeight: "600",
+                }}
+              >
+                {cat.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
       {/* Membership Card */}
-      <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 32 }}>
+      <View style={{ paddingHorizontal: 20, marginBottom: 32 }}>
         <MembershipCard
           firstName={profile?.first_name ?? ""}
           lastName={profile?.last_name ?? ""}
@@ -239,50 +295,6 @@ export default function HomeTab() {
           status={profile?.membership_status ?? "pending"}
           showReflection={false}
         />
-      </View>
-
-      {/* Quick Actions */}
-      <View
-        style={{
-          flexDirection: "row",
-          paddingHorizontal: 20,
-          gap: 12,
-          marginBottom: 32,
-        }}
-      >
-        {[
-          { icon: "qr-code-outline" as const, label: "QR Code", route: "/qr" },
-          { icon: "calendar-outline" as const, label: "Book Event", route: "/(tabs)/events" },
-          { icon: "people-outline" as const, label: "Connect", route: "/(tabs)/connect" },
-          { icon: "compass-outline" as const, label: "Discover", route: "/(tabs)/discover" },
-        ].map((action) => (
-          <Pressable
-            key={action.label}
-            onPress={() => router.push(action.route as any)}
-            style={{
-              flex: 1,
-              backgroundColor: colors.dark,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              paddingVertical: 14,
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Ionicons name={action.icon} size={20} color={colors.gold} />
-            <Text
-              style={{
-                color: colors.grey,
-                fontSize: 10,
-                fontWeight: "600",
-                letterSpacing: 0.3,
-              }}
-            >
-              {action.label}
-            </Text>
-          </Pressable>
-        ))}
       </View>
 
       {/* Upcoming Events */}
@@ -306,35 +318,11 @@ export default function HomeTab() {
         </View>
       )}
 
-      {/* Featured Venues */}
-      {featuredVenues.length > 0 && (
-        <View style={{ marginBottom: 32 }}>
-          <SectionHeader title="Featured Venues" actionLabel="See All" />
-          <FlatList
-            horizontal
-            data={featuredVenues}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 20 }}
-            renderItem={({ item }) => (
-              <VenueCard
-                name={item.name}
-                category={item.category}
-                imageUrl={item.image_url}
-                dealHeadline={item.deals?.[0]?.title}
-                onPress={() => router.push(`/venue/${item.id}`)}
-                variant="featured"
-              />
-            )}
-          />
-        </View>
-      )}
-
       {/* All Venues */}
       <View style={{ paddingHorizontal: 20 }}>
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: 20,
             fontWeight: "700",
             letterSpacing: 0.3,
@@ -360,11 +348,11 @@ export default function HomeTab() {
             <Ionicons
               name="storefront-outline"
               size={48}
-              color={colors.darkBorder}
+              color={colors.border}
             />
             <Text
               style={{
-                color: colors.grey,
+                color: colors.stone,
                 fontSize: 14,
                 textAlign: "center",
                 paddingHorizontal: 20,

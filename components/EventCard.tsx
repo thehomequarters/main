@@ -49,9 +49,9 @@ export function EventCard({
     width: cardWidth,
     borderRadius: 16,
     overflow: "hidden" as const,
-    backgroundColor: colors.dark,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.darkBorder,
+    borderColor: colors.border,
     marginRight: isCompact ? 16 : 0,
     marginBottom: isCompact ? 0 : 20,
   };
@@ -73,17 +73,17 @@ export function EventCard({
             left: 0,
             right: 0,
             height: "50%",
-            backgroundColor: "rgba(0,0,0,0.5)",
+            backgroundColor: "rgba(0,0,0,0.35)",
           }}
         />
 
-        {/* Date badge */}
+        {/* Date badge — dark bg, white text, top-left */}
         <View
           style={{
             position: "absolute",
             top: 12,
             left: 12,
-            backgroundColor: "rgba(0,0,0,0.75)",
+            backgroundColor: colors.dark,
             borderRadius: 10,
             paddingHorizontal: 10,
             paddingVertical: 6,
@@ -93,7 +93,7 @@ export function EventCard({
         >
           <Text
             style={{
-              color: colors.gold,
+              color: colors.white,
               fontSize: 18,
               fontWeight: "800",
               lineHeight: 20,
@@ -103,7 +103,7 @@ export function EventCard({
           </Text>
           <Text
             style={{
-              color: colors.grey,
+              color: "rgba(255,255,255,0.7)",
               fontSize: 9,
               fontWeight: "600",
               letterSpacing: 1,
@@ -113,13 +113,13 @@ export function EventCard({
           </Text>
         </View>
 
-        {/* Category badge */}
+        {/* Category badge — sand bg, dark text, top-right */}
         <View
           style={{
             position: "absolute",
             top: 12,
             right: 12,
-            backgroundColor: "rgba(201, 168, 76, 0.2)",
+            backgroundColor: colors.sand,
             borderRadius: 6,
             paddingHorizontal: 8,
             paddingVertical: 4,
@@ -127,7 +127,7 @@ export function EventCard({
         >
           <Text
             style={{
-              color: colors.gold,
+              color: colors.dark,
               fontSize: 9,
               fontWeight: "700",
               letterSpacing: 1.5,
@@ -143,7 +143,7 @@ export function EventCard({
       <View style={{ padding: 16 }}>
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: isCompact ? 16 : 18,
             fontWeight: "700",
             marginBottom: 6,
@@ -166,15 +166,15 @@ export function EventCard({
             <Ionicons
               name="location-outline"
               size={13}
-              color={colors.grey}
+              color={colors.stone}
             />
-            <Text style={{ color: colors.grey, fontSize: 12 }}>
+            <Text style={{ color: colors.stone, fontSize: 12 }}>
               {event.venue}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Ionicons name="time-outline" size={13} color={colors.grey} />
-            <Text style={{ color: colors.grey, fontSize: 12 }}>
+            <Ionicons name="time-outline" size={13} color={colors.stone} />
+            <Text style={{ color: colors.stone, fontSize: 12 }}>
               {weekday} {formatTime(event.time)}
             </Text>
           </View>
@@ -196,11 +196,11 @@ export function EventCard({
                 <Ionicons
                   name="people-outline"
                   size={14}
-                  color={colors.grey}
+                  color={colors.stone}
                 />
                 <Text
                   style={{
-                    color: colors.grey,
+                    color: colors.stone,
                     fontSize: 12,
                     marginLeft: 4,
                   }}
@@ -208,12 +208,12 @@ export function EventCard({
                   {attendees} going
                 </Text>
               </View>
-              <Text style={{ color: colors.darkBorder, fontSize: 12 }}>
+              <Text style={{ color: colors.border, fontSize: 12 }}>
                 ·
               </Text>
               <Text
                 style={{
-                  color: spotsLeft < 10 ? colors.red : colors.grey,
+                  color: spotsLeft < 10 ? colors.red : colors.stone,
                   fontSize: 12,
                 }}
               >
@@ -226,12 +226,12 @@ export function EventCard({
               onPress={onBook}
               style={{
                 backgroundColor: isBooked
-                  ? "rgba(76, 175, 80, 0.15)"
-                  : "rgba(201, 168, 76, 0.15)",
-                borderWidth: 1,
+                  ? "rgba(46, 125, 50, 0.12)"
+                  : colors.dark,
+                borderWidth: isBooked ? 1 : 0,
                 borderColor: isBooked
-                  ? "rgba(76, 175, 80, 0.3)"
-                  : "rgba(201, 168, 76, 0.3)",
+                  ? "rgba(46, 125, 50, 0.3)"
+                  : "transparent",
                 borderRadius: 8,
                 paddingHorizontal: 16,
                 paddingVertical: 8,
@@ -239,7 +239,7 @@ export function EventCard({
             >
               <Text
                 style={{
-                  color: isBooked ? colors.green : colors.gold,
+                  color: isBooked ? colors.green : colors.white,
                   fontSize: 12,
                   fontWeight: "700",
                   letterSpacing: 0.5,
