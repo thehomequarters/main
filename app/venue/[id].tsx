@@ -75,7 +75,6 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapFailed, setMapFailed] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
   const screenWidth = Dimensions.get("window").width;
@@ -368,43 +367,110 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
-          {/* Map preview */}
-          {venue.latitude && venue.longitude && !mapFailed && (
+          {/* Location card — opens native Maps app */}
+          {venue.latitude && venue.longitude && (
             <Pressable
               onPress={openMap}
               style={{
+                backgroundColor: colors.dark,
                 borderRadius: 14,
-                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: colors.darkBorder,
                 marginBottom: 16,
-                height: 180,
+                overflow: "hidden",
               }}
             >
-              <Image
-                source={{
-                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=16&size=600x360&markers=${venue.latitude},${venue.longitude},red`,
-                }}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-                onError={() => setMapFailed(true)}
-              />
+              {/* Map placeholder visual */}
               <View
                 style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: "rgba(0,0,0,0.60)",
-                  flexDirection: "row",
+                  height: 100,
+                  backgroundColor: "#0d1117",
+                  justifyContent: "center",
                   alignItems: "center",
                   gap: 6,
-                  paddingHorizontal: 14,
-                  paddingVertical: 10,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.darkBorder,
                 }}
               >
-                <Ionicons name="navigate-outline" size={14} color={colors.gold} />
-                <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }}>
-                  Open in Maps
+                {/* Grid lines to suggest a map */}
+                {[0.25, 0.5, 0.75].map((f) => (
+                  <View
+                    key={f}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: `${f * 100}%`,
+                      height: 1,
+                      backgroundColor: "rgba(255,255,255,0.04)",
+                    }}
+                  />
+                ))}
+                {[0.25, 0.5, 0.75].map((f) => (
+                  <View
+                    key={f}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      bottom: 0,
+                      left: `${f * 100}%`,
+                      width: 1,
+                      backgroundColor: "rgba(255,255,255,0.04)",
+                    }}
+                  />
+                ))}
+                {/* Pin */}
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: "rgba(201,168,76,0.15)",
+                    borderWidth: 1.5,
+                    borderColor: "rgba(201,168,76,0.4)",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons name="location" size={18} color={colors.gold} />
+                </View>
+                <Text style={{ color: "rgba(201,168,76,0.6)", fontSize: 10, letterSpacing: 1 }}>
+                  {venue.latitude.toFixed(4)}, {venue.longitude.toFixed(4)}
                 </Text>
+              </View>
+
+              {/* Footer row */}
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingHorizontal: 14,
+                  paddingVertical: 12,
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                  <Ionicons name="navigate-outline" size={16} color={colors.gold} />
+                  <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }}>
+                    Get Directions
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                    backgroundColor: "rgba(201,168,76,0.1)",
+                    borderRadius: 8,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                  }}
+                >
+                  <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "600" }}>
+                    Open Maps
+                  </Text>
+                  <Ionicons name="open-outline" size={12} color={colors.gold} />
+                </View>
               </View>
             </Pressable>
           )}

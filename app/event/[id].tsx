@@ -8,6 +8,7 @@ import {
   Dimensions,
   Linking,
   Alert,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -351,6 +352,78 @@ export default function EventDetailScreen() {
               </Text>
             </View>
           </View>
+
+          {/* Location map card */}
+          {event.venue ? (
+            <Pressable
+              onPress={() => {
+                const query = encodeURIComponent(event.venue);
+                const url = Platform.select({
+                  ios: `maps:?q=${query}`,
+                  default: `geo:0,0?q=${query}`,
+                });
+                Linking.openURL(url!).catch(() =>
+                  Linking.openURL(`https://maps.google.com/?q=${query}`)
+                );
+              }}
+              style={{
+                backgroundColor: colors.dark,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.darkBorder,
+                marginBottom: 20,
+                overflow: "hidden",
+              }}
+            >
+              {/* Map placeholder visual */}
+              <View
+                style={{
+                  height: 90,
+                  backgroundColor: "#0d1117",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 4,
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.darkBorder,
+                }}
+              >
+                {[0.33, 0.67].map((f) => (
+                  <View key={`h${f}`} style={{ position: "absolute", left: 0, right: 0, top: `${f * 100}%`, height: 1, backgroundColor: "rgba(255,255,255,0.04)" }} />
+                ))}
+                {[0.25, 0.5, 0.75].map((f) => (
+                  <View key={`v${f}`} style={{ position: "absolute", top: 0, bottom: 0, left: `${f * 100}%`, width: 1, backgroundColor: "rgba(255,255,255,0.04)" }} />
+                ))}
+                <View
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 17,
+                    backgroundColor: `${catColor}22`,
+                    borderWidth: 1.5,
+                    borderColor: `${catColor}55`,
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons name="location" size={16} color={catColor} />
+                </View>
+              </View>
+
+              {/* Footer row */}
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+                  <Ionicons name="navigate-outline" size={16} color={colors.gold} />
+                  <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
+                    {event.venue}
+                  </Text>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(201,168,76,0.1)", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}>
+                  <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "600" }}>Directions</Text>
+                  <Ionicons name="open-outline" size={12} color={colors.gold} />
+                </View>
+              </View>
+            </Pressable>
+          ) : null}
 
           {/* Description */}
           {event.description ? (

@@ -426,7 +426,7 @@ export default function AccountTab() {
             icon="airplane-outline"
             label="eSIM & Travel"
             subtitle="Stay connected abroad with Airalo"
-            onPress={() => router.push("/esim")}
+            onPress={() => router.push("/esim-intro")}
           />
         </View>
       </View>
