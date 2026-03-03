@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: HERO_H * 0.55,
+    height: 120,
     backgroundColor: "rgba(0,0,0,0.70)",
   },
   heroText: {

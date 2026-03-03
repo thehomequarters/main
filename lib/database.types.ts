@@ -37,6 +37,12 @@ export interface Profile {
   linkedin_handle: string | null;
   // Push notifications
   push_token: string | null;
+  // Privacy settings (all default to false = visible)
+  hide_city?: boolean;
+  hide_industry?: boolean;
+  hide_interests?: boolean;
+  hide_social_links?: boolean;
+  allow_messages?: "all" | "connections";
   // Nomination system
   vouchers: string[];        // UIDs of members who have vouched
   voucher_count: number;     // denormalised length of vouchers
