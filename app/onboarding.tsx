@@ -106,12 +106,6 @@ export default function OnboardingScreen() {
               resizeMode="cover"
             />
 
-            {/* Top vignette for logo */}
-            <View style={styles.topOverlay} />
-
-            {/* Bottom overlay for text */}
-            <View style={styles.bottomOverlay} />
-
             {/* HQ wordmark — top left */}
             <View style={styles.logoWrap}>
               <Text style={styles.logoText}>HQ</Text>
@@ -177,24 +171,6 @@ const styles = StyleSheet.create({
     width: W,
     height: H,
   },
-  // Soft vignette at top so the logo reads
-  topOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    backgroundColor: "rgba(0,0,0,0.30)",
-  },
-  // Thin fade at the very bottom for text legibility only
-  bottomOverlay: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: H * 0.38,
-    backgroundColor: "rgba(0,0,0,0.72)",
-  },
   logoWrap: {
     position: "absolute",
     top: Platform.OS === "ios" ? 62 : 46,
@@ -205,6 +181,9 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "800",
     letterSpacing: 6,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   textBlock: {
     position: "absolute",
@@ -218,6 +197,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 3.5,
     marginBottom: 14,
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 8,
   },
   title: {
     color: colors.white,
@@ -226,6 +208,9 @@ const styles = StyleSheet.create({
     lineHeight: 52,
     letterSpacing: -0.5,
     marginBottom: 18,
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 12,
   },
   controls: {
     position: "absolute",
