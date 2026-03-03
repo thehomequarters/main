@@ -58,7 +58,7 @@ function TabIcon({
   }
   return (
     <View style={{ alignItems: "center", marginTop: 4 }}>
-      <Ionicons name={name} size={22} color={colors.stone} />
+      <Ionicons name={name} size={22} color="#5C5C5E" />
       {!!badge && (
         <View
           style={{
@@ -106,7 +106,7 @@ export default function TabLayout() {
         },
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.white,
-        tabBarInactiveTintColor: colors.stone,
+        tabBarInactiveTintColor: "#5C5C5E",
       }}
     >
       <Tabs.Screen

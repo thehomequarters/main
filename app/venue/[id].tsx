@@ -37,37 +37,6 @@ const PLACEHOLDER_IMAGES: Record<string, string> = {
     "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
 };
 
-function ActionButton({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={{ alignItems: "center", gap: 6, flex: 1 }}>
-      <View
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: colors.sand,
-          borderWidth: 1,
-          borderColor: colors.border,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Ionicons name={icon} size={20} color={colors.dark} />
-      </View>
-      <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "500" }}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -330,26 +299,6 @@ export default function VenueDetailScreen() {
             </ScrollView>
           )}
 
-          {/* Address */}
-          <Pressable
-            onPress={openMap}
-            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 }}
-          >
-            <Ionicons name="location-outline" size={14} color={colors.stone} />
-            <Text style={{ color: colors.stone, fontSize: 14 }}>{venue.address}</Text>
-          </Pressable>
-
-          <Text
-            style={{
-              color: colors.stone,
-              fontSize: 14,
-              marginBottom: 20,
-              paddingLeft: 18,
-            }}
-          >
-            {venue.city}, {venue.country}
-          </Text>
-
           {venue.description ? (
             <Text
               style={{
@@ -363,76 +312,189 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
-          {/* Map preview */}
-          {venue.latitude && venue.longitude && !mapFailed && (
+          {/* Location card → taps open native Maps */}
+          {venue.latitude != null && venue.longitude != null && (
             <Pressable
               onPress={openMap}
               style={{
+                backgroundColor: colors.sand,
                 borderRadius: 14,
-                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 16,
                 marginBottom: 16,
-                height: 180,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 14,
               }}
             >
-              <Image
-                source={{
-                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=16&size=600x360&markers=${venue.latitude},${venue.longitude},red`,
-                }}
-                style={{ width: "100%", height: "100%" }}
-                resizeMode="cover"
-                onError={() => setMapFailed(true)}
-              />
-              {/* Open in Maps pill */}
               <View
                 style={{
-                  position: "absolute",
-                  bottom: 10,
-                  alignSelf: "center",
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  backgroundColor: colors.white,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="map-outline" size={22} color={colors.dark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.dark, fontSize: 14, fontWeight: "600" }}>
+                  {venue.address}
+                </Text>
+                <Text style={{ color: colors.stone, fontSize: 12, marginTop: 2 }}>
+                  {venue.city}, {venue.country}
+                </Text>
+              </View>
+              <View
+                style={{
+                  backgroundColor: colors.dark,
+                  borderRadius: 20,
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
                   flexDirection: "row",
                   alignItems: "center",
                   gap: 5,
-                  backgroundColor: "rgba(255,255,255,0.93)",
-                  borderRadius: 20,
-                  paddingHorizontal: 14,
-                  paddingVertical: 7,
                 }}
               >
-                <Ionicons name="navigate-outline" size={13} color={colors.dark} />
-                <Text style={{ color: colors.dark, fontSize: 12, fontWeight: "700" }}>
-                  Open in Maps
+                <Ionicons name="navigate-outline" size={12} color={colors.white} />
+                <Text style={{ color: colors.white, fontSize: 12, fontWeight: "700" }}>
+                  Directions
                 </Text>
               </View>
             </Pressable>
           )}
 
-          {/* Action Buttons */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-around",
-              backgroundColor: colors.white,
-              borderRadius: 14,
-              paddingVertical: 18,
-              borderWidth: 1,
-              borderColor: colors.border,
-              marginBottom: 24,
-            }}
-          >
-            <ActionButton icon="map-outline" label="Map" onPress={openMap} />
-            <ActionButton icon="call-outline" label="Call" onPress={callVenue} />
-            {venue.menu_url ? (
-              <ActionButton icon="restaurant-outline" label="Menu" onPress={openMenu} />
-            ) : (
-              <ActionButton
-                icon="share-outline"
-                label="Share"
-                onPress={() =>
-                  Share.share({
-                    message: `Check out ${venue.name} on HomeQuarters — ${venue.address}, ${venue.city}`,
-                  })
-                }
-              />
+          {/* Opening hours */}
+          {venue.opening_hours && (
+            <View
+              style={{
+                backgroundColor: colors.white,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 16,
+                marginBottom: 16,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 14,
+              }}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: colors.sand,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="time-outline" size={18} color={colors.dark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600", marginBottom: 3 }}>
+                  Opening Hours
+                </Text>
+                <Text style={{ color: colors.stone, fontSize: 13, lineHeight: 20 }}>
+                  {venue.opening_hours}
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Booking reminder */}
+          {venue.phone && (
+            <Pressable
+              onPress={callVenue}
+              style={{
+                backgroundColor: colors.sand,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 16,
+                marginBottom: 24,
+                flexDirection: "row",
+                alignItems: "flex-start",
+                gap: 14,
+              }}
+            >
+              <View
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: colors.white,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="call-outline" size={17} color={colors.dark} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600", marginBottom: 3 }}>
+                  Reservations — mention HomeQuarters
+                </Text>
+                <Text style={{ color: colors.stone, fontSize: 13, lineHeight: 20 }}>
+                  Call ahead to book your table. Always mention HomeQuarters to ensure your member benefit is applied.
+                </Text>
+                <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600", marginTop: 6 }}>
+                  {venue.phone}
+                </Text>
+              </View>
+            </Pressable>
+          )}
+
+          {/* Share + Menu quick actions */}
+          <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
+            {venue.menu_url && (
+              <Pressable
+                onPress={openMenu}
+                style={{
+                  flex: 1,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 7,
+                  backgroundColor: colors.white,
+                  borderRadius: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  paddingVertical: 13,
+                }}
+              >
+                <Ionicons name="restaurant-outline" size={16} color={colors.dark} />
+                <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600" }}>Menu</Text>
+              </Pressable>
             )}
+            <Pressable
+              onPress={() =>
+                Share.share({
+                  message: `Check out ${venue.name} on HomeQuarters — ${venue.address}, ${venue.city}`,
+                })
+              }
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                backgroundColor: colors.white,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+                paddingVertical: 13,
+              }}
+            >
+              <Ionicons name="share-outline" size={16} color={colors.dark} />
+              <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600" }}>Share</Text>
+            </Pressable>
           </View>
 
           {/* Divider */}

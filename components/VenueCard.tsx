@@ -8,6 +8,7 @@ interface VenueCardProps {
   category: string;
   imageUrl: string | null;
   dealHeadline?: string;
+  tags?: string[] | null;
   onPress: () => void;
   variant?: "featured" | "list";
 }
@@ -26,6 +27,7 @@ export function VenueCard({
   category,
   imageUrl,
   dealHeadline,
+  tags,
   onPress,
   variant = "list",
 }: VenueCardProps) {
@@ -35,6 +37,7 @@ export function VenueCard({
   const imageHeight = isFeatured ? 170 : 190;
 
   const imgSource = imageUrl || PLACEHOLDER_IMAGES[category] || PLACEHOLDER_IMAGES.restaurant;
+  const visibleTags = tags?.slice(0, 2) ?? [];
 
   return (
     <Pressable
@@ -58,7 +61,7 @@ export function VenueCard({
           resizeMode="cover"
         />
 
-        {/* Category pill — top left on image */}
+        {/* Category pill — top left */}
         <View
           style={{
             position: "absolute",
@@ -126,39 +129,48 @@ export function VenueCard({
             color: colors.dark,
             fontSize: 15,
             fontWeight: "700",
-            marginBottom: 6,
+            marginBottom: 7,
           }}
           numberOfLines={1}
         >
           {name}
         </Text>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          {/* Deal pill */}
-          {dealHeadline && (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {/* Tags */}
+          {visibleTags.map((tag) => (
             <View
+              key={tag}
               style={{
                 backgroundColor: colors.sand,
                 borderRadius: 20,
-                paddingHorizontal: 10,
+                paddingHorizontal: 9,
                 paddingVertical: 3,
                 borderWidth: 1,
                 borderColor: colors.border,
               }}
             >
-              <Text style={{ color: colors.dark, fontSize: 11, fontWeight: "600" }} numberOfLines={1}>
+              <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "500" }}>
+                {tag}
+              </Text>
+            </View>
+          ))}
+
+          {/* Deal pill if present */}
+          {dealHeadline && (
+            <View
+              style={{
+                backgroundColor: colors.dark,
+                borderRadius: 20,
+                paddingHorizontal: 9,
+                paddingVertical: 3,
+              }}
+            >
+              <Text style={{ color: colors.white, fontSize: 11, fontWeight: "600" }} numberOfLines={1}>
                 {dealHeadline}
               </Text>
             </View>
           )}
-
-          {/* Rating + members */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Text style={{ fontSize: 12 }}>⭐</Text>
-            <Text style={{ color: colors.stone, fontSize: 12 }}>4.7</Text>
-            <Text style={{ color: colors.border, fontSize: 12 }}>·</Text>
-            <Text style={{ color: colors.stone, fontSize: 12 }}>Members only</Text>
-          </View>
         </View>
       </View>
     </Pressable>

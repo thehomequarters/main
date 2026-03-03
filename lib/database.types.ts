@@ -105,6 +105,7 @@ export interface Venue {
   image_urls: string[] | null;    // up to 3 carousel images
   logo_url: string | null;        // venue logo shown as avatar; tap opens stories
   tags: string[] | null;          // cuisine/vibe tags e.g. ['Middle Eastern', 'Halal']
+  opening_hours: string | null;   // e.g. "Mon2013Sat 12pm201310pm 00b7 Sun Closed"
   is_active: boolean;
   created_at: string;
 }
