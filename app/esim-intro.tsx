@@ -18,8 +18,8 @@ const SLIDES = [
     icon: "wifi" as const,
     tag: "Zimbabwe Coverage",
     title: "Never Lose Signal\nBack Home",
-    body: "Whether you're diaspora returning home or visiting Zimbabwe for the first time, get instant local connectivity — Econet, NetOne & Telecel networks, no roaming charges.",
-    accent: "Econet · NetOne · Telecel",
+    body: "Whether you're diaspora returning home or visiting Zimbabwe for the first time, get instant local connectivity on Telecel's eSIM network — no roaming charges, no physical SIM swap.",
+    accent: "Telecel Zimbabwe · eSIM supported",
   },
   {
     icon: "phone-portrait-outline" as const,
