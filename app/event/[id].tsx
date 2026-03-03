@@ -57,7 +57,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isGrace = profile?.membership_status === "accepted";
 
   const [event, setEvent] = useState<HQEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -493,34 +494,54 @@ export default function EventDetailScreen() {
           borderTopColor: colors.darkBorder,
         }}
       >
-        <Pressable
-          onPress={handleBook}
-          disabled={booking || (isFull && !userBooking)}
-          style={{
-            backgroundColor: userBooking
-              ? "rgba(76,175,80,0.15)"
-              : isFull
-              ? "rgba(160,160,160,0.1)"
-              : colors.stone,
-            borderWidth: userBooking ? 1 : 0,
-            borderColor: userBooking ? "rgba(76,175,80,0.4)" : undefined,
-            borderRadius: 12,
-            paddingVertical: 16,
-            opacity: booking ? 0.7 : 1,
-          }}
-        >
-          <Text
+        {isGrace ? (
+          <Pressable
+            onPress={() => router.push("/activate")}
             style={{
-              color: userBooking ? colors.green : isFull ? colors.grey : colors.black,
-              fontSize: 16,
-              fontWeight: "700",
-              textAlign: "center",
-              letterSpacing: 0.5,
+              backgroundColor: "#F5A623",
+              borderRadius: 12,
+              paddingVertical: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
             }}
           >
-            {booking ? "Please wait..." : userBooking ? "Booked — Cancel?" : isFull ? "Event Full" : "Book My Spot"}
-          </Text>
-        </Pressable>
+            <Ionicons name="lock-closed-outline" size={16} color="#3D2800" />
+            <Text style={{ color: "#3D2800", fontSize: 16, fontWeight: "700", letterSpacing: 0.5 }}>
+              Activate to Book
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={handleBook}
+            disabled={booking || (isFull && !userBooking)}
+            style={{
+              backgroundColor: userBooking
+                ? "rgba(76,175,80,0.15)"
+                : isFull
+                ? "rgba(160,160,160,0.1)"
+                : colors.stone,
+              borderWidth: userBooking ? 1 : 0,
+              borderColor: userBooking ? "rgba(76,175,80,0.4)" : undefined,
+              borderRadius: 12,
+              paddingVertical: 16,
+              opacity: booking ? 0.7 : 1,
+            }}
+          >
+            <Text
+              style={{
+                color: userBooking ? colors.green : isFull ? colors.grey : colors.black,
+                fontSize: 16,
+                fontWeight: "700",
+                textAlign: "center",
+                letterSpacing: 0.5,
+              }}
+            >
+              {booking ? "Please wait..." : userBooking ? "Booked — Cancel?" : isFull ? "Event Full" : "Book My Spot"}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );

@@ -13,6 +13,7 @@ import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth";
 import { MembershipCard } from "@/components/MembershipCard";
+import { GraceBanner } from "@/components/GraceBanner";
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -105,6 +106,7 @@ function MenuItem({
 export default function AccountTab() {
   const { user, profile, signOut } = useAuth();
   const router = useRouter();
+  const isGrace = profile?.membership_status === "accepted";
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
@@ -221,6 +223,8 @@ export default function AccountTab() {
                 backgroundColor:
                   profile?.membership_status === "active"
                     ? "rgba(76, 175, 80, 0.12)"
+                    : isGrace
+                    ? "rgba(245, 166, 35, 0.12)"
                     : colors.sand,
                 paddingHorizontal: 10,
                 paddingVertical: 3,
@@ -233,6 +237,8 @@ export default function AccountTab() {
                   color:
                     profile?.membership_status === "active"
                       ? colors.green
+                      : isGrace
+                      ? "#F5A623"
                       : colors.stone,
                   fontSize: 9,
                   fontWeight: "700",
@@ -240,7 +246,7 @@ export default function AccountTab() {
                   textTransform: "uppercase",
                 }}
               >
-                {profile?.membership_status}
+                {isGrace ? "GRACE PERIOD" : profile?.membership_status}
               </Text>
             </View>
           </View>
@@ -303,6 +309,9 @@ export default function AccountTab() {
         </View>
       </View>
 
+      {/* Grace period banner */}
+      <GraceBanner />
+
       {/* Membership Card */}
       <View style={{ paddingHorizontal: 20, marginBottom: 28 }}>
         <MembershipCard
@@ -310,6 +319,7 @@ export default function AccountTab() {
           lastName={profile?.last_name ?? ""}
           memberCode={profile?.member_code ?? ""}
           status={profile?.membership_status ?? "pending"}
+          acceptedAt={profile?.accepted_at}
         />
       </View>
 
@@ -363,8 +373,8 @@ export default function AccountTab() {
           <MenuItem
             icon="qr-code-outline"
             label="QR Code"
-            subtitle="Show your membership QR"
-            onPress={() => router.push("/qr")}
+            subtitle={isGrace ? "Activate to unlock QR redemption" : "Show your membership QR"}
+            onPress={() => router.push(isGrace ? "/activate" : "/qr")}
           />
         </View>
       </View>
@@ -425,8 +435,8 @@ export default function AccountTab() {
           <MenuItem
             icon="airplane-outline"
             label="eSIM & Travel"
-            subtitle="Get connected in Zimbabwe with Airalo"
-            onPress={() => router.push("/esim-intro" as any)}
+            subtitle={isGrace ? "Activate to unlock eSIM perks" : "Get connected in Zimbabwe with Airalo"}
+            onPress={() => router.push(isGrace ? "/activate" : ("/esim-intro" as any))}
           />
         </View>
       </View>

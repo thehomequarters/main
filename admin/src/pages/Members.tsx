@@ -18,19 +18,20 @@ interface Profile {
   phone: string | null;
   avatar_url: string | null;
   member_code: string;
-  membership_status: "pending" | "active" | "rejected" | "suspended";
+  membership_status: "pending" | "accepted" | "active" | "rejected" | "suspended";
   title: string | null;
   bio: string | null;
   city: string | null;
   industry: string | null;
   interests: string[];
   created_at: string;
+  accepted_at?: string | null;
   voucher_count?: number;
   vouchers?: string[];
   application_code?: string;
 }
 
-type FilterTab = "all" | "pending" | "active" | "rejected" | "suspended";
+type FilterTab = "all" | "pending" | "accepted" | "active" | "rejected" | "suspended";
 
 export default function Members() {
   const [members, setMembers] = useState<Profile[]>([]);
@@ -65,16 +66,24 @@ export default function Members() {
   ) => {
     setUpdating(memberId);
     try {
-      await updateDoc(doc(db, "profiles", memberId), {
-        membership_status: newStatus,
-      });
+      const updatePayload: Record<string, unknown> = { membership_status: newStatus };
+      if (newStatus === "accepted") {
+        updatePayload.accepted_at = new Date().toISOString();
+      }
+      await updateDoc(doc(db, "profiles", memberId), updatePayload);
       setMembers((prev) =>
         prev.map((m) =>
-          m.id === memberId ? { ...m, membership_status: newStatus } : m
+          m.id === memberId
+            ? { ...m, membership_status: newStatus, ...(newStatus === "accepted" ? { accepted_at: updatePayload.accepted_at as string } : {}) }
+            : m
         )
       );
       if (selected?.id === memberId) {
-        setSelected((s) => s ? { ...s, membership_status: newStatus } : s);
+        setSelected((s) =>
+          s
+            ? { ...s, membership_status: newStatus, ...(newStatus === "accepted" ? { accepted_at: updatePayload.accepted_at as string } : {}) }
+            : s
+        );
       }
     } catch (e) {
       console.error("Failed to update status:", e);
@@ -125,17 +134,19 @@ export default function Members() {
   const counts = {
     all: members.length,
     pending: members.filter((m) => m.membership_status === "pending").length,
+    accepted: members.filter((m) => m.membership_status === "accepted").length,
     active: members.filter((m) => m.membership_status === "active").length,
     rejected: members.filter((m) => m.membership_status === "rejected").length,
     suspended: members.filter((m) => m.membership_status === "suspended").length,
   };
 
   const TABS: { key: FilterTab; label: string }[] = [
-    { key: "all", label: "All" },
-    { key: "pending", label: "Pending" },
-    { key: "active", label: "Active" },
+    { key: "all",      label: "All"       },
+    { key: "pending",  label: "Pending"   },
+    { key: "accepted", label: "Accepted"  },
+    { key: "active",   label: "Active"    },
     { key: "suspended", label: "Suspended" },
-    { key: "rejected", label: "Rejected" },
+    { key: "rejected", label: "Rejected"  },
   ];
 
   if (loading) {
@@ -161,7 +172,10 @@ export default function Members() {
           <p className="text-gray-500 text-sm mt-1">
             {members.length} total
             {counts.pending > 0 && (
-              <span className="text-amber-400"> · {counts.pending} pending review</span>
+              <span className="text-yellow-400"> · {counts.pending} pending review</span>
+            )}
+            {counts.accepted > 0 && (
+              <span className="text-amber-400"> · {counts.accepted} awaiting activation</span>
             )}
           </p>
         </div>
@@ -213,16 +227,18 @@ export default function Members() {
           {filtered.map((member) => {
             const initials =
               (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
-            const isPending = member.membership_status === "pending";
-            const isActive = member.membership_status === "active";
+            const isPending  = member.membership_status === "pending";
+            const isAccepted = member.membership_status === "accepted";
+            const isActive   = member.membership_status === "active";
             const isSuspended = member.membership_status === "suspended";
             const isUpdating = updating === member.id;
             const isDeleting = deleting === member.id;
             const isSelected = selected?.id === member.id;
 
-            const statusColors = {
-              active: "bg-green-500/15 text-green-400",
-              pending: "bg-amber-400/15 text-amber-400",
+            const statusColors: Record<string, string> = {
+              active:   "bg-green-500/15 text-green-400",
+              accepted: "bg-amber-500/15 text-amber-400",
+              pending:  "bg-yellow-400/15 text-yellow-400",
               rejected: "bg-red-500/15 text-red-400",
               suspended: "bg-orange-500/15 text-orange-400",
             };
@@ -289,11 +305,11 @@ export default function Members() {
                   {isPending && (
                     <>
                       <button
-                        onClick={() => handleUpdateStatus(member.id, "active")}
+                        onClick={() => handleUpdateStatus(member.id, "accepted")}
                         disabled={isUpdating || isDeleting}
-                        className="px-3 py-1.5 bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-bold rounded-xl hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                        className="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-xl hover:bg-amber-500/25 transition-colors disabled:opacity-50"
                       >
-                        {isUpdating ? "..." : "Approve"}
+                        {isUpdating ? "..." : "Accept"}
                       </button>
                       <button
                         onClick={() => handleUpdateStatus(member.id, "rejected")}
@@ -301,6 +317,24 @@ export default function Members() {
                         className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold rounded-xl hover:bg-red-500/20 transition-colors disabled:opacity-50"
                       >
                         Reject
+                      </button>
+                    </>
+                  )}
+                  {isAccepted && (
+                    <>
+                      <button
+                        onClick={() => handleUpdateStatus(member.id, "active")}
+                        disabled={isUpdating || isDeleting}
+                        className="px-3 py-1.5 bg-green-500/15 border border-green-500/30 text-green-400 text-xs font-bold rounded-xl hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                      >
+                        {isUpdating ? "..." : "Activate"}
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(member.id, "suspended")}
+                        disabled={isUpdating || isDeleting}
+                        className="px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-bold rounded-xl hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+                      >
+                        {isUpdating ? "..." : "Suspend"}
                       </button>
                     </>
                   )}
@@ -315,9 +349,9 @@ export default function Members() {
                   )}
                   {(isSuspended || member.membership_status === "rejected") && (
                     <button
-                      onClick={() => handleUpdateStatus(member.id, "active")}
+                      onClick={() => handleUpdateStatus(member.id, "accepted")}
                       disabled={isUpdating || isDeleting}
-                      className="px-3 py-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-bold rounded-xl hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                      className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-xl hover:bg-amber-500/20 transition-colors disabled:opacity-50"
                     >
                       {isUpdating ? "..." : "Reinstate"}
                     </button>
@@ -393,8 +427,10 @@ export default function Members() {
                 className={`mt-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${
                   selected.membership_status === "active"
                     ? "bg-green-500/15 text-green-400"
+                    : selected.membership_status === "accepted"
+                    ? "bg-amber-500/15 text-amber-400"
                     : selected.membership_status === "pending"
-                    ? "bg-amber-400/15 text-amber-400"
+                    ? "bg-yellow-400/15 text-yellow-400"
                     : selected.membership_status === "suspended"
                     ? "bg-orange-500/15 text-orange-400"
                     : "bg-red-500/15 text-red-400"
@@ -412,6 +448,14 @@ export default function Members() {
                 <DetailRow
                   label="Nominations"
                   value={`${selected.voucher_count ?? 0} / 2 ${(selected.voucher_count ?? 0) >= 2 ? "✓ ready to review" : "— needs more"}`}
+                />
+              )}
+              {selected.accepted_at && (
+                <DetailRow
+                  label="Accepted"
+                  value={new Date(selected.accepted_at).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "long", year: "numeric",
+                  })}
                 />
               )}
               {selected.application_code && selected.membership_status === "pending" && (
@@ -449,11 +493,11 @@ export default function Members() {
               {selected.membership_status === "pending" && (
                 <>
                   <button
-                    onClick={() => handleUpdateStatus(selected.id, "active")}
+                    onClick={() => handleUpdateStatus(selected.id, "accepted")}
                     disabled={updating === selected.id}
-                    className="w-full py-2.5 bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-bold rounded-xl hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                    className="w-full py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-sm font-bold rounded-xl hover:bg-amber-500/25 transition-colors disabled:opacity-50"
                   >
-                    {updating === selected.id ? "Updating..." : "Approve Member"}
+                    {updating === selected.id ? "Updating..." : "Accept Member"}
                   </button>
                   <button
                     onClick={() => handleUpdateStatus(selected.id, "rejected")}
@@ -461,6 +505,24 @@ export default function Members() {
                     className="w-full py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold rounded-xl hover:bg-red-500/20 transition-colors disabled:opacity-50"
                   >
                     Reject Application
+                  </button>
+                </>
+              )}
+              {selected.membership_status === "accepted" && (
+                <>
+                  <button
+                    onClick={() => handleUpdateStatus(selected.id, "active")}
+                    disabled={updating === selected.id}
+                    className="w-full py-2.5 bg-green-500/15 border border-green-500/30 text-green-400 text-sm font-bold rounded-xl hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                  >
+                    {updating === selected.id ? "Updating..." : "Activate Member"}
+                  </button>
+                  <button
+                    onClick={() => handleUpdateStatus(selected.id, "suspended")}
+                    disabled={updating === selected.id}
+                    className="w-full py-2.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 text-sm font-bold rounded-xl hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+                  >
+                    {updating === selected.id ? "Updating..." : "Suspend Member"}
                   </button>
                 </>
               )}
@@ -476,9 +538,9 @@ export default function Members() {
               {(selected.membership_status === "suspended" ||
                 selected.membership_status === "rejected") && (
                 <button
-                  onClick={() => handleUpdateStatus(selected.id, "active")}
+                  onClick={() => handleUpdateStatus(selected.id, "accepted")}
                   disabled={updating === selected.id}
-                  className="w-full py-2.5 bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-bold rounded-xl hover:bg-green-500/20 transition-colors disabled:opacity-50"
+                  className="w-full py-2.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm font-bold rounded-xl hover:bg-amber-500/20 transition-colors disabled:opacity-50"
                 >
                   {updating === selected.id ? "Updating..." : "Reinstate Member"}
                 </button>

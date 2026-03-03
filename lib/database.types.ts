@@ -1,4 +1,4 @@
-export type MembershipStatus = "pending" | "active" | "rejected" | "suspended";
+export type MembershipStatus = "pending" | "accepted" | "active" | "rejected" | "suspended";
 export type MembershipTier =
   | "gold_card"
   | "platinum_card"
@@ -49,6 +49,8 @@ export interface Profile {
   hide_interests?: boolean;
   hide_social_links?: boolean;
   allow_messages?: "all" | "connections";
+  // Grace period
+  accepted_at?: string | null;  // ISO timestamp set when status → "accepted"
   // Nomination system
   vouchers: string[];        // UIDs of members who have vouched
   voucher_count: number;     // denormalised length of vouchers

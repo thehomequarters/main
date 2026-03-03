@@ -17,7 +17,7 @@ export default function Index() {
       return;
     }
 
-    if (profile?.membership_status === "active") {
+    if (profile?.membership_status === "active" || profile?.membership_status === "accepted") {
       router.replace("/(tabs)");
     } else if (profile?.membership_status === "pending") {
       router.replace("/pending");

@@ -23,6 +23,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import type { Venue, Deal } from "@/lib/database.types";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -42,6 +43,8 @@ const PLACEHOLDER_IMAGES: Record<string, string> = {
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { profile } = useAuth();
+  const isGrace = profile?.membership_status === "accepted";
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -211,9 +214,11 @@ export default function VenueDetailScreen() {
             <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: -28, marginBottom: 14 }}>
               <Pressable
                 onPress={() =>
-                  router.push(
-                    `/stories/${id}?venueName=${encodeURIComponent(venue.name)}` as any
-                  )
+                  isGrace
+                    ? router.push("/activate")
+                    : router.push(
+                        `/stories/${id}?venueName=${encodeURIComponent(venue.name)}` as any
+                      )
                 }
                 style={{ width: 72, height: 72, position: "relative" }}
               >
@@ -602,30 +607,57 @@ export default function VenueDetailScreen() {
             borderTopColor: colors.border,
           }}
         >
-          <Pressable
-            onPress={() =>
-              router.push(
-                `/qr?venueId=${venue.id}&venueName=${encodeURIComponent(venue.name)}&dealTitle=${encodeURIComponent(deals[0].title)}&dealId=${deals[0].id}`
-              )
-            }
-            style={{
-              backgroundColor: colors.dark,
-              borderRadius: 12,
-              paddingVertical: 16,
-            }}
-          >
-            <Text
+          {isGrace ? (
+            <Pressable
+              onPress={() => router.push("/activate")}
               style={{
-                color: colors.white,
-                fontSize: 16,
-                fontWeight: "700",
-                textAlign: "center",
-                letterSpacing: 0.5,
+                backgroundColor: "#F5A623",
+                borderRadius: 12,
+                paddingVertical: 16,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              Redeem Benefit
-            </Text>
-          </Pressable>
+              <Ionicons name="lock-closed-outline" size={16} color="#3D2800" />
+              <Text
+                style={{
+                  color: "#3D2800",
+                  fontSize: 16,
+                  fontWeight: "700",
+                  letterSpacing: 0.5,
+                }}
+              >
+                Activate to Redeem
+              </Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={() =>
+                router.push(
+                  `/qr?venueId=${venue.id}&venueName=${encodeURIComponent(venue.name)}&dealTitle=${encodeURIComponent(deals[0].title)}&dealId=${deals[0].id}`
+                )
+              }
+              style={{
+                backgroundColor: colors.dark,
+                borderRadius: 12,
+                paddingVertical: 16,
+              }}
+            >
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 16,
+                  fontWeight: "700",
+                  textAlign: "center",
+                  letterSpacing: 0.5,
+                }}
+              >
+                Redeem Benefit
+              </Text>
+            </Pressable>
+          )}
         </View>
       )}
     </View>

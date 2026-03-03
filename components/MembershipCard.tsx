@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import Svg, {
 // Warm pearl accent for the dark membership card (replaces gold)
 const PEARL = "#C4BDB5";
 const PEARL_DIM = "rgba(196,189,181,0.5)";
+const AMBER = "#F5A623";
+const AMBER_DIM = "rgba(245,166,35,0.5)";
 
 const TIER_DISPLAY: Record<string, string> = {
   gold_card: "Gold Card",
@@ -36,6 +38,7 @@ interface MembershipCardProps {
   memberCode: string;
   status: string;
   tier?: string;
+  acceptedAt?: string | null;
 }
 
 const CARD_ASPECT_RATIO = 1.586;
@@ -50,6 +53,7 @@ export function MembershipCard({
   memberCode,
   status,
   tier,
+  acceptedAt,
 }: MembershipCardProps) {
   const tierLabel = tier ? TIER_DISPLAY[tier] : null;
   const router    = useRouter();
@@ -82,6 +86,13 @@ export function MembershipCard({
   });
 
   const isActive = status === "active";
+  const isGrace  = status === "accepted";
+
+  const graceExpiryLabel = useMemo(() => {
+    if (!isGrace || !acceptedAt) return null;
+    const expiry = new Date(new Date(acceptedAt).getTime() + 365 * 24 * 60 * 60 * 1000);
+    return `Activate before ${expiry.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+  }, [isGrace, acceptedAt]);
 
   const renderFace = (p: string) => (
     <>
@@ -250,26 +261,42 @@ export function MembershipCard({
           )}
           <Text style={{
             color: "#ffffff", fontSize: 15, fontWeight: "700",
-            letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 8,
+            letterSpacing: 2.5, textTransform: "uppercase", marginBottom: isGrace ? 4 : 8,
             textShadowColor: "rgba(255,255,255,0.2)",
             textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6,
           }} numberOfLines={1}>
             {firstName} {lastName}
           </Text>
+          {isGrace && graceExpiryLabel && (
+            <Text style={{
+              color: AMBER_DIM, fontSize: 8, fontWeight: "500",
+              letterSpacing: 1, marginBottom: 8,
+            }}>
+              {graceExpiryLabel}
+            </Text>
+          )}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <Text style={{ color: "rgba(196,189,181,0.65)", fontSize: 11, letterSpacing: 3.5, fontWeight: "400" }}>
               {memberCode}
             </Text>
             <View style={{
-              backgroundColor: isActive ? "rgba(76,175,80,0.18)" : "rgba(196,189,181,0.15)",
+              backgroundColor: isActive
+                ? "rgba(76,175,80,0.18)"
+                : isGrace
+                ? "rgba(245,166,35,0.18)"
+                : "rgba(196,189,181,0.15)",
               paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4,
               borderWidth: 0.5,
-              borderColor: isActive ? "rgba(76,175,80,0.45)" : "rgba(196,189,181,0.35)",
+              borderColor: isActive
+                ? "rgba(76,175,80,0.45)"
+                : isGrace
+                ? "rgba(245,166,35,0.45)"
+                : "rgba(196,189,181,0.35)",
             }}>
               <Text style={{
-                color: isActive ? colors.green : PEARL,
+                color: isActive ? colors.green : isGrace ? AMBER : PEARL,
                 fontSize: 8, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase",
-              }}>{status}</Text>
+              }}>{isGrace ? "GRACE PERIOD" : status}</Text>
             </View>
           </View>
         </View>
@@ -281,7 +308,7 @@ export function MembershipCard({
     <View>
       {/* The card */}
       <Pressable
-        onPress={() => router.push("/qr")}
+        onPress={() => router.push(isGrace ? "/activate" : "/qr")}
         style={{
           width: CARD_WIDTH,
           height: CARD_HEIGHT,

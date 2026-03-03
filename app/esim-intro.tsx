@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+import { useAuth } from "@/lib/auth";
 
 const { width: W } = Dimensions.get("window");
 
@@ -59,8 +60,15 @@ const SLIDES = [
 
 export default function ESIMIntroScreen() {
   const router = useRouter();
+  const { profile } = useAuth();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (profile?.membership_status === "accepted") {
+      router.replace("/activate");
+    }
+  }, [profile?.membership_status]);
 
   const isLast = currentIndex === SLIDES.length - 1;
 

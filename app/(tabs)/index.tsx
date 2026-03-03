@@ -28,6 +28,8 @@ import { VenueCard } from "@/components/VenueCard";
 import { EventCard } from "@/components/EventCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { GraceBanner } from "@/components/GraceBanner";
+import { PaywallSheet } from "@/components/PaywallSheet";
 import { Ionicons } from "@expo/vector-icons";
 
 interface VenueWithDeal extends Venue {
@@ -54,6 +56,9 @@ export default function HomeTab() {
   const [activeCategory, setActiveCategory] = useState("venues");
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [paywallVisible, setPaywallVisible] = useState(false);
+
+  const isGrace = profile?.membership_status === "accepted";
 
   const fetchVenues = useCallback(async () => {
     try {
@@ -243,7 +248,7 @@ export default function HomeTab() {
         </View>
 
         {/* Heading */}
-        <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 24 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 16 }}>
           <Text
             style={{
               color: colors.dark,
@@ -257,11 +262,14 @@ export default function HomeTab() {
           </Text>
         </View>
 
+        {/* Grace period banner */}
+        <GraceBanner />
+
         {/* Category pills */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 10, marginBottom: 28 }}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 10, marginBottom: 28, marginTop: 8 }}
         >
           {CATEGORY_PILLS.map((cat) => {
             const isActive = activeCategory === cat.key;
@@ -317,6 +325,7 @@ export default function HomeTab() {
                 memberCode={profile?.member_code ?? ""}
                 status={profile?.membership_status ?? "pending"}
                 tier={profile?.membership_tier}
+                acceptedAt={profile?.accepted_at}
               />
             </View>
 
@@ -335,7 +344,11 @@ export default function HomeTab() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ paddingHorizontal: 20 }}
                   renderItem={({ item }) => (
-                    <EventCard event={item} variant="compact" />
+                    <EventCard
+                      event={item}
+                      variant="compact"
+                      onPress={isGrace ? () => setPaywallVisible(true) : undefined}
+                    />
                   )}
                 />
               </View>
@@ -360,7 +373,13 @@ export default function HomeTab() {
                   name={venue.name}
                   category={venue.category}
                   imageUrl={venue.image_url}
-                  dealHeadline={venue.deals?.[0]?.title}
+                  dealHeadline={
+                    venue.deals?.[0]?.title
+                      ? isGrace
+                        ? "🔒 Members deal"
+                        : venue.deals[0].title
+                      : undefined
+                  }
                   tags={venue.tags}
                   onPress={() => router.push(`/venue/${venue.id}`)}
                   variant="list"
@@ -394,7 +413,11 @@ export default function HomeTab() {
                   key={event.id}
                   event={event}
                   variant="full"
-                  onPress={() => router.push(`/event/${event.id}` as any)}
+                  onPress={
+                    isGrace
+                      ? () => setPaywallVisible(true)
+                      : () => router.push(`/event/${event.id}` as any)
+                  }
                 />
               ))
             ) : (
@@ -408,6 +431,14 @@ export default function HomeTab() {
           </View>
         )}
       </ScrollView>
+
+      {/* Events paywall for grace users */}
+      <PaywallSheet
+        visible={paywallVisible}
+        onClose={() => setPaywallVisible(false)}
+        featureTitle="Unlock Events"
+        featureDescription="Active members can RSVP and book spots at exclusive HomeQuarters events. Activate your membership to get access."
+      />
 
       {/* Search Modal */}
       <Modal
