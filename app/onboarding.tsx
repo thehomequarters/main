@@ -10,7 +10,6 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { colors } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
 
@@ -65,13 +64,11 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleFinish = async () => {
-    await AsyncStorage.setItem("hq_onboarding_complete", "1");
-    router.replace("/apply");
+  const handleFinish = () => {
+    router.replace("/house-rules-intro");
   };
 
-  const handleSignIn = async () => {
-    await AsyncStorage.setItem("hq_onboarding_complete", "1");
+  const handleSignIn = () => {
     router.replace("/login");
   };
 

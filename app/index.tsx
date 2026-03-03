@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 
@@ -12,28 +11,19 @@ export default function Index() {
   useEffect(() => {
     if (loading) return;
 
-    const navigate = async () => {
-      // Show onboarding on very first launch
-      if (!user) {
-        const seen = await AsyncStorage.getItem("hq_onboarding_complete");
-        if (!seen) {
-          router.replace("/onboarding");
-        } else {
-          router.replace("/apply");
-        }
-        return;
-      }
+    // Unauthenticated users always see the onboarding splash
+    if (!user) {
+      router.replace("/onboarding");
+      return;
+    }
 
-      if (profile?.membership_status === "active") {
-        router.replace("/(tabs)");
-      } else if (profile?.membership_status === "pending") {
-        router.replace("/pending");
-      } else {
-        router.replace("/apply");
-      }
-    };
-
-    navigate();
+    if (profile?.membership_status === "active") {
+      router.replace("/(tabs)");
+    } else if (profile?.membership_status === "pending") {
+      router.replace("/pending");
+    } else {
+      router.replace("/apply");
+    }
   }, [loading, user, profile]);
 
   return (

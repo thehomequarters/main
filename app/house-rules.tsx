@@ -47,6 +47,12 @@ const RULES = [
       "If you experience or witness behaviour that violates these rules, report it to the HQ team immediately. We handle all reports confidentially and fairly.",
     icon: "shield-checkmark-outline" as const,
   },
+  {
+    title: "Membership Can Be Revoked",
+    description:
+      "Violation of these rules may result in the immediate suspension or permanent revocation of your HomeQuarters membership — regardless of tier. Your access is a privilege upheld by your conduct, not a right guaranteed by your subscription.",
+    icon: "ban-outline" as const,
+  },
 ];
 
 export default function HouseRulesScreen() {
@@ -129,56 +135,69 @@ export default function HouseRulesScreen() {
       </View>
 
       {/* Rules */}
-      {RULES.map((rule, index) => (
-        <View
-          key={rule.title}
-          style={{
-            flexDirection: "row",
-            marginHorizontal: 20,
-            marginBottom: 16,
-            backgroundColor: colors.dark,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: colors.darkBorder,
-            padding: 16,
-            gap: 14,
-          }}
-        >
+      {RULES.map((rule, index) => {
+        const isRevocation = index === RULES.length - 1;
+        return (
           <View
+            key={rule.title}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "rgba(201, 168, 76, 0.1)",
-              justifyContent: "center",
-              alignItems: "center",
+              flexDirection: "row",
+              marginHorizontal: 20,
+              marginBottom: 16,
+              backgroundColor: isRevocation
+                ? "rgba(229, 57, 53, 0.06)"
+                : colors.dark,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: isRevocation
+                ? "rgba(229, 57, 53, 0.25)"
+                : colors.darkBorder,
+              padding: 16,
+              gap: 14,
             }}
           >
-            <Ionicons name={rule.icon} size={18} color={colors.gold} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text
+            <View
               style={{
-                color: colors.white,
-                fontSize: 15,
-                fontWeight: "600",
-                marginBottom: 4,
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                backgroundColor: isRevocation
+                  ? "rgba(229, 57, 53, 0.12)"
+                  : "rgba(201, 168, 76, 0.1)",
+                justifyContent: "center",
+                alignItems: "center",
               }}
             >
-              {index + 1}. {rule.title}
-            </Text>
-            <Text
-              style={{
-                color: colors.grey,
-                fontSize: 13,
-                lineHeight: 20,
-              }}
-            >
-              {rule.description}
-            </Text>
+              <Ionicons
+                name={rule.icon}
+                size={18}
+                color={isRevocation ? "#E53935" : colors.gold}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  color: isRevocation ? "#E53935" : colors.white,
+                  fontSize: 15,
+                  fontWeight: "600",
+                  marginBottom: 4,
+                }}
+              >
+                {index + 1}. {rule.title}
+              </Text>
+              <Text
+                style={{
+                  color: colors.grey,
+                  fontSize: 13,
+                  lineHeight: 20,
+                }}
+              >
+                {rule.description}
+              </Text>
+            </View>
           </View>
-        </View>
-      ))}
+        );
+      })}
 
       {/* Footer */}
       <Text
@@ -192,8 +211,8 @@ export default function HouseRulesScreen() {
           opacity: 0.7,
         }}
       >
-        Violation of these rules may result in suspension or removal from
-        HomeQuarters. Last updated March 2026.
+        These rules apply equally to all membership tiers — Gold Card, Platinum
+        Card, Founding Member, and Committee Member. Last updated March 2026.
       </Text>
     </ScrollView>
   );

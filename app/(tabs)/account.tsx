@@ -102,12 +102,22 @@ function MenuItem({
   );
 }
 
+const TIER_LABELS: Record<string, string> = {
+  gold_card: "Gold Card",
+  platinum_card: "Platinum Card",
+  founding_member: "Founding Member",
+  committee_member: "Committee Member",
+};
+
 export default function AccountTab() {
   const { user, profile, signOut } = useAuth();
   const router = useRouter();
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
+  const tierLabel = profile?.membership_tier
+    ? TIER_LABELS[profile.membership_tier]
+    : null;
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -215,33 +225,57 @@ export default function AccountTab() {
             >
               {profile?.member_code}
             </Text>
-            <View
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor:
-                  profile?.membership_status === "active"
-                    ? "rgba(76, 175, 80, 0.15)"
-                    : "rgba(201, 168, 76, 0.15)",
-                paddingHorizontal: 10,
-                paddingVertical: 3,
-                borderRadius: 4,
-                marginTop: 6,
-              }}
-            >
-              <Text
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+              <View
                 style={{
-                  color:
+                  backgroundColor:
                     profile?.membership_status === "active"
-                      ? colors.green
-                      : colors.gold,
-                  fontSize: 9,
-                  fontWeight: "700",
-                  letterSpacing: 2,
-                  textTransform: "uppercase",
+                      ? "rgba(76, 175, 80, 0.15)"
+                      : "rgba(201, 168, 76, 0.15)",
+                  paddingHorizontal: 10,
+                  paddingVertical: 3,
+                  borderRadius: 4,
                 }}
               >
-                {profile?.membership_status}
-              </Text>
+                <Text
+                  style={{
+                    color:
+                      profile?.membership_status === "active"
+                        ? colors.green
+                        : colors.gold,
+                    fontSize: 9,
+                    fontWeight: "700",
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {profile?.membership_status}
+                </Text>
+              </View>
+              {tierLabel && (
+                <View
+                  style={{
+                    backgroundColor: "rgba(201, 168, 76, 0.1)",
+                    borderWidth: 1,
+                    borderColor: "rgba(201, 168, 76, 0.3)",
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.gold,
+                      fontSize: 9,
+                      fontWeight: "700",
+                      letterSpacing: 1.5,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {tierLabel}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -310,6 +344,7 @@ export default function AccountTab() {
           lastName={profile?.last_name ?? ""}
           memberCode={profile?.member_code ?? ""}
           status={profile?.membership_status ?? "pending"}
+          tier={profile?.membership_tier}
         />
       </View>
 
@@ -410,17 +445,6 @@ export default function AccountTab() {
             label="Redemption History"
             subtitle="Deals you've redeemed"
             onPress={() => router.push("/redemptions")}
-          />
-          <MenuItem
-            icon="heart-outline"
-            label="Saved Venues"
-            subtitle="Your favourite spots"
-            onPress={() =>
-              Alert.alert(
-                "Saved Venues",
-                "Saved venues are coming soon. You'll be able to favourite your go-to spots for quick access."
-              )
-            }
           />
           <MenuItem
             icon="airplane-outline"

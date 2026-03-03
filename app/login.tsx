@@ -8,9 +8,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
@@ -19,6 +21,34 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetVisible, setResetVisible] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handlePasswordReset = async () => {
+    const addr = resetEmail.trim().toLowerCase();
+    if (!addr) {
+      Alert.alert("Required", "Please enter your email address.");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, addr);
+      setResetSent(true);
+    } catch {
+      // Show success even on error to avoid email enumeration
+      setResetSent(true);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const closeReset = () => {
+    setResetVisible(false);
+    setResetEmail("");
+    setResetSent(false);
+  };
 
   const handleLogin = async () => {
     if (!email.trim()) {
@@ -144,6 +174,15 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
+          onPress={() => { setResetEmail(email); setResetVisible(true); }}
+          style={{ alignSelf: "flex-end", marginTop: 10 }}
+        >
+          <Text style={{ color: colors.gold, fontSize: 13 }}>
+            Forgot password?
+          </Text>
+        </Pressable>
+
+        <Pressable
           onPress={handleLogin}
           disabled={loading}
           style={{
@@ -180,6 +219,140 @@ export default function LoginScreen() {
           </Text>
         </Pressable>
       </ScrollView>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={resetVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeReset}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }}
+          onPress={closeReset}
+        />
+        <View
+          style={{
+            backgroundColor: colors.dark,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            borderTopWidth: 1,
+            borderColor: colors.darkBorder,
+            padding: 28,
+            paddingBottom: Platform.OS === "ios" ? 52 : 32,
+          }}
+        >
+          {resetSent ? (
+            <>
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 20,
+                  fontWeight: "700",
+                  marginBottom: 10,
+                }}
+              >
+                Check your inbox
+              </Text>
+              <Text
+                style={{
+                  color: colors.grey,
+                  fontSize: 14,
+                  lineHeight: 21,
+                  marginBottom: 24,
+                }}
+              >
+                If an account exists for that email, we've sent a password reset
+                link. Check your spam folder if you don't see it.
+              </Text>
+              <Pressable
+                onPress={closeReset}
+                style={{
+                  backgroundColor: colors.gold,
+                  borderRadius: 12,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ color: colors.black, fontWeight: "700", fontSize: 15 }}
+                >
+                  Done
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text
+                style={{
+                  color: colors.white,
+                  fontSize: 20,
+                  fontWeight: "700",
+                  marginBottom: 6,
+                }}
+              >
+                Reset Password
+              </Text>
+              <Text
+                style={{
+                  color: colors.grey,
+                  fontSize: 14,
+                  lineHeight: 21,
+                  marginBottom: 20,
+                }}
+              >
+                Enter your email address and we'll send you a link to reset your
+                password.
+              </Text>
+              <TextInput
+                placeholder="Email address"
+                placeholderTextColor={colors.grey}
+                value={resetEmail}
+                onChangeText={setResetEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{
+                  backgroundColor: colors.black,
+                  borderWidth: 1,
+                  borderColor: colors.darkBorder,
+                  borderRadius: 10,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  color: colors.white,
+                  fontSize: 15,
+                  marginBottom: 16,
+                }}
+              />
+              <Pressable
+                onPress={handlePasswordReset}
+                disabled={resetLoading}
+                style={{
+                  backgroundColor: colors.gold,
+                  borderRadius: 12,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                  opacity: resetLoading ? 0.6 : 1,
+                }}
+              >
+                {resetLoading ? (
+                  <ActivityIndicator color={colors.black} />
+                ) : (
+                  <Text
+                    style={{
+                      color: colors.black,
+                      fontWeight: "700",
+                      fontSize: 15,
+                    }}
+                  >
+                    Send Reset Link
+                  </Text>
+                )}
+              </Pressable>
+            </>
+          )}
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

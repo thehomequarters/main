@@ -1,4 +1,9 @@
 export type MembershipStatus = "pending" | "active" | "rejected" | "suspended";
+export type MembershipTier =
+  | "gold_card"
+  | "platinum_card"
+  | "founding_member"
+  | "committee_member";
 export type VenueCategory = "restaurant" | "bar" | "cafe" | "experience";
 export type EventCategory = "social" | "dining" | "wellness" | "music" | "arts";
 export type PostTopic =
@@ -25,6 +30,7 @@ export interface Profile {
   avatar_url: string | null;
   member_code: string;
   membership_status: MembershipStatus;
+  membership_tier: MembershipTier;
   created_at: string;
   // Social fields (set via profile editing)
   title: string | null;

@@ -19,11 +19,19 @@ import Svg, {
   Line,
 } from "react-native-svg";
 
+const TIER_DISPLAY: Record<string, string> = {
+  gold_card: "Gold Card",
+  platinum_card: "Platinum Card",
+  founding_member: "Founding Member",
+  committee_member: "Committee Member",
+};
+
 interface MembershipCardProps {
   firstName: string;
   lastName: string;
   memberCode: string;
   status: string;
+  tier?: string;
   showReflection?: boolean;
 }
 
@@ -39,8 +47,10 @@ export function MembershipCard({
   lastName,
   memberCode,
   status,
+  tier,
   showReflection = true,
 }: MembershipCardProps) {
+  const tierLabel = tier ? TIER_DISPLAY[tier] : null;
   const router    = useRouter();
   const glareAnim = useRef(new Animated.Value(0)).current;
 
@@ -229,8 +239,16 @@ export function MembershipCard({
           </View>
         </View>
 
-        {/* Bottom: name + member code + status */}
+        {/* Bottom: tier + name + member code + status */}
         <View>
+          {tierLabel && (
+            <Text style={{
+              color: "rgba(201,168,76,0.55)", fontSize: 7, fontWeight: "700",
+              letterSpacing: 3, textTransform: "uppercase", marginBottom: 4,
+            }}>
+              {tierLabel}
+            </Text>
+          )}
           <Text style={{
             color: "#ffffff", fontSize: 15, fontWeight: "700",
             letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 8,
