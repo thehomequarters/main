@@ -45,20 +45,19 @@ export function EventCard({
   const { day, month, weekday } = formatDate(event.date);
   const spotsLeft = event.capacity - attendees;
 
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        width: cardWidth,
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: colors.dark,
-        borderWidth: 1,
-        borderColor: colors.darkBorder,
-        marginRight: isCompact ? 16 : 0,
-        marginBottom: isCompact ? 0 : 20,
-      }}
-    >
+  const cardStyle = {
+    width: cardWidth,
+    borderRadius: 16,
+    overflow: "hidden" as const,
+    backgroundColor: colors.dark,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
+    marginRight: isCompact ? 16 : 0,
+    marginBottom: isCompact ? 0 : 20,
+  };
+
+  const inner = (
+    <>
       {/* Image */}
       <View style={{ height: isCompact ? 140 : 180, position: "relative" }}>
         <Image
@@ -252,6 +251,20 @@ export function EventCard({
           </View>
         )}
       </View>
-    </Pressable>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={cardStyle}>
+        {inner}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={cardStyle}>
+      {inner}
+    </View>
   );
 }

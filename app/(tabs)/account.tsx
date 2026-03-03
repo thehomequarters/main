@@ -103,7 +103,7 @@ function MenuItem({
 }
 
 export default function AccountTab() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const router = useRouter();
 
   const initials =
@@ -347,6 +347,12 @@ export default function AccountTab() {
                 [{ text: "OK" }]
               )
             }
+          />
+          <MenuItem
+            icon="person-circle-outline"
+            label="View My Profile"
+            subtitle="See how other members see you"
+            onPress={() => router.push(`/member/${user?.uid}` as any)}
           />
           <MenuItem
             icon="star-outline"
