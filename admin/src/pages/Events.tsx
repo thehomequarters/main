@@ -20,6 +20,7 @@ interface HQEvent {
   image_url: string;
   category: string;
   capacity: number;
+  link_url: string | null;
   is_active: boolean;
   created_at: string;
 }
@@ -34,6 +35,7 @@ const EMPTY_EVENT = {
   time: "18:00",
   end_time: "21:00",
   image_url: "",
+  link_url: "",
   category: "social",
   capacity: 50,
 };
@@ -90,6 +92,7 @@ export default function Events() {
         time: form.time,
         end_time: form.end_time,
         image_url: form.image_url.trim(),
+        link_url: form.link_url.trim() || null,
         category: form.category,
         capacity: Number(form.capacity) || 50,
         is_active: true,
@@ -142,6 +145,7 @@ export default function Events() {
       time: event.time,
       end_time: event.end_time,
       image_url: event.image_url,
+      link_url: event.link_url ?? "",
       category: event.category,
       capacity: event.capacity,
     });
@@ -267,6 +271,12 @@ export default function Events() {
                   className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
                 />
               </div>
+              <input
+                value={form.link_url}
+                onChange={(e) => setForm({ ...form, link_url: e.target.value })}
+                placeholder="Event page / ticketing URL (optional)"
+                className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+              />
             </div>
 
             <div className="flex gap-3 mt-6">

@@ -24,6 +24,7 @@ import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCard } from "@/components/EventCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { useRouter } from "expo-router";
 import type { HQEvent, Booking, EventCategory } from "@/lib/database.types";
 
 const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
@@ -37,6 +38,7 @@ const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
 
 export default function EventsTab() {
   const { user } = useAuth();
+  const router = useRouter();
   const [events, setEvents] = useState<HQEvent[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingCounts, setBookingCounts] = useState<Record<string, number>>(
@@ -320,6 +322,7 @@ export default function EventsTab() {
                 variant="full"
                 attendees={bookingCounts[event.id] || 0}
                 isBooked={isEventBooked(event.id)}
+                onPress={() => router.push(`/event/${event.id}` as any)}
                 onBook={() => handleBook(event)}
               />
             ))}
@@ -367,6 +370,7 @@ export default function EventsTab() {
                 variant="full"
                 attendees={bookingCounts[event.id] || 0}
                 isBooked={isEventBooked(event.id)}
+                onPress={() => router.push(`/event/${event.id}` as any)}
                 onBook={() => handleBook(event)}
               />
             ))}

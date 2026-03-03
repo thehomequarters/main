@@ -96,7 +96,20 @@ export interface Venue {
   phone: string | null;
   menu_url: string | null;
   image_url: string | null;
+  image_urls: string[] | null;    // up to 3 carousel images
+  logo_url: string | null;        // venue logo shown as avatar; tap opens stories
+  tags: string[] | null;          // cuisine/vibe tags e.g. ['Middle Eastern', 'Halal']
   is_active: boolean;
+  created_at: string;
+}
+
+export interface VenueStory {
+  id: string;
+  venue_id: string;
+  media_url: string;
+  media_type: "image" | "video";  // video requires expo-av in the app
+  caption: string | null;
+  order: number;
   created_at: string;
 }
 
@@ -121,6 +134,7 @@ export interface HQEvent {
   image_url: string;
   category: EventCategory;
   capacity: number;
+  link_url: string | null;        // optional external event page / ticketing URL
   is_active: boolean;
   created_at: string;
 }

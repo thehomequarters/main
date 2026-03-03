@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,12 @@ import {
   Image,
   Pressable,
   Dimensions,
+  FlatList,
   Linking,
   Share,
   Platform,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -44,14 +47,7 @@ function ActionButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        alignItems: "center",
-        gap: 6,
-        flex: 1,
-      }}
-    >
+    <Pressable onPress={onPress} style={{ alignItems: "center", gap: 6, flex: 1 }}>
       <View
         style={{
           width: 48,
@@ -66,13 +62,7 @@ function ActionButton({
       >
         <Ionicons name={icon} size={20} color={colors.gold} />
       </View>
-      <Text
-        style={{
-          color: colors.grey,
-          fontSize: 11,
-          fontWeight: "500",
-        }}
-      >
+      <Text style={{ color: colors.grey, fontSize: 11, fontWeight: "500" }}>
         {label}
       </Text>
     </Pressable>
@@ -86,31 +76,27 @@ export default function VenueDetailScreen() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapFailed, setMapFailed] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  const screenWidth = Dimensions.get("window").width;
 
   useEffect(() => {
     const fetchVenue = async () => {
       const venueSnap = await getDoc(doc(db, "venues", id));
-
       if (venueSnap.exists()) {
         setVenue({ id: venueSnap.id, ...venueSnap.data() } as Venue);
-
         const dealsQuery = query(
           collection(db, "deals"),
           where("venue_id", "==", id),
           where("is_active", "==", true)
         );
         const dealsSnap = await getDocs(dealsQuery);
-        setDeals(
-          dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal)
-        );
+        setDeals(dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
       }
       setLoading(false);
     };
-
     fetchVenue();
   }, [id]);
-
-  const screenWidth = Dimensions.get("window").width;
 
   const openMap = () => {
     if (!venue) return;
@@ -119,7 +105,7 @@ export default function VenueDetailScreen() {
       ios: `maps:0,0?q=${label}@${venue.latitude},${venue.longitude}`,
       default: `geo:${venue.latitude},${venue.longitude}?q=${venue.latitude},${venue.longitude}(${label})`,
     });
-    Linking.openURL(url);
+    Linking.openURL(url!);
   };
 
   const callVenue = () => {
@@ -132,21 +118,18 @@ export default function VenueDetailScreen() {
     Linking.openURL(venue.menu_url);
   };
 
+  const onCarouselScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+    setActiveSlide(index);
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.black }}>
         <SkeletonLoader width={screenWidth} height={300} borderRadius={0} />
         <View style={{ padding: 20 }}>
-          <SkeletonLoader
-            width="60%"
-            height={24}
-            style={{ marginBottom: 12 }}
-          />
-          <SkeletonLoader
-            width="30%"
-            height={14}
-            style={{ marginBottom: 8 }}
-          />
+          <SkeletonLoader width="60%" height={24} style={{ marginBottom: 12 }} />
+          <SkeletonLoader width="30%" height={14} style={{ marginBottom: 8 }} />
           <SkeletonLoader width="80%" height={14} />
         </View>
       </View>
@@ -155,34 +138,45 @@ export default function VenueDetailScreen() {
 
   if (!venue) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.black,
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <View style={{ flex: 1, backgroundColor: colors.black, justifyContent: "center", alignItems: "center" }}>
         <Text style={{ color: colors.grey }}>Venue not found.</Text>
       </View>
     );
   }
 
-  const imageSource =
-    venue.image_url ||
-    PLACEHOLDER_IMAGES[venue.category] ||
-    PLACEHOLDER_IMAGES.restaurant;
+  // Build the carousel image list
+  const carouselImages: string[] =
+    venue.image_urls && venue.image_urls.length > 0
+      ? venue.image_urls
+      : venue.image_url
+      ? [venue.image_url]
+      : [PLACEHOLDER_IMAGES[venue.category] ?? PLACEHOLDER_IMAGES.restaurant];
+
+  const hasStories = Boolean(venue.logo_url); // logo present means stories may exist
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.black }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Hero Image */}
+
+        {/* ── Hero Carousel ── */}
         <View style={{ width: screenWidth, height: 300 }}>
-          <Image
-            source={{ uri: imageSource }}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
+          <FlatList
+            data={carouselImages}
+            keyExtractor={(_, i) => String(i)}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={onCarouselScroll}
+            scrollEventThrottle={16}
+            renderItem={({ item }) => (
+              <Image
+                source={{ uri: item }}
+                style={{ width: screenWidth, height: 300 }}
+                resizeMode="cover"
+              />
+            )}
           />
+
           {/* Gradient overlay */}
           <View
             style={{
@@ -192,11 +186,43 @@ export default function VenueDetailScreen() {
               right: 0,
               height: 120,
               backgroundColor: "rgba(0,0,0,0.6)",
+              pointerEvents: "none",
             }}
           />
+
+          {/* Dot indicators (only if multiple images) */}
+          {carouselImages.length > 1 && (
+            <View
+              style={{
+                position: "absolute",
+                bottom: 12,
+                left: 0,
+                right: 0,
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 6,
+                pointerEvents: "none",
+              }}
+            >
+              {carouselImages.map((_, i) => (
+                <View
+                  key={i}
+                  style={{
+                    width: i === activeSlide ? 16 : 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor:
+                      i === activeSlide
+                        ? colors.gold
+                        : "rgba(255,255,255,0.4)",
+                  }}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
-        {/* Back button */}
+        {/* Back button (floating) */}
         <Pressable
           onPress={() => router.back()}
           style={{
@@ -214,8 +240,49 @@ export default function VenueDetailScreen() {
           <Ionicons name="chevron-back" size={22} color={colors.white} />
         </Pressable>
 
-        {/* Venue Info */}
-        <View style={{ padding: 20 }}>
+        {/* ── Logo avatar + venue info row ── */}
+        <View style={{ paddingHorizontal: 20, paddingTop: venue.logo_url ? 0 : 20 }}>
+          {venue.logo_url && (
+            <View style={{ flexDirection: "row", alignItems: "flex-end", marginTop: -28, marginBottom: 14 }}>
+              <Pressable
+                onPress={() =>
+                  router.push(
+                    `/stories/${id}?venueName=${encodeURIComponent(venue.name)}` as any
+                  )
+                }
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                  borderWidth: 3,
+                  borderColor: colors.gold,
+                  overflow: "hidden",
+                  backgroundColor: colors.dark,
+                }}
+              >
+                <Image
+                  source={{ uri: venue.logo_url }}
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="cover"
+                />
+              </Pressable>
+              <Text
+                style={{
+                  color: colors.gold,
+                  fontSize: 10,
+                  fontWeight: "700",
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  marginLeft: 10,
+                  marginBottom: 4,
+                }}
+              >
+                Tap for stories
+              </Text>
+            </View>
+          )}
+
+          {/* Category */}
           <Text
             style={{
               color: colors.gold,
@@ -223,36 +290,58 @@ export default function VenueDetailScreen() {
               fontWeight: "600",
               letterSpacing: 2,
               textTransform: "uppercase",
-              marginBottom: 8,
+              marginBottom: 6,
             }}
           >
             {venue.category}
           </Text>
 
+          {/* Name */}
           <Text
             style={{
               color: colors.white,
               fontSize: 28,
               fontWeight: "700",
-              marginBottom: 8,
+              marginBottom: 10,
             }}
           >
             {venue.name}
           </Text>
 
+          {/* ── Tags ── */}
+          {venue.tags && venue.tags.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, marginBottom: 14 }}
+            >
+              {venue.tags.map((tag) => (
+                <View
+                  key={tag}
+                  style={{
+                    backgroundColor: "rgba(160, 160, 160, 0.1)",
+                    borderWidth: 1,
+                    borderColor: colors.darkBorder,
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                  }}
+                >
+                  <Text style={{ color: colors.grey, fontSize: 12, fontWeight: "500" }}>
+                    {tag}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Address */}
           <Pressable
             onPress={openMap}
             style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 }}
           >
             <Ionicons name="location-outline" size={14} color={colors.grey} />
-            <Text
-              style={{
-                color: colors.grey,
-                fontSize: 14,
-              }}
-            >
-              {venue.address}
-            </Text>
+            <Text style={{ color: colors.grey, fontSize: 14 }}>{venue.address}</Text>
           </Pressable>
 
           <Text
@@ -279,7 +368,7 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
-          {/* Embedded map preview */}
+          {/* Map preview */}
           {venue.latitude && venue.longitude && !mapFailed && (
             <Pressable
               onPress={openMap}
@@ -313,13 +402,7 @@ export default function VenueDetailScreen() {
                 }}
               >
                 <Ionicons name="navigate-outline" size={14} color={colors.gold} />
-                <Text
-                  style={{
-                    color: colors.white,
-                    fontSize: 13,
-                    fontWeight: "600",
-                  }}
-                >
+                <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }}>
                   Open in Maps
                 </Text>
               </View>
@@ -340,38 +423,24 @@ export default function VenueDetailScreen() {
             }}
           >
             <ActionButton icon="map-outline" label="Map" onPress={openMap} />
-            <ActionButton
-              icon="call-outline"
-              label="Call"
-              onPress={callVenue}
-            />
+            <ActionButton icon="call-outline" label="Call" onPress={callVenue} />
             {venue.menu_url ? (
-              <ActionButton
-                icon="restaurant-outline"
-                label="Menu"
-                onPress={openMenu}
-              />
+              <ActionButton icon="restaurant-outline" label="Menu" onPress={openMenu} />
             ) : (
               <ActionButton
                 icon="share-outline"
                 label="Share"
-                onPress={() => {
+                onPress={() =>
                   Share.share({
                     message: `Check out ${venue.name} on HomeQuarters — ${venue.address}, ${venue.city}`,
-                  });
-                }}
+                  })
+                }
               />
             )}
           </View>
 
           {/* Divider */}
-          <View
-            style={{
-              height: 1,
-              backgroundColor: colors.darkBorder,
-              marginBottom: 24,
-            }}
-          />
+          <View style={{ height: 1, backgroundColor: colors.darkBorder, marginBottom: 24 }} />
 
           {/* Your Benefits */}
           {deals.length > 0 && (
@@ -440,7 +509,7 @@ export default function VenueDetailScreen() {
         </View>
       </ScrollView>
 
-      {/* Show QR Code Button */}
+      {/* Redeem Benefit button */}
       {deals.length > 0 && (
         <View
           style={{
