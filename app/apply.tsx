@@ -175,7 +175,7 @@ export default function ApplyScreen() {
             <Text style={styles.fieldLabel}>INVITATION CODE</Text>
             <TextInput
               placeholder="e.g. HQ-XXXX-XXXX"
-              placeholderTextColor={colors.stone}
+              placeholderTextColor="rgba(201,168,76,0.35)"
               value={inviteCode}
               onChangeText={(t) => setInviteCode(t.toUpperCase())}
               autoCapitalize="characters"
@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: colors.gold,
-    backgroundColor: colors.dark,
+    borderColor: "rgba(201,168,76,0.4)",
+    backgroundColor: "rgba(201,168,76,0.07)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     fontStyle: "italic",
-    opacity: 0.7,
+    opacity: 0.6,
   },
   divider: {
     height: 1,
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 18,
-    color: colors.dark,
+    color: colors.gold,
     fontSize: 20,
     fontWeight: "700",
     letterSpacing: 4,
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   signinLink: {
-    color: colors.dark,
+    color: colors.gold,
     fontWeight: "600",
   },
   verifiedBadge: {
