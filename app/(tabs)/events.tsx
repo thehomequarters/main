@@ -175,7 +175,7 @@ export default function EventsTab() {
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.black,
+          backgroundColor: colors.bg,
           paddingTop: 80,
           paddingHorizontal: 20,
         }}
@@ -200,13 +200,13 @@ export default function EventsTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 30 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -220,9 +220,9 @@ export default function EventsTab() {
       >
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: 30,
-            fontWeight: "700",
+            fontWeight: "800",
             letterSpacing: 0.3,
           }}
         >
@@ -230,7 +230,7 @@ export default function EventsTab() {
         </Text>
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 14,
             marginTop: 4,
           }}
@@ -260,17 +260,13 @@ export default function EventsTab() {
                 paddingVertical: 9,
                 borderRadius: 20,
                 borderWidth: 1,
-                borderColor: isSelected
-                  ? colors.gold
-                  : "rgba(160, 160, 160, 0.25)",
-                backgroundColor: isSelected
-                  ? "rgba(201, 168, 76, 0.12)"
-                  : "transparent",
+                borderColor: isSelected ? colors.dark : colors.border,
+                backgroundColor: isSelected ? colors.dark : colors.white,
               }}
             >
               <Text
                 style={{
-                  color: isSelected ? colors.gold : colors.grey,
+                  color: isSelected ? colors.white : colors.dark,
                   fontSize: 13,
                   fontWeight: "600",
                 }}
@@ -303,7 +299,7 @@ export default function EventsTab() {
               />
               <Text
                 style={{
-                  color: colors.white,
+                  color: colors.dark,
                   fontSize: 20,
                   fontWeight: "700",
                   letterSpacing: 0.3,
@@ -346,12 +342,12 @@ export default function EventsTab() {
                   width: 4,
                   height: 20,
                   borderRadius: 2,
-                  backgroundColor: colors.grey,
+                  backgroundColor: colors.gold,
                 }}
               />
               <Text
                 style={{
-                  color: colors.white,
+                  color: colors.dark,
                   fontSize: 20,
                   fontWeight: "700",
                   letterSpacing: 0.3,
@@ -390,11 +386,11 @@ export default function EventsTab() {
           <Ionicons
             name="calendar-outline"
             size={48}
-            color={colors.darkBorder}
+            color={colors.border}
           />
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 15,
               textAlign: "center",
               marginTop: 16,

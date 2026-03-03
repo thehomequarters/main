@@ -332,13 +332,13 @@ export default function ConnectTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 30 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -356,7 +356,7 @@ export default function ConnectTab() {
         <View style={{ flex: 1 }}>
           <Text
             style={{
-              color: colors.white,
+              color: colors.dark,
               fontSize: 30,
               fontWeight: "700",
               letterSpacing: 0.3,
@@ -366,7 +366,7 @@ export default function ConnectTab() {
           </Text>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 14,
               marginTop: 4,
             }}
@@ -381,15 +381,15 @@ export default function ConnectTab() {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             justifyContent: "center",
             alignItems: "center",
             marginTop: 4,
           }}
         >
-          <Ionicons name="chatbubble-outline" size={18} color={colors.white} />
+          <Ionicons name="chatbubble-outline" size={18} color={colors.dark} />
         </Pressable>
       </View>
 
@@ -400,11 +400,11 @@ export default function ConnectTab() {
           marginHorizontal: 20,
           marginTop: 16,
           marginBottom: 20,
-          backgroundColor: colors.dark,
+          backgroundColor: colors.white,
           borderRadius: 12,
           padding: 4,
           borderWidth: 1,
-          borderColor: colors.darkBorder,
+          borderColor: colors.border,
         }}
       >
         {(["noticeboard", "groups"] as ConnectTabView[]).map((tab) => (
@@ -416,14 +416,12 @@ export default function ConnectTab() {
               paddingVertical: 10,
               borderRadius: 10,
               backgroundColor:
-                activeTab === tab
-                  ? "rgba(201, 168, 76, 0.12)"
-                  : "transparent",
+                activeTab === tab ? colors.dark : "transparent",
             }}
           >
             <Text
               style={{
-                color: activeTab === tab ? colors.gold : colors.grey,
+                color: activeTab === tab ? colors.white : colors.stone,
                 fontSize: 14,
                 fontWeight: "600",
                 textAlign: "center",
@@ -446,10 +444,10 @@ export default function ConnectTab() {
               alignItems: "center",
               marginHorizontal: 20,
               marginBottom: 20,
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderRadius: 14,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               padding: 14,
               gap: 12,
             }}
@@ -459,16 +457,16 @@ export default function ConnectTab() {
                 width: 36,
                 height: 36,
                 borderRadius: 18,
-                backgroundColor: "rgba(201, 168, 76, 0.12)",
+                backgroundColor: colors.sand,
                 borderWidth: 1,
-                borderColor: "rgba(201, 168, 76, 0.25)",
+                borderColor: colors.border,
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
               <Text
                 style={{
-                  color: colors.gold,
+                  color: colors.dark,
                   fontSize: 12,
                   fontWeight: "700",
                 }}
@@ -478,14 +476,14 @@ export default function ConnectTab() {
             </View>
             <Text
               style={{
-                color: "rgba(160, 160, 160, 0.5)",
+                color: colors.stone,
                 fontSize: 14,
                 flex: 1,
               }}
             >
               What's on your mind?
             </Text>
-            <Ionicons name="create-outline" size={20} color={colors.grey} />
+            <Ionicons name="create-outline" size={20} color={colors.stone} />
           </Pressable>
 
           {/* Topic filters */}
@@ -509,17 +507,13 @@ export default function ConnectTab() {
                     paddingVertical: 7,
                     borderRadius: 18,
                     borderWidth: 1,
-                    borderColor: isSelected
-                      ? colors.gold
-                      : "rgba(160, 160, 160, 0.25)",
-                    backgroundColor: isSelected
-                      ? "rgba(201, 168, 76, 0.12)"
-                      : "transparent",
+                    borderColor: isSelected ? colors.dark : colors.border,
+                    backgroundColor: isSelected ? colors.dark : colors.white,
                   }}
                 >
                   <Text
                     style={{
-                      color: isSelected ? colors.gold : colors.grey,
+                      color: isSelected ? colors.white : colors.dark,
                       fontSize: 12,
                       fontWeight: "600",
                     }}
@@ -562,11 +556,11 @@ export default function ConnectTab() {
               <Ionicons
                 name="chatbubbles-outline"
                 size={48}
-                color={colors.darkBorder}
+                color={colors.border}
               />
               <Text
                 style={{
-                  color: colors.grey,
+                  color: colors.stone,
                   fontSize: 15,
                   textAlign: "center",
                   marginTop: 16,
@@ -583,7 +577,7 @@ export default function ConnectTab() {
         <View style={{ paddingHorizontal: 20 }}>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 13,
               marginBottom: 20,
             }}
@@ -613,10 +607,10 @@ export default function ConnectTab() {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    backgroundColor: colors.dark,
+                    backgroundColor: colors.white,
                     borderRadius: 14,
                     borderWidth: 1,
-                    borderColor: joined ? "rgba(201,168,76,0.2)" : colors.darkBorder,
+                    borderColor: colors.border,
                     padding: 16,
                     marginBottom: 12,
                   }}
@@ -626,7 +620,7 @@ export default function ConnectTab() {
                       width: 48,
                       height: 48,
                       borderRadius: 14,
-                      backgroundColor: "rgba(201, 168, 76, 0.1)",
+                      backgroundColor: colors.sand,
                       justifyContent: "center",
                       alignItems: "center",
                       marginRight: 14,
@@ -635,14 +629,14 @@ export default function ConnectTab() {
                     <Ionicons
                       name={group.icon as any}
                       size={22}
-                      color={colors.gold}
+                      color={colors.dark}
                     />
                   </View>
 
                   <View style={{ flex: 1 }}>
                     <Text
                       style={{
-                        color: colors.white,
+                        color: colors.dark,
                         fontSize: 15,
                         fontWeight: "600",
                         marginBottom: 2,
@@ -652,7 +646,7 @@ export default function ConnectTab() {
                     </Text>
                     <Text
                       style={{
-                        color: colors.grey,
+                        color: colors.stone,
                         fontSize: 12,
                       }}
                     >
@@ -664,12 +658,12 @@ export default function ConnectTab() {
                     onPress={() => handleJoinGroup(group)}
                     style={{
                       backgroundColor: joined
-                        ? "rgba(76, 175, 80, 0.15)"
-                        : "rgba(201, 168, 76, 0.12)",
-                      borderWidth: 1,
+                        ? "rgba(46, 125, 50, 0.12)"
+                        : colors.dark,
+                      borderWidth: joined ? 1 : 0,
                       borderColor: joined
-                        ? "rgba(76, 175, 80, 0.3)"
-                        : "rgba(201, 168, 76, 0.25)",
+                        ? "rgba(46, 125, 50, 0.3)"
+                        : "transparent",
                       borderRadius: 10,
                       paddingHorizontal: 14,
                       paddingVertical: 8,
@@ -677,7 +671,7 @@ export default function ConnectTab() {
                   >
                     <Text
                       style={{
-                        color: joined ? colors.green : colors.gold,
+                        color: joined ? colors.green : colors.white,
                         fontSize: 12,
                         fontWeight: "700",
                       }}
@@ -706,7 +700,7 @@ export default function ConnectTab() {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <Pressable
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
             onPress={() => {
               setCommentPost(null);
               setNewComment("");
@@ -714,12 +708,12 @@ export default function ConnectTab() {
           />
           <View
             style={{
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               maxHeight: "70%",
               borderTopWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
             }}
           >
             {/* Handle bar */}
@@ -729,7 +723,7 @@ export default function ConnectTab() {
                   width: 36,
                   height: 4,
                   borderRadius: 2,
-                  backgroundColor: colors.darkBorder,
+                  backgroundColor: colors.border,
                 }}
               />
             </View>
@@ -743,18 +737,18 @@ export default function ConnectTab() {
                 paddingHorizontal: 20,
                 paddingVertical: 16,
                 borderBottomWidth: 1,
-                borderBottomColor: colors.darkBorder,
+                borderBottomColor: colors.border,
               }}
             >
               <Text
                 style={{
-                  color: colors.white,
+                  color: colors.dark,
                   fontSize: 17,
                   fontWeight: "600",
                 }}
               >
                 Comments{" "}
-                <Text style={{ color: colors.grey, fontWeight: "400" }}>
+                <Text style={{ color: colors.stone, fontWeight: "400" }}>
                   ({commentPost?.comments ?? 0})
                 </Text>
               </Text>
@@ -764,14 +758,14 @@ export default function ConnectTab() {
                   setNewComment("");
                 }}
               >
-                <Ionicons name="close" size={22} color={colors.grey} />
+                <Ionicons name="close" size={22} color={colors.stone} />
               </Pressable>
             </View>
 
             {/* Comments list */}
             {loadingComments ? (
               <View style={{ padding: 40, alignItems: "center" }}>
-                <ActivityIndicator color={colors.gold} />
+                <ActivityIndicator color={colors.stone} />
               </View>
             ) : comments.length === 0 ? (
               <View
@@ -783,11 +777,11 @@ export default function ConnectTab() {
                 <Ionicons
                   name="chatbubble-outline"
                   size={32}
-                  color={colors.darkBorder}
+                  color={colors.border}
                 />
                 <Text
                   style={{
-                    color: colors.grey,
+                    color: colors.stone,
                     fontSize: 14,
                     marginTop: 12,
                     textAlign: "center",
@@ -814,16 +808,16 @@ export default function ConnectTab() {
                         width: 34,
                         height: 34,
                         borderRadius: 17,
-                        backgroundColor: "rgba(201, 168, 76, 0.12)",
+                        backgroundColor: colors.sand,
                         borderWidth: 1,
-                        borderColor: "rgba(201, 168, 76, 0.25)",
+                        borderColor: colors.border,
                         justifyContent: "center",
                         alignItems: "center",
                       }}
                     >
                       <Text
                         style={{
-                          color: colors.gold,
+                          color: colors.dark,
                           fontSize: 11,
                           fontWeight: "700",
                         }}
@@ -841,7 +835,7 @@ export default function ConnectTab() {
                       >
                         <Text
                           style={{
-                            color: colors.white,
+                            color: colors.dark,
                             fontSize: 13,
                             fontWeight: "600",
                           }}
@@ -850,7 +844,7 @@ export default function ConnectTab() {
                         </Text>
                         <Text
                           style={{
-                            color: colors.grey,
+                            color: colors.stone,
                             fontSize: 11,
                             opacity: 0.7,
                           }}
@@ -860,7 +854,7 @@ export default function ConnectTab() {
                       </View>
                       <Text
                         style={{
-                          color: colors.white,
+                          color: colors.dark,
                           fontSize: 13,
                           lineHeight: 19,
                           marginTop: 3,
@@ -884,7 +878,7 @@ export default function ConnectTab() {
                 paddingVertical: 12,
                 paddingBottom: Platform.OS === "ios" ? 32 : 12,
                 borderTopWidth: 1,
-                borderTopColor: colors.darkBorder,
+                borderTopColor: colors.border,
                 gap: 10,
               }}
             >
@@ -893,16 +887,16 @@ export default function ConnectTab() {
                   width: 32,
                   height: 32,
                   borderRadius: 16,
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  backgroundColor: colors.sand,
                   borderWidth: 1,
-                  borderColor: "rgba(201, 168, 76, 0.25)",
+                  borderColor: colors.border,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.dark,
                     fontSize: 10,
                     fontWeight: "700",
                   }}
@@ -914,17 +908,17 @@ export default function ConnectTab() {
                 value={newComment}
                 onChangeText={setNewComment}
                 placeholder="Add a comment..."
-                placeholderTextColor="rgba(160, 160, 160, 0.5)"
+                placeholderTextColor={colors.stone}
                 style={{
                   flex: 1,
-                  color: colors.white,
+                  color: colors.dark,
                   fontSize: 14,
-                  backgroundColor: colors.black,
+                  backgroundColor: colors.bg,
                   borderRadius: 20,
                   paddingHorizontal: 16,
                   paddingVertical: 10,
                   borderWidth: 1,
-                  borderColor: colors.darkBorder,
+                  borderColor: colors.border,
                 }}
               />
               <Pressable
@@ -935,8 +929,8 @@ export default function ConnectTab() {
                   height: 36,
                   borderRadius: 18,
                   backgroundColor: newComment.trim()
-                    ? colors.gold
-                    : "rgba(201, 168, 76, 0.2)",
+                    ? colors.dark
+                    : colors.sand,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
@@ -944,7 +938,7 @@ export default function ConnectTab() {
                 <Ionicons
                   name="arrow-up"
                   size={18}
-                  color={newComment.trim() ? colors.black : colors.grey}
+                  color={newComment.trim() ? colors.white : colors.stone}
                 />
               </Pressable>
             </View>
@@ -961,19 +955,19 @@ export default function ConnectTab() {
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(0,0,0,0.7)",
+              backgroundColor: "rgba(0,0,0,0.4)",
               justifyContent: "flex-end",
             }}
           >
             <View
               style={{
-                backgroundColor: colors.dark,
+                backgroundColor: colors.white,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 padding: 24,
                 paddingBottom: 40,
                 borderTopWidth: 1,
-                borderColor: colors.darkBorder,
+                borderColor: colors.border,
               }}
             >
               {/* Header */}
@@ -986,13 +980,13 @@ export default function ConnectTab() {
                 }}
               >
                 <Pressable onPress={() => setShowCompose(false)}>
-                  <Text style={{ color: colors.grey, fontSize: 15 }}>
+                  <Text style={{ color: colors.stone, fontSize: 15 }}>
                     Cancel
                   </Text>
                 </Pressable>
                 <Text
                   style={{
-                    color: colors.white,
+                    color: colors.dark,
                     fontSize: 17,
                     fontWeight: "600",
                   }}
@@ -1005,8 +999,8 @@ export default function ConnectTab() {
                   style={{
                     backgroundColor:
                       newPostContent.trim()
-                        ? colors.gold
-                        : "rgba(201, 168, 76, 0.3)",
+                        ? colors.dark
+                        : colors.sand,
                     borderRadius: 8,
                     paddingHorizontal: 16,
                     paddingVertical: 8,
@@ -1014,7 +1008,7 @@ export default function ConnectTab() {
                 >
                   <Text
                     style={{
-                      color: colors.black,
+                      color: newPostContent.trim() ? colors.white : colors.stone,
                       fontSize: 14,
                       fontWeight: "700",
                     }}
@@ -1042,7 +1036,7 @@ export default function ConnectTab() {
                       borderColor:
                         newPostTopic === topic.key
                           ? topic.color
-                          : colors.darkBorder,
+                          : colors.border,
                       backgroundColor:
                         newPostTopic === topic.key
                           ? `${topic.color}15`
@@ -1054,7 +1048,7 @@ export default function ConnectTab() {
                         color:
                           newPostTopic === topic.key
                             ? topic.color
-                            : colors.grey,
+                            : colors.stone,
                         fontSize: 12,
                         fontWeight: "600",
                       }}
@@ -1070,11 +1064,11 @@ export default function ConnectTab() {
                 value={newPostContent}
                 onChangeText={setNewPostContent}
                 placeholder="Share something with the community..."
-                placeholderTextColor="rgba(160, 160, 160, 0.5)"
+                placeholderTextColor={colors.stone}
                 multiline
                 autoFocus
                 style={{
-                  color: colors.white,
+                  color: colors.dark,
                   fontSize: 16,
                   lineHeight: 24,
                   minHeight: 100,
@@ -1120,17 +1114,17 @@ export default function ConnectTab() {
                   marginTop: 16,
                   paddingTop: 12,
                   borderTopWidth: 1,
-                  borderTopColor: colors.darkBorder,
+                  borderTopColor: colors.border,
                 }}
               >
                 <Ionicons
                   name="image-outline"
                   size={20}
-                  color={colors.gold}
+                  color={colors.stone}
                 />
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.stone,
                     fontSize: 13,
                     fontWeight: "500",
                   }}
