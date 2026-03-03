@@ -237,6 +237,7 @@ export default function HomeTab() {
           lastName={profile?.last_name ?? ""}
           memberCode={profile?.member_code ?? ""}
           status={profile?.membership_status ?? "pending"}
+          showReflection={false}
         />
       </View>
 
