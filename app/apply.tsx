@@ -175,7 +175,7 @@ export default function ApplyScreen() {
             <Text style={styles.fieldLabel}>INVITATION CODE</Text>
             <TextInput
               placeholder="e.g. HQ-XXXX-XXXX"
-              placeholderTextColor="rgba(201,168,76,0.35)"
+              placeholderTextColor={colors.stone}
               value={inviteCode}
               onChangeText={(t) => setInviteCode(t.toUpperCase())}
               autoCapitalize="characters"
@@ -226,7 +226,7 @@ export default function ApplyScreen() {
                 <Text style={styles.fieldLabel}>FIRST NAME</Text>
                 <TextInput
                   placeholder="First"
-                  placeholderTextColor={colors.grey}
+                  placeholderTextColor={colors.stone}
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCapitalize="words"
@@ -237,7 +237,7 @@ export default function ApplyScreen() {
                 <Text style={styles.fieldLabel}>LAST NAME</Text>
                 <TextInput
                   placeholder="Last"
-                  placeholderTextColor={colors.grey}
+                  placeholderTextColor={colors.stone}
                   value={lastName}
                   onChangeText={setLastName}
                   autoCapitalize="words"
@@ -249,7 +249,7 @@ export default function ApplyScreen() {
             <Text style={styles.fieldLabel}>EMAIL ADDRESS</Text>
             <TextInput
               placeholder="your@email.com"
-              placeholderTextColor={colors.grey}
+              placeholderTextColor={colors.stone}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -261,7 +261,7 @@ export default function ApplyScreen() {
             <Text style={styles.fieldLabel}>CREATE PASSWORD</Text>
             <TextInput
               placeholder="Minimum 6 characters"
-              placeholderTextColor={colors.grey}
+              placeholderTextColor={colors.stone}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -272,7 +272,7 @@ export default function ApplyScreen() {
             <Text style={styles.fieldLabel}>PHONE (OPTIONAL)</Text>
             <TextInput
               placeholder="+263 77 000 0000"
-              placeholderTextColor={colors.grey}
+              placeholderTextColor={colors.stone}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -303,7 +303,7 @@ export default function ApplyScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: colors.bg,
   },
   scroll: {
     flexGrow: 1,
@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "rgba(201,168,76,0.4)",
-    backgroundColor: "rgba(201,168,76,0.07)",
+    borderColor: colors.gold,
+    backgroundColor: colors.dark,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   headline: {
-    color: colors.white,
+    color: colors.dark,
     fontSize: 34,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headline2: {
-    color: colors.white,
+    color: colors.dark,
     fontSize: 30,
     fontWeight: "800",
     letterSpacing: -0.5,
@@ -354,37 +354,38 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   subtext: {
-    color: "rgba(160,160,160,0.8)",
+    color: colors.stone,
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 8,
   },
   subtext2: {
-    color: "rgba(160,160,160,0.45)",
+    color: colors.stone,
     fontSize: 12,
     lineHeight: 18,
     fontStyle: "italic",
+    opacity: 0.7,
   },
   divider: {
     height: 1,
-    backgroundColor: "rgba(42,42,42,0.8)",
+    backgroundColor: colors.border,
     marginVertical: 28,
   },
   fieldLabel: {
-    color: "rgba(160,160,160,0.6)",
+    color: colors.stone,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
     marginBottom: 8,
   },
   codeInput: {
-    backgroundColor: "rgba(26,26,26,0.9)",
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "rgba(201,168,76,0.2)",
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 18,
     paddingVertical: 18,
-    color: colors.gold,
+    color: colors.dark,
     fontSize: 20,
     fontWeight: "700",
     letterSpacing: 4,
@@ -392,16 +393,16 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   codeInputActive: {
-    borderColor: "rgba(201,168,76,0.55)",
+    borderColor: colors.dark,
   },
   input: {
-    backgroundColor: colors.dark,
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.darkBorder,
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 15,
-    color: colors.white,
+    color: colors.dark,
     fontSize: 15,
     marginBottom: 16,
   },
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   btn: {
-    backgroundColor: colors.gold,
+    backgroundColor: colors.dark,
     borderRadius: 12,
     paddingVertical: 17,
     alignItems: "center",
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   btnText: {
-    color: colors.black,
+    color: colors.white,
     fontSize: 15,
     fontWeight: "800",
     letterSpacing: 0.4,
@@ -428,11 +429,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   signinText: {
-    color: "rgba(160,160,160,0.5)",
+    color: colors.stone,
     fontSize: 13,
   },
   signinLink: {
-    color: colors.gold,
+    color: colors.dark,
     fontWeight: "600",
   },
   verifiedBadge: {
@@ -452,10 +453,11 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
   disclaimer: {
-    color: "rgba(160,160,160,0.4)",
+    color: colors.stone,
     fontSize: 11,
     textAlign: "center",
     lineHeight: 17,
     fontStyle: "italic",
+    opacity: 0.6,
   },
 });

@@ -40,7 +40,7 @@ function MenuItem({
         paddingVertical: 16,
         paddingHorizontal: 20,
         borderBottomWidth: 1,
-        borderBottomColor: colors.darkBorder,
+        borderBottomColor: colors.border,
       }}
     >
       <View
@@ -50,7 +50,7 @@ function MenuItem({
           borderRadius: 10,
           backgroundColor: danger
             ? "rgba(229, 57, 53, 0.1)"
-            : "rgba(160, 160, 160, 0.08)",
+            : colors.sand,
           justifyContent: "center",
           alignItems: "center",
           marginRight: 14,
@@ -59,13 +59,13 @@ function MenuItem({
         <Ionicons
           name={icon}
           size={18}
-          color={danger ? colors.red : colors.grey}
+          color={danger ? colors.red : colors.stone}
         />
       </View>
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            color: danger ? colors.red : colors.white,
+            color: danger ? colors.red : colors.dark,
             fontSize: 15,
             fontWeight: "500",
           }}
@@ -75,7 +75,7 @@ function MenuItem({
         {subtitle && (
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 12,
               marginTop: 1,
             }}
@@ -96,18 +96,11 @@ function MenuItem({
         />
       )}
       {!danger && (
-        <Ionicons name="chevron-forward" size={16} color={colors.darkBorder} />
+        <Ionicons name="chevron-forward" size={16} color={colors.border} />
       )}
     </Pressable>
   );
 }
-
-const TIER_LABELS: Record<string, string> = {
-  gold_card: "Gold Card",
-  platinum_card: "Platinum Card",
-  founding_member: "Founding Member",
-  committee_member: "Committee Member",
-};
 
 export default function AccountTab() {
   const { user, profile, signOut } = useAuth();
@@ -115,9 +108,6 @@ export default function AccountTab() {
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
-  const tierLabel = profile?.membership_tier
-    ? TIER_LABELS[profile.membership_tier]
-    : null;
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -144,7 +134,7 @@ export default function AccountTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       {/* Header */}
@@ -208,7 +198,7 @@ export default function AccountTab() {
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: colors.white,
+                color: colors.dark,
                 fontSize: 22,
                 fontWeight: "700",
               }}
@@ -217,7 +207,7 @@ export default function AccountTab() {
             </Text>
             <Text
               style={{
-                color: colors.grey,
+                color: colors.stone,
                 fontSize: 12,
                 letterSpacing: 2,
                 marginTop: 2,
@@ -225,57 +215,33 @@ export default function AccountTab() {
             >
               {profile?.member_code}
             </Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
-              <View
+            <View
+              style={{
+                alignSelf: "flex-start",
+                backgroundColor:
+                  profile?.membership_status === "active"
+                    ? "rgba(76, 175, 80, 0.15)"
+                    : "rgba(201, 168, 76, 0.15)",
+                paddingHorizontal: 10,
+                paddingVertical: 3,
+                borderRadius: 4,
+                marginTop: 6,
+              }}
+            >
+              <Text
                 style={{
-                  backgroundColor:
+                  color:
                     profile?.membership_status === "active"
-                      ? "rgba(76, 175, 80, 0.15)"
-                      : "rgba(201, 168, 76, 0.15)",
-                  paddingHorizontal: 10,
-                  paddingVertical: 3,
-                  borderRadius: 4,
+                      ? colors.green
+                      : colors.gold,
+                  fontSize: 9,
+                  fontWeight: "700",
+                  letterSpacing: 2,
+                  textTransform: "uppercase",
                 }}
               >
-                <Text
-                  style={{
-                    color:
-                      profile?.membership_status === "active"
-                        ? colors.green
-                        : colors.gold,
-                    fontSize: 9,
-                    fontWeight: "700",
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {profile?.membership_status}
-                </Text>
-              </View>
-              {tierLabel && (
-                <View
-                  style={{
-                    backgroundColor: "rgba(201, 168, 76, 0.1)",
-                    borderWidth: 1,
-                    borderColor: "rgba(201, 168, 76, 0.3)",
-                    paddingHorizontal: 10,
-                    paddingVertical: 3,
-                    borderRadius: 4,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: colors.gold,
-                      fontSize: 9,
-                      fontWeight: "700",
-                      letterSpacing: 1.5,
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    {tierLabel}
-                  </Text>
-                </View>
-              )}
+                {profile?.membership_status}
+              </Text>
             </View>
           </View>
         </View>
@@ -292,17 +258,17 @@ export default function AccountTab() {
             onPress={() => router.push("/profile")}
             style={{
               flex: 1,
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               paddingVertical: 12,
               alignItems: "center",
             }}
           >
             <Text
               style={{
-                color: colors.white,
+                color: colors.dark,
                 fontSize: 13,
                 fontWeight: "600",
               }}
@@ -344,7 +310,6 @@ export default function AccountTab() {
           lastName={profile?.last_name ?? ""}
           memberCode={profile?.member_code ?? ""}
           status={profile?.membership_status ?? "pending"}
-          tier={profile?.membership_tier}
         />
       </View>
 
@@ -352,7 +317,7 @@ export default function AccountTab() {
       <View style={{ marginBottom: 8 }}>
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 11,
             fontWeight: "600",
             letterSpacing: 1.5,
@@ -365,10 +330,10 @@ export default function AccountTab() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
@@ -408,7 +373,7 @@ export default function AccountTab() {
       <View style={{ marginBottom: 8, marginTop: 20 }}>
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 11,
             fontWeight: "600",
             letterSpacing: 1.5,
@@ -421,10 +386,10 @@ export default function AccountTab() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
@@ -447,10 +412,21 @@ export default function AccountTab() {
             onPress={() => router.push("/redemptions")}
           />
           <MenuItem
+            icon="heart-outline"
+            label="Saved Venues"
+            subtitle="Your favourite spots"
+            onPress={() =>
+              Alert.alert(
+                "Saved Venues",
+                "Saved venues are coming soon. You'll be able to favourite your go-to spots for quick access."
+              )
+            }
+          />
+          <MenuItem
             icon="airplane-outline"
             label="eSIM & Travel"
             subtitle="Stay connected abroad with Airalo"
-            onPress={() => router.push("/esim-intro")}
+            onPress={() => router.push("/esim")}
           />
         </View>
       </View>
@@ -459,7 +435,7 @@ export default function AccountTab() {
       <View style={{ marginBottom: 8, marginTop: 20 }}>
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 11,
             fontWeight: "600",
             letterSpacing: 1.5,
@@ -472,10 +448,10 @@ export default function AccountTab() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
@@ -509,10 +485,10 @@ export default function AccountTab() {
       <View style={{ marginTop: 20 }}>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
@@ -527,7 +503,7 @@ export default function AccountTab() {
       {/* App version */}
       <Text
         style={{
-          color: colors.darkBorder,
+          color: colors.border,
           fontSize: 11,
           textAlign: "center",
           marginTop: 24,

@@ -228,7 +228,7 @@ export default function DiscoverTab() {
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.black,
+          backgroundColor: colors.bg,
           paddingTop: 80,
           paddingHorizontal: 20,
         }}
@@ -253,13 +253,13 @@ export default function DiscoverTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 30 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -273,7 +273,7 @@ export default function DiscoverTab() {
       >
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: 30,
             fontWeight: "700",
             letterSpacing: 0.3,
@@ -283,7 +283,7 @@ export default function DiscoverTab() {
         </Text>
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 14,
             marginTop: 4,
           }}
@@ -305,10 +305,10 @@ export default function DiscoverTab() {
         <View
           style={{
             flex: 1,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             padding: 16,
             alignItems: "center",
           }}
@@ -320,7 +320,7 @@ export default function DiscoverTab() {
           </Text>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 11,
               marginTop: 2,
               fontWeight: "500",
@@ -332,22 +332,22 @@ export default function DiscoverTab() {
         <View
           style={{
             flex: 1,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             padding: 16,
             alignItems: "center",
           }}
         >
           <Text
-            style={{ color: colors.white, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.dark, fontSize: 24, fontWeight: "800" }}
           >
             {industryCount || "—"}
           </Text>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 11,
               marginTop: 2,
               fontWeight: "500",
@@ -359,22 +359,22 @@ export default function DiscoverTab() {
         <View
           style={{
             flex: 1,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             padding: 16,
             alignItems: "center",
           }}
         >
           <Text
-            style={{ color: colors.white, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.dark, fontSize: 24, fontWeight: "800" }}
           >
             {cityCount || "—"}
           </Text>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 11,
               marginTop: 2,
               fontWeight: "500",
@@ -406,17 +406,13 @@ export default function DiscoverTab() {
                 paddingVertical: 9,
                 borderRadius: 20,
                 borderWidth: 1,
-                borderColor: isSelected
-                  ? colors.gold
-                  : "rgba(160, 160, 160, 0.25)",
-                backgroundColor: isSelected
-                  ? "rgba(201, 168, 76, 0.12)"
-                  : "transparent",
+                borderColor: isSelected ? colors.dark : colors.border,
+                backgroundColor: isSelected ? colors.dark : colors.white,
               }}
             >
               <Text
                 style={{
-                  color: isSelected ? colors.gold : colors.grey,
+                  color: isSelected ? colors.white : colors.dark,
                   fontSize: 13,
                   fontWeight: "600",
                 }}
@@ -450,7 +446,7 @@ export default function DiscoverTab() {
             />
             <Text
               style={{
-                color: colors.white,
+                color: colors.dark,
                 fontSize: 18,
                 fontWeight: "700",
               }}
@@ -468,7 +464,7 @@ export default function DiscoverTab() {
             >
               <Text
                 style={{
-                  color: colors.black,
+                  color: colors.white,
                   fontSize: 11,
                   fontWeight: "700",
                 }}
@@ -487,10 +483,10 @@ export default function DiscoverTab() {
               <View
                 key={req.id}
                 style={{
-                  backgroundColor: colors.dark,
+                  backgroundColor: colors.white,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "rgba(201, 168, 76, 0.2)",
+                  borderColor: colors.border,
                   padding: 16,
                   marginBottom: 10,
                   marginHorizontal: 20,
@@ -507,7 +503,7 @@ export default function DiscoverTab() {
                       height: 46,
                       borderRadius: 23,
                       borderWidth: 1.5,
-                      borderColor: "rgba(201,168,76,0.25)",
+                      borderColor: colors.border,
                       marginRight: 12,
                     }}
                   />
@@ -517,9 +513,9 @@ export default function DiscoverTab() {
                       width: 46,
                       height: 46,
                       borderRadius: 23,
-                      backgroundColor: "rgba(201, 168, 76, 0.12)",
+                      backgroundColor: colors.sand,
                       borderWidth: 1.5,
-                      borderColor: "rgba(201, 168, 76, 0.25)",
+                      borderColor: colors.border,
                       justifyContent: "center",
                       alignItems: "center",
                       marginRight: 12,
@@ -527,7 +523,7 @@ export default function DiscoverTab() {
                   >
                     <Text
                       style={{
-                        color: colors.gold,
+                        color: colors.dark,
                         fontSize: 15,
                         fontWeight: "700",
                       }}
@@ -541,7 +537,7 @@ export default function DiscoverTab() {
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      color: colors.white,
+                      color: colors.dark,
                       fontSize: 15,
                       fontWeight: "600",
                     }}
@@ -550,7 +546,7 @@ export default function DiscoverTab() {
                   </Text>
                   <Text
                     style={{
-                      color: colors.grey,
+                      color: colors.stone,
                       fontSize: 12,
                       marginTop: 1,
                     }}
@@ -624,7 +620,7 @@ export default function DiscoverTab() {
         />
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: 18,
             fontWeight: "700",
           }}
@@ -647,10 +643,10 @@ export default function DiscoverTab() {
             key={member.id}
             onPress={() => router.push(`/member/${member.id}` as any)}
             style={{
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               padding: 18,
               marginBottom: 14,
               marginHorizontal: 20,
@@ -666,7 +662,7 @@ export default function DiscoverTab() {
                     height: 52,
                     borderRadius: 26,
                     borderWidth: 1.5,
-                    borderColor: "rgba(201, 168, 76, 0.25)",
+                    borderColor: colors.border,
                     marginRight: 14,
                   }}
                 />
@@ -676,9 +672,9 @@ export default function DiscoverTab() {
                     width: 52,
                     height: 52,
                     borderRadius: 26,
-                    backgroundColor: "rgba(201, 168, 76, 0.12)",
+                    backgroundColor: colors.sand,
                     borderWidth: 1.5,
-                    borderColor: "rgba(201, 168, 76, 0.25)",
+                    borderColor: colors.border,
                     justifyContent: "center",
                     alignItems: "center",
                     marginRight: 14,
@@ -686,7 +682,7 @@ export default function DiscoverTab() {
                 >
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.dark,
                       fontSize: 17,
                       fontWeight: "700",
                       letterSpacing: 1,
@@ -701,7 +697,7 @@ export default function DiscoverTab() {
               <View style={{ flex: 1 }}>
                 <Text
                   style={{
-                    color: colors.white,
+                    color: colors.dark,
                     fontSize: 15,
                     fontWeight: "600",
                     marginBottom: 2,
@@ -710,7 +706,7 @@ export default function DiscoverTab() {
                   {member.first_name} {member.last_name}
                 </Text>
                 <Text
-                  style={{ color: colors.grey, fontSize: 12, marginBottom: 6 }}
+                  style={{ color: colors.stone, fontSize: 12, marginBottom: 6 }}
                   numberOfLines={1}
                 >
                   {member.title || "HQ Member"}
@@ -736,9 +732,9 @@ export default function DiscoverTab() {
                       <Ionicons
                         name="location-outline"
                         size={12}
-                        color={colors.grey}
+                        color={colors.stone}
                       />
-                      <Text style={{ color: colors.grey, fontSize: 11 }}>
+                      <Text style={{ color: colors.stone, fontSize: 11 }}>
                         {member.city}
                       </Text>
                     </View>
@@ -746,13 +742,13 @@ export default function DiscoverTab() {
                   {member.industry && (
                     <>
                       <Text
-                        style={{ color: colors.darkBorder, fontSize: 11 }}
+                        style={{ color: colors.border, fontSize: 11 }}
                       >
                         ·
                       </Text>
                       <Text
                         style={{
-                          color: colors.gold,
+                          color: colors.stone,
                           fontSize: 11,
                           fontWeight: "500",
                           textTransform: "capitalize",
@@ -773,7 +769,7 @@ export default function DiscoverTab() {
                       <View
                         key={interest}
                         style={{
-                          backgroundColor: "rgba(160, 160, 160, 0.1)",
+                          backgroundColor: colors.sand,
                           borderRadius: 6,
                           paddingHorizontal: 8,
                           paddingVertical: 3,
@@ -781,7 +777,7 @@ export default function DiscoverTab() {
                       >
                         <Text
                           style={{
-                            color: colors.grey,
+                            color: colors.stone,
                             fontSize: 10,
                             fontWeight: "500",
                           }}
@@ -800,12 +796,12 @@ export default function DiscoverTab() {
                   onPress={() => handleConnect(member)}
                   style={{
                     backgroundColor: connected
-                      ? "rgba(76, 175, 80, 0.15)"
-                      : "rgba(201, 168, 76, 0.12)",
+                      ? "rgba(46, 125, 50, 0.12)"
+                      : colors.dark,
                     borderWidth: 1,
                     borderColor: connected
-                      ? "rgba(76, 175, 80, 0.3)"
-                      : "rgba(201, 168, 76, 0.25)",
+                      ? "rgba(46, 125, 50, 0.3)"
+                      : colors.dark,
                     borderRadius: 10,
                     paddingHorizontal: 14,
                     paddingVertical: 8,
@@ -813,7 +809,7 @@ export default function DiscoverTab() {
                 >
                   <Text
                     style={{
-                      color: connected ? colors.green : colors.gold,
+                      color: connected ? colors.green : colors.white,
                       fontSize: 11,
                       fontWeight: "700",
                     }}
@@ -832,18 +828,18 @@ export default function DiscoverTab() {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 4,
-                      backgroundColor: "rgba(201, 168, 76, 0.08)",
+                      backgroundColor: colors.white,
                       borderWidth: 1,
-                      borderColor: "rgba(201, 168, 76, 0.2)",
+                      borderColor: colors.border,
                       borderRadius: 10,
                       paddingHorizontal: 12,
                       paddingVertical: 7,
                     }}
                   >
-                    <Ionicons name="chatbubble-outline" size={12} color={colors.gold} />
+                    <Ionicons name="chatbubble-outline" size={12} color={colors.dark} />
                     <Text
                       style={{
-                        color: colors.gold,
+                        color: colors.dark,
                         fontSize: 11,
                         fontWeight: "600",
                       }}
@@ -869,11 +865,11 @@ export default function DiscoverTab() {
           <Ionicons
             name="people-outline"
             size={48}
-            color={colors.darkBorder}
+            color={colors.border}
           />
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 15,
               textAlign: "center",
               marginTop: 16,

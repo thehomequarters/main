@@ -53,16 +53,16 @@ function ActionButton({
           width: 48,
           height: 48,
           borderRadius: 24,
-          backgroundColor: "rgba(201, 168, 76, 0.12)",
+          backgroundColor: colors.sand,
           borderWidth: 1,
-          borderColor: "rgba(201, 168, 76, 0.25)",
+          borderColor: colors.border,
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <Ionicons name={icon} size={20} color={colors.gold} />
+        <Ionicons name={icon} size={20} color={colors.dark} />
       </View>
-      <Text style={{ color: colors.grey, fontSize: 11, fontWeight: "500" }}>
+      <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "500" }}>
         {label}
       </Text>
     </Pressable>
@@ -75,6 +75,7 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mapFailed, setMapFailed] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
   const screenWidth = Dimensions.get("window").width;
@@ -124,7 +125,7 @@ export default function VenueDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.black }}>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
         <SkeletonLoader width={screenWidth} height={300} borderRadius={0} />
         <View style={{ padding: 20 }}>
           <SkeletonLoader width="60%" height={24} style={{ marginBottom: 12 }} />
@@ -137,8 +138,8 @@ export default function VenueDetailScreen() {
 
   if (!venue) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.black, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ color: colors.grey }}>Venue not found.</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg, justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ color: colors.stone }}>Venue not found.</Text>
       </View>
     );
   }
@@ -154,11 +155,19 @@ export default function VenueDetailScreen() {
   const hasStories = Boolean(venue.logo_url); // logo present means stories may exist
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.black }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 
         {/* ── Hero Carousel ── */}
-        <View style={{ width: screenWidth, height: 300 }}>
+        <View
+          style={{
+            width: screenWidth,
+            height: 300,
+            borderBottomLeftRadius: 32,
+            borderBottomRightRadius: 32,
+            overflow: "hidden",
+          }}
+        >
           <FlatList
             data={carouselImages}
             keyExtractor={(_, i) => String(i)}
@@ -231,12 +240,12 @@ export default function VenueDetailScreen() {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: "rgba(0,0,0,0.5)",
+            backgroundColor: colors.white,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <Ionicons name="chevron-back" size={22} color={colors.white} />
+          <Ionicons name="chevron-back" size={22} color={colors.dark} />
         </Pressable>
 
         {/* ── Logo avatar + venue info row ── */}
@@ -256,7 +265,7 @@ export default function VenueDetailScreen() {
                   borderWidth: 3,
                   borderColor: colors.gold,
                   overflow: "hidden",
-                  backgroundColor: colors.dark,
+                  backgroundColor: colors.white,
                 }}
               >
                 <Image
@@ -298,7 +307,7 @@ export default function VenueDetailScreen() {
           {/* Name */}
           <Text
             style={{
-              color: colors.white,
+              color: colors.dark,
               fontSize: 28,
               fontWeight: "700",
               marginBottom: 10,
@@ -318,15 +327,15 @@ export default function VenueDetailScreen() {
                 <View
                   key={tag}
                   style={{
-                    backgroundColor: "rgba(160, 160, 160, 0.1)",
+                    backgroundColor: colors.sand,
                     borderWidth: 1,
-                    borderColor: colors.darkBorder,
+                    borderColor: colors.border,
                     borderRadius: 20,
                     paddingHorizontal: 12,
                     paddingVertical: 5,
                   }}
                 >
-                  <Text style={{ color: colors.grey, fontSize: 12, fontWeight: "500" }}>
+                  <Text style={{ color: colors.stone, fontSize: 12, fontWeight: "500" }}>
                     {tag}
                   </Text>
                 </View>
@@ -339,13 +348,13 @@ export default function VenueDetailScreen() {
             onPress={openMap}
             style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 4 }}
           >
-            <Ionicons name="location-outline" size={14} color={colors.grey} />
-            <Text style={{ color: colors.grey, fontSize: 14 }}>{venue.address}</Text>
+            <Ionicons name="location-outline" size={14} color={colors.stone} />
+            <Text style={{ color: colors.stone, fontSize: 14 }}>{venue.address}</Text>
           </Pressable>
 
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 14,
               marginBottom: 20,
               paddingLeft: 18,
@@ -357,7 +366,7 @@ export default function VenueDetailScreen() {
           {venue.description ? (
             <Text
               style={{
-                color: colors.grey,
+                color: colors.stone,
                 fontSize: 14,
                 lineHeight: 22,
                 marginBottom: 24,
@@ -367,110 +376,43 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
-          {/* Location card — opens native Maps app */}
-          {venue.latitude && venue.longitude && (
+          {/* Map preview */}
+          {venue.latitude && venue.longitude && !mapFailed && (
             <Pressable
               onPress={openMap}
               style={{
-                backgroundColor: colors.dark,
                 borderRadius: 14,
-                borderWidth: 1,
-                borderColor: colors.darkBorder,
-                marginBottom: 16,
                 overflow: "hidden",
+                marginBottom: 16,
+                height: 180,
               }}
             >
-              {/* Map placeholder visual */}
-              <View
-                style={{
-                  height: 100,
-                  backgroundColor: "#0d1117",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  gap: 6,
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.darkBorder,
+              <Image
+                source={{
+                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=16&size=600x360&markers=${venue.latitude},${venue.longitude},red`,
                 }}
-              >
-                {/* Grid lines to suggest a map */}
-                {[0.25, 0.5, 0.75].map((f) => (
-                  <View
-                    key={f}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: `${f * 100}%`,
-                      height: 1,
-                      backgroundColor: "rgba(255,255,255,0.04)",
-                    }}
-                  />
-                ))}
-                {[0.25, 0.5, 0.75].map((f) => (
-                  <View
-                    key={f}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      bottom: 0,
-                      left: `${f * 100}%`,
-                      width: 1,
-                      backgroundColor: "rgba(255,255,255,0.04)",
-                    }}
-                  />
-                ))}
-                {/* Pin */}
-                <View
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 18,
-                    backgroundColor: "rgba(201,168,76,0.15)",
-                    borderWidth: 1.5,
-                    borderColor: "rgba(201,168,76,0.4)",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Ionicons name="location" size={18} color={colors.gold} />
-                </View>
-                <Text style={{ color: "rgba(201,168,76,0.6)", fontSize: 10, letterSpacing: 1 }}>
-                  {venue.latitude.toFixed(4)}, {venue.longitude.toFixed(4)}
-                </Text>
-              </View>
-
-              {/* Footer row */}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+                onError={() => setMapFailed(true)}
+              />
               <View
                 style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  backgroundColor: "rgba(0,0,0,0.60)",
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  gap: 6,
                   paddingHorizontal: 14,
-                  paddingVertical: 12,
+                  paddingVertical: 10,
                 }}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-                  <Ionicons name="navigate-outline" size={16} color={colors.gold} />
-                  <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }}>
-                    Get Directions
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 4,
-                    backgroundColor: "rgba(201,168,76,0.1)",
-                    borderRadius: 8,
-                    paddingHorizontal: 10,
-                    paddingVertical: 5,
-                  }}
-                >
-                  <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "600" }}>
-                    Open Maps
-                  </Text>
-                  <Ionicons name="open-outline" size={12} color={colors.gold} />
-                </View>
+                <Ionicons name="navigate-outline" size={14} color={colors.gold} />
+                <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }}>
+                  Open in Maps
+                </Text>
               </View>
             </Pressable>
           )}
@@ -480,11 +422,11 @@ export default function VenueDetailScreen() {
             style={{
               flexDirection: "row",
               justifyContent: "space-around",
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderRadius: 14,
               paddingVertical: 18,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               marginBottom: 24,
             }}
           >
@@ -506,14 +448,14 @@ export default function VenueDetailScreen() {
           </View>
 
           {/* Divider */}
-          <View style={{ height: 1, backgroundColor: colors.darkBorder, marginBottom: 24 }} />
+          <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 24 }} />
 
           {/* Your Benefits */}
           {deals.length > 0 && (
             <>
               <Text
                 style={{
-                  color: colors.white,
+                  color: colors.dark,
                   fontSize: 18,
                   fontWeight: "600",
                   marginBottom: 16,
@@ -526,17 +468,17 @@ export default function VenueDetailScreen() {
                 <View
                   key={deal.id}
                   style={{
-                    backgroundColor: colors.dark,
+                    backgroundColor: colors.white,
                     borderRadius: 12,
                     padding: 18,
                     marginBottom: 12,
                     borderWidth: 1,
-                    borderColor: colors.darkBorder,
+                    borderColor: colors.border,
                   }}
                 >
                   <Text
                     style={{
-                      color: colors.white,
+                      color: colors.dark,
                       fontSize: 16,
                       fontWeight: "600",
                       marginBottom: deal.description || deal.terms ? 6 : 0,
@@ -547,7 +489,7 @@ export default function VenueDetailScreen() {
                   {deal.description && (
                     <Text
                       style={{
-                        color: colors.grey,
+                        color: colors.stone,
                         fontSize: 13,
                         lineHeight: 20,
                         marginBottom: deal.terms ? 6 : 0,
@@ -559,7 +501,7 @@ export default function VenueDetailScreen() {
                   {deal.terms && (
                     <Text
                       style={{
-                        color: colors.grey,
+                        color: colors.stone,
                         fontSize: 12,
                         fontStyle: "italic",
                         opacity: 0.7,
@@ -585,9 +527,9 @@ export default function VenueDetailScreen() {
             right: 0,
             padding: 20,
             paddingBottom: 36,
-            backgroundColor: colors.black,
+            backgroundColor: colors.bg,
             borderTopWidth: 1,
-            borderTopColor: colors.darkBorder,
+            borderTopColor: colors.border,
           }}
         >
           <Pressable
@@ -597,14 +539,14 @@ export default function VenueDetailScreen() {
               )
             }
             style={{
-              backgroundColor: colors.gold,
+              backgroundColor: colors.dark,
               borderRadius: 12,
               paddingVertical: 16,
             }}
           >
             <Text
               style={{
-                color: colors.black,
+                color: colors.white,
                 fontSize: 16,
                 fontWeight: "700",
                 textAlign: "center",
