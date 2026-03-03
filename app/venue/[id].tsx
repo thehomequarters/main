@@ -27,6 +27,7 @@ import { colors } from "@/constants/theme";
 import type { Venue, Deal } from "@/lib/database.types";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { Ionicons } from "@expo/vector-icons";
+import Svg, { Defs, LinearGradient as SvgGradient, Stop, Circle } from "react-native-svg";
 
 const PLACEHOLDER_IMAGES: Record<string, string> = {
   restaurant:
@@ -214,21 +215,38 @@ export default function VenueDetailScreen() {
                     `/stories/${id}?venueName=${encodeURIComponent(venue.name)}` as any
                   )
                 }
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 32,
-                  borderWidth: 3,
-                  borderColor: colors.border,
-                  overflow: "hidden",
-                  backgroundColor: colors.white,
-                }}
+                style={{ width: 72, height: 72, position: "relative" }}
               >
-                <Image
-                  source={{ uri: venue.logo_url }}
-                  style={{ width: "100%", height: "100%" }}
-                  resizeMode="cover"
-                />
+                {/* Instagram-style gradient glow ring */}
+                <Svg width={72} height={72} style={{ position: "absolute", top: 0, left: 0 }}>
+                  <Defs>
+                    <SvgGradient id="storyRing" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <Stop offset="0%" stopColor="#F5831F" />
+                      <Stop offset="40%" stopColor="#E1306C" />
+                      <Stop offset="80%" stopColor="#833AB4" />
+                      <Stop offset="100%" stopColor="#FCAF45" />
+                    </SvgGradient>
+                  </Defs>
+                  <Circle cx={36} cy={36} r={34} fill="none" stroke="url(#storyRing)" strokeWidth={3} />
+                </Svg>
+                <View
+                  style={{
+                    position: "absolute",
+                    top: 4, left: 4,
+                    width: 64, height: 64,
+                    borderRadius: 32,
+                    overflow: "hidden",
+                    backgroundColor: colors.white,
+                    borderWidth: 2,
+                    borderColor: colors.bg,
+                  }}
+                >
+                  <Image
+                    source={{ uri: venue.logo_url }}
+                    style={{ width: "100%", height: "100%" }}
+                    resizeMode="cover"
+                  />
+                </View>
               </Pressable>
               <Text
                 style={{
@@ -312,59 +330,61 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
-          {/* Location card → taps open native Maps */}
+          {/* Location card with static map preview */}
           {venue.latitude != null && venue.longitude != null && (
             <Pressable
               onPress={openMap}
               style={{
-                backgroundColor: colors.sand,
-                borderRadius: 14,
+                borderRadius: 16,
                 borderWidth: 1,
                 borderColor: colors.border,
-                padding: 16,
+                overflow: "hidden",
                 marginBottom: 16,
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 14,
               }}
             >
-              <View
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: 12,
-                  backgroundColor: colors.white,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                  justifyContent: "center",
-                  alignItems: "center",
+              {/* Static map image */}
+              <Image
+                source={{
+                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=15&size=600x200&markers=${venue.latitude},${venue.longitude},red-marker-m`,
                 }}
-              >
-                <Ionicons name="map-outline" size={22} color={colors.dark} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.dark, fontSize: 14, fontWeight: "600" }}>
-                  {venue.address}
-                </Text>
-                <Text style={{ color: colors.stone, fontSize: 12, marginTop: 2 }}>
-                  {venue.city}, {venue.country}
-                </Text>
-              </View>
+                style={{ width: "100%", height: 140 }}
+                resizeMode="cover"
+              />
+              {/* Address row below map */}
               <View
                 style={{
-                  backgroundColor: colors.dark,
-                  borderRadius: 20,
-                  paddingHorizontal: 14,
-                  paddingVertical: 8,
+                  backgroundColor: colors.sand,
+                  padding: 14,
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 5,
+                  gap: 12,
                 }}
               >
-                <Ionicons name="navigate-outline" size={12} color={colors.white} />
-                <Text style={{ color: colors.white, fontSize: 12, fontWeight: "700" }}>
-                  Directions
-                </Text>
+                <Ionicons name="location-outline" size={18} color={colors.dark} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600" }}>
+                    {venue.address}
+                  </Text>
+                  <Text style={{ color: colors.stone, fontSize: 12, marginTop: 1 }}>
+                    {venue.city}, {venue.country}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    backgroundColor: colors.dark,
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <Ionicons name="navigate-outline" size={11} color={colors.white} />
+                  <Text style={{ color: colors.white, fontSize: 12, fontWeight: "700" }}>
+                    Directions
+                  </Text>
+                </View>
               </View>
             </Pressable>
           )}

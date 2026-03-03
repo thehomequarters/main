@@ -69,6 +69,13 @@ export default function ConnectTab() {
   const [myGroupIds, setMyGroupIds] = useState<Set<string>>(new Set());
   const [loadingGroups, setLoadingGroups] = useState(true);
 
+  // Create group state
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [newGroupIcon, setNewGroupIcon] = useState("people-outline");
+  const [creatingGroup, setCreatingGroup] = useState(false);
+
   // Comments state
   const [commentPost, setCommentPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -313,6 +320,35 @@ export default function ConnectTab() {
             : g
         )
       );
+    }
+  };
+
+  const handleCreateGroup = async () => {
+    if (!newGroupName.trim() || !user?.uid) return;
+    setCreatingGroup(true);
+    try {
+      const ref = await addDoc(collection(db, "groups"), {
+        name: newGroupName.trim(),
+        description: newGroupDesc.trim(),
+        icon: newGroupIcon,
+        member_count: 1,
+        created_at: new Date().toISOString(),
+      });
+      // Auto-join creator
+      await addDoc(collection(db, "group_members"), {
+        group_id: ref.id,
+        member_id: user.uid,
+        joined_at: new Date().toISOString(),
+      });
+      setNewGroupName("");
+      setNewGroupDesc("");
+      setNewGroupIcon("people-outline");
+      setShowCreateGroup(false);
+      await fetchGroups();
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setCreatingGroup(false);
     }
   };
 
@@ -575,15 +611,27 @@ export default function ConnectTab() {
 
       {activeTab === "groups" && (
         <View style={{ paddingHorizontal: 20 }}>
-          <Text
-            style={{
-              color: colors.stone,
-              fontSize: 13,
-              marginBottom: 20,
-            }}
-          >
-            Join groups to connect with members who share your interests.
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <Text style={{ color: colors.stone, fontSize: 13, flex: 1 }}>
+              Join groups to connect with members who share your interests.
+            </Text>
+            <Pressable
+              onPress={() => setShowCreateGroup(true)}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                backgroundColor: colors.dark,
+                borderRadius: 20,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                marginLeft: 12,
+              }}
+            >
+              <Ionicons name="add" size={14} color={colors.white} />
+              <Text style={{ color: colors.white, fontSize: 12, fontWeight: "700" }}>New</Text>
+            </Pressable>
+          </View>
 
           {loadingGroups && (
             <View style={{ gap: 12 }}>
@@ -684,6 +732,96 @@ export default function ConnectTab() {
             })}
         </View>
       )}
+
+      {/* Create Group Modal */}
+      <Modal
+        visible={showCreateGroup}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowCreateGroup(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <Pressable
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
+            onPress={() => setShowCreateGroup(false)}
+          />
+          <View
+            style={{
+              backgroundColor: colors.bg,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 24,
+              paddingBottom: 40,
+            }}
+          >
+            <Text style={{ color: colors.dark, fontSize: 20, fontWeight: "700", marginBottom: 20 }}>
+              Create a Group
+            </Text>
+
+            <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, marginBottom: 6 }}>
+              GROUP NAME
+            </Text>
+            <TextInput
+              value={newGroupName}
+              onChangeText={setNewGroupName}
+              placeholder="e.g. Harare Foodies"
+              placeholderTextColor={colors.stone}
+              style={{
+                backgroundColor: colors.white,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 14,
+                color: colors.dark,
+                fontSize: 15,
+                marginBottom: 16,
+              }}
+            />
+
+            <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, marginBottom: 6 }}>
+              DESCRIPTION (OPTIONAL)
+            </Text>
+            <TextInput
+              value={newGroupDesc}
+              onChangeText={setNewGroupDesc}
+              placeholder="What's this group about?"
+              placeholderTextColor={colors.stone}
+              multiline
+              style={{
+                backgroundColor: colors.white,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 14,
+                color: colors.dark,
+                fontSize: 15,
+                minHeight: 80,
+                textAlignVertical: "top",
+                marginBottom: 24,
+              }}
+            />
+
+            <Pressable
+              onPress={handleCreateGroup}
+              disabled={creatingGroup || !newGroupName.trim()}
+              style={{
+                backgroundColor: colors.dark,
+                borderRadius: 100,
+                paddingVertical: 16,
+                alignItems: "center",
+                opacity: (!newGroupName.trim() || creatingGroup) ? 0.5 : 1,
+              }}
+            >
+              <Text style={{ color: colors.white, fontSize: 15, fontWeight: "800" }}>
+                {creatingGroup ? "Creating..." : "Create Group"}
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Comments Modal */}
       <Modal

@@ -43,9 +43,10 @@ const CATEGORY_PILLS = [
 ];
 
 export default function HomeTab() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const [venues, setVenues] = useState<VenueWithDeal[]>([]);
+  const [likedVenueIds, setLikedVenueIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
@@ -92,6 +93,14 @@ export default function HomeTab() {
         .sort((a, b) => a.date.localeCompare(b.date));
       setAllEvents(eventList);
       setUpcomingEvents(eventList.slice(0, 4));
+
+      // Load liked venues for current user
+      if (user?.uid) {
+        const likesSnap = await getDocs(
+          query(collection(db, "venue_likes"), where("member_id", "==", user.uid))
+        );
+        setLikedVenueIds(new Set(likesSnap.docs.map((d) => d.data().venue_id as string)));
+      }
     } catch (e: any) {
       Alert.alert("Error", "Could not load data. Pull down to try again.");
     } finally {
@@ -297,7 +306,7 @@ export default function HomeTab() {
           })}
         </ScrollView>
 
-        {/* Venues tab */}
+        {/* ── Venues content ── */}
         {activeCategory === "venues" && (
           <>
             {/* Membership Card */}
@@ -307,7 +316,7 @@ export default function HomeTab() {
                 lastName={profile?.last_name ?? ""}
                 memberCode={profile?.member_code ?? ""}
                 status={profile?.membership_status ?? "pending"}
-                showReflection={false}
+                tier={profile?.membership_tier}
               />
             </View>
 
@@ -355,20 +364,14 @@ export default function HomeTab() {
                   tags={venue.tags}
                   onPress={() => router.push(`/venue/${venue.id}`)}
                   variant="list"
+                  venueId={venue.id}
+                  initialLiked={likedVenueIds.has(venue.id)}
                 />
               ))}
-
               {venues.length === 0 && (
                 <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
                   <Ionicons name="storefront-outline" size={48} color={colors.border} />
-                  <Text
-                    style={{
-                      color: colors.stone,
-                      fontSize: 14,
-                      textAlign: "center",
-                      paddingHorizontal: 20,
-                    }}
-                  >
+                  <Text style={{ color: colors.stone, fontSize: 14, textAlign: "center", paddingHorizontal: 20 }}>
                     Partner venues are being added. Check back soon!
                   </Text>
                 </View>
@@ -377,7 +380,7 @@ export default function HomeTab() {
           </>
         )}
 
-        {/* Events tab */}
+        {/* ── Events content ── */}
         {activeCategory === "events" && (
           <View style={{ paddingHorizontal: 20 }}>
             <SectionHeader
@@ -397,14 +400,7 @@ export default function HomeTab() {
             ) : (
               <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
                 <Ionicons name="calendar-outline" size={48} color={colors.border} />
-                <Text
-                  style={{
-                    color: colors.stone,
-                    fontSize: 14,
-                    textAlign: "center",
-                    paddingHorizontal: 20,
-                  }}
-                >
+                <Text style={{ color: colors.stone, fontSize: 14, textAlign: "center", paddingHorizontal: 20 }}>
                   No upcoming events. Check back soon!
                 </Text>
               </View>

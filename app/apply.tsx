@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     backgroundColor: colors.dark,
-    borderRadius: 12,
+    borderRadius: 100,
     paddingVertical: 17,
     alignItems: "center",
     marginTop: 8,

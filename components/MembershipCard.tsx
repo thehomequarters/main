@@ -36,14 +36,12 @@ interface MembershipCardProps {
   memberCode: string;
   status: string;
   tier?: string;
-  showReflection?: boolean;
 }
 
 const CARD_ASPECT_RATIO = 1.586;
 const SCREEN_WIDTH      = Dimensions.get("window").width;
 const CARD_WIDTH        = SCREEN_WIDTH - 40;
 const CARD_HEIGHT       = Math.round(CARD_WIDTH / CARD_ASPECT_RATIO);
-const REFL_HEIGHT       = Math.round(CARD_HEIGHT * 0.42);
 const CARD_RADIUS       = 16;
 
 export function MembershipCard({
@@ -52,7 +50,6 @@ export function MembershipCard({
   memberCode,
   status,
   tier,
-  showReflection = true,
 }: MembershipCardProps) {
   const tierLabel = tier ? TIER_DISPLAY[tier] : null;
   const router    = useRouter();
@@ -300,44 +297,6 @@ export function MembershipCard({
         {renderFace("c")}
       </Pressable>
 
-      {/* Reflection — only shown when showReflection is true */}
-      {showReflection && (
-        <>
-          <View
-            pointerEvents="none"
-            style={{
-              width: CARD_WIDTH,
-              height: REFL_HEIGHT,
-              overflow: "hidden",
-              borderTopLeftRadius: CARD_RADIUS,
-              borderTopRightRadius: CARD_RADIUS,
-              marginTop: 3,
-              opacity: 0.3,
-            }}
-          >
-            <View style={{ transform: [{ scaleY: -1 }], width: CARD_WIDTH, height: CARD_HEIGHT }}>
-              {renderFace("r")}
-            </View>
-          </View>
-
-          {/* Gradient fade over reflection */}
-          <Svg
-            width={CARD_WIDTH}
-            height={REFL_HEIGHT}
-            pointerEvents="none"
-            style={{ position: "absolute", top: CARD_HEIGHT + 3, left: 0 }}
-          >
-            <Defs>
-              <SvgGradient id="reflFade" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%"   stopColor="#1C1C1E" stopOpacity="0.0" />
-                <Stop offset="45%"  stopColor="#1C1C1E" stopOpacity="0.5" />
-                <Stop offset="100%" stopColor="#1C1C1E" stopOpacity="1.0" />
-              </SvgGradient>
-            </Defs>
-            <Rect width={CARD_WIDTH} height={REFL_HEIGHT} fill="url(#reflFade)" />
-          </Svg>
-        </>
-      )}
     </View>
   );
 }

@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Image, Pressable, Dimensions } from "react-native";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/lib/auth";
 
 interface VenueCardProps {
   name: string;
@@ -11,6 +14,8 @@ interface VenueCardProps {
   tags?: string[] | null;
   onPress: () => void;
   variant?: "featured" | "list";
+  venueId?: string;
+  initialLiked?: boolean;
 }
 
 const PLACEHOLDER_IMAGES: Record<string, string> = {
@@ -30,7 +35,11 @@ export function VenueCard({
   tags,
   onPress,
   variant = "list",
+  venueId,
+  initialLiked = false,
 }: VenueCardProps) {
+  const { user } = useAuth();
+  const [liked, setLiked] = useState(initialLiked);
   const screenWidth = Dimensions.get("window").width;
   const isFeatured = variant === "featured";
   const cardWidth = isFeatured ? screenWidth * 0.72 : screenWidth - 40;
@@ -38,6 +47,33 @@ export function VenueCard({
 
   const imgSource = imageUrl || PLACEHOLDER_IMAGES[category] || PLACEHOLDER_IMAGES.restaurant;
   const visibleTags = tags?.slice(0, 2) ?? [];
+
+  const handleLike = async () => {
+    if (!user?.uid || !venueId) return;
+    const newLiked = !liked;
+    setLiked(newLiked);
+    try {
+      if (newLiked) {
+        await addDoc(collection(db, "venue_likes"), {
+          venue_id: venueId,
+          member_id: user.uid,
+          created_at: new Date().toISOString(),
+        });
+      } else {
+        const q = query(
+          collection(db, "venue_likes"),
+          where("venue_id", "==", venueId),
+          where("member_id", "==", user.uid)
+        );
+        const snap = await getDocs(q);
+        for (const d of snap.docs) {
+          await deleteDoc(doc(db, "venue_likes", d.id));
+        }
+      }
+    } catch {
+      setLiked(!newLiked); // revert on error
+    }
+  };
 
   return (
     <Pressable
@@ -85,93 +121,84 @@ export function VenueCard({
           </Text>
         </View>
 
-        {/* Action buttons — top right */}
-        <View
+        {/* Like button — top right */}
+        <Pressable
+          onPress={(e) => { e.stopPropagation?.(); handleLike(); }}
           style={{
             position: "absolute",
             top: 10,
             right: 10,
-            flexDirection: "row",
-            gap: 8,
+            width: 34,
+            height: 34,
+            borderRadius: 17,
+            backgroundColor: "rgba(255,255,255,0.92)",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
-          <View
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              backgroundColor: "rgba(255,255,255,0.92)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="share-outline" size={16} color={colors.dark} />
-          </View>
-          <View
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              backgroundColor: "rgba(255,255,255,0.92)",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="heart-outline" size={16} color={colors.dark} />
-          </View>
-        </View>
+          <Ionicons
+            name={liked ? "heart" : "heart-outline"}
+            size={16}
+            color={liked ? colors.red : colors.dark}
+          />
+        </Pressable>
       </View>
 
       {/* Info strip */}
-      <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
+      <View style={{ paddingHorizontal: 14, paddingTop: 11, paddingBottom: 12 }}>
+        {/* Venue name */}
         <Text
           style={{
             color: colors.dark,
             fontSize: 15,
             fontWeight: "700",
-            marginBottom: 7,
+            marginBottom: visibleTags.length > 0 || dealHeadline ? 7 : 0,
           }}
           numberOfLines={1}
         >
           {name}
         </Text>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-          {/* Tags */}
-          {visibleTags.map((tag) => (
-            <View
-              key={tag}
-              style={{
-                backgroundColor: colors.sand,
-                borderRadius: 20,
-                paddingHorizontal: 9,
-                paddingVertical: 3,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
-              <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "500" }}>
-                {tag}
-              </Text>
-            </View>
-          ))}
+        {/* Tags row */}
+        {visibleTags.length > 0 && (
+          <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", marginBottom: dealHeadline ? 6 : 0 }}>
+            {visibleTags.map((tag) => (
+              <View
+                key={tag}
+                style={{
+                  backgroundColor: colors.sand,
+                  borderRadius: 20,
+                  paddingHorizontal: 9,
+                  paddingVertical: 3,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "500" }}>
+                  {tag}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
 
-          {/* Deal pill if present */}
-          {dealHeadline && (
+        {/* Deal pill — own row */}
+        {dealHeadline && (
+          <View style={{ flexDirection: "row" }}>
             <View
               style={{
                 backgroundColor: colors.dark,
                 borderRadius: 20,
-                paddingHorizontal: 9,
-                paddingVertical: 3,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
               }}
             >
               <Text style={{ color: colors.white, fontSize: 11, fontWeight: "600" }} numberOfLines={1}>
                 {dealHeadline}
               </Text>
             </View>
-          )}
-        </View>
+          </View>
+        )}
       </View>
     </Pressable>
   );

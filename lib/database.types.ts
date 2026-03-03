@@ -210,6 +210,13 @@ export interface GroupMember {
   joined_at: string;
 }
 
+export interface VenueLike {
+  id: string;
+  venue_id: string;
+  member_id: string;
+  created_at: string;
+}
+
 export interface Redemption {
   id: string;
   member_id: string;

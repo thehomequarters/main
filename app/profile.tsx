@@ -478,7 +478,7 @@ export default function ProfileScreen() {
                       ? colors.stone
                       : "rgba(160, 160, 160, 0.25)",
                     backgroundColor: isSelected
-                      ? "rgba(201, 168, 76, 0.12)"
+                      ? "rgba(154,142,130,0.18)"
                       : "transparent",
                   }}
                 >
@@ -524,10 +524,11 @@ export default function ProfileScreen() {
               disabled={saving}
               style={{
                 backgroundColor: colors.stone,
-                borderRadius: 12,
+                borderRadius: 100,
                 paddingVertical: 16,
                 opacity: saving ? 0.6 : 1,
                 marginBottom: 16,
+                alignItems: "center",
               }}
             >
               <Text

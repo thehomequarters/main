@@ -57,14 +57,29 @@ function TabIcon({
     );
   }
   return (
-    <View style={{ alignItems: "center", marginTop: 4 }}>
-      <Ionicons name={name} size={22} color="#5C5C5E" />
+    <View style={{ alignItems: "center", marginTop: 4, position: "relative" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 5,
+          backgroundColor: "rgba(255,255,255,0.88)",
+          borderRadius: 24,
+          borderWidth: 1,
+          borderColor: "rgba(224,213,197,0.8)",
+          paddingHorizontal: 13,
+          paddingVertical: 7,
+        }}
+      >
+        <Ionicons name={name} size={17} color="#5C5C5E" />
+        <Text style={{ color: "#5C5C5E", fontSize: 12, fontWeight: "600" }}>{label}</Text>
+      </View>
       {!!badge && (
         <View
           style={{
             position: "absolute",
             top: -3,
-            right: -6,
+            right: -4,
             width: 8,
             height: 8,
             borderRadius: 4,

@@ -332,7 +332,13 @@ export default function MemberProfileScreen() {
               <View style={[styles.socialIconWrap, { backgroundColor: "rgba(0,119,181,0.12)" }]}>
                 <Ionicons name="logo-linkedin" size={18} color="#0077B5" />
               </View>
-              <Text style={styles.socialHandle}>{member.linkedin_handle}</Text>
+              <Text style={styles.socialHandle}>
+                {member.linkedin_handle!.startsWith("http")
+                  ? (member.linkedin_handle!
+                      .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "")
+                      .replace(/\/$/, "") || "LinkedIn Profile")
+                  : member.linkedin_handle}
+              </Text>
               <Ionicons name="chevron-forward" size={14} color={colors.grey} style={{ marginLeft: "auto" }} />
             </Pressable>
           ) : null}
