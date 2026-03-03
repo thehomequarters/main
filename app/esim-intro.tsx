@@ -5,261 +5,324 @@ import {
   Pressable,
   FlatList,
   Dimensions,
-  Animated,
+  StyleSheet,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { StatusBar } from "expo-status-bar";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: W } = Dimensions.get("window");
+
+// Dark theme constants
+const BG      = "#1C1C1E";
+const CARD    = "#252523";
+const LINE    = "rgba(255,255,255,0.08)";
+const PEARL   = "rgba(255,255,255,0.82)";
+const MUTED   = "rgba(255,255,255,0.45)";
+const WHITE   = "#FFFFFF";
 
 const SLIDES = [
   {
-    icon: "wifi" as const,
-    tag: "Zimbabwe Coverage",
-    title: "Never Lose Signal\nBack Home",
-    body: "Whether you're diaspora returning home or visiting Zimbabwe for the first time, get instant local connectivity on Telecel's eSIM network — no roaming charges, no physical SIM swap.",
-    accent: "Telecel Zimbabwe · eSIM supported",
+    id: "1",
+    icon: "airplane" as const,
+    tag: "MEMBER PERK",
+    title: "Going Back\nHome?",
+    body: "Roaming charges are brutal. Hunting for a SIM at Robert Gabriel Mugabe International at midnight is worse. There's a better way.",
+    accent: { icon: "alert-circle-outline" as const, label: "Average roaming bill: $80–$200 per trip" },
   },
   {
+    id: "2",
     icon: "phone-portrait-outline" as const,
-    tag: "Before You Land",
-    title: "Set Up Before\nYou Touch Down",
-    body: "Install your Zimbabwe eSIM from your phone before you fly. It activates automatically when you land at Robert Gabriel Mugabe International Airport — no airport kiosk, no queuing.",
-    accent: "RGM International · Instant activation",
+    tag: "HOW IT WORKS",
+    title: "Install Before\nYou Fly",
+    body: "Get a Telecel Zimbabwe eSIM through Airalo before you leave. It installs digitally on your phone — no physical SIM card needed — and activates automatically when you touch down in Zim.",
+    accent: { icon: "checkmark-circle-outline" as const, label: "Telecel Zimbabwe · Only network with eSIM support" },
   },
   {
-    icon: "globe-outline" as const,
-    tag: "HQ Member Perk",
-    title: "Local Rates.\nGlobal Reach.",
-    body: "Browse affordable Zimbabwe data plans from as little as $2/day. HQ members also unlock eSIMs for 200+ countries — one app for every trip beyond the border.",
-    accent: "Powered by Airalo",
+    id: "3",
+    icon: "flash-outline" as const,
+    tag: "LOCAL RATES",
+    title: "Local Data.\nNo Drama.",
+    body: "Browse affordable Telecel data plans at local rates — from as little as a few dollars. No contracts, no contracts, no SIM swap, no airport kiosk queue.",
+    accent: { icon: "wifi-outline" as const, label: "4G LTE · Pay as you need · Cancel anytime" },
+  },
+  {
+    id: "4",
+    icon: "flag-outline" as const,
+    tag: "READY?",
+    title: "Your Zim SIM,\nSorted.",
+    body: "Takes five minutes to set up. You'll be texting family from the tarmac before your bag hits the carousel.",
+    accent: { icon: "shield-checkmark-outline" as const, label: "Powered by Airalo · 4.7★ · 20M+ travellers" },
   },
 ];
 
 export default function ESIMIntroScreen() {
   const router = useRouter();
-  const flatListRef = useRef<FlatList>(null);
-  const scrollX = useRef(new Animated.Value(0)).current;
+  const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const next = () => {
-    if (currentIndex < SLIDES.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+  const isLast = currentIndex === SLIDES.length - 1;
+
+  const handleNext = () => {
+    if (!isLast) {
+      flatRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
     } else {
-      router.replace("/esim");
+      router.push("/esim" as any);
     }
   };
 
-  const skip = () => router.replace("/esim");
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      flatRef.current?.scrollToIndex({ index: currentIndex - 1, animated: true });
+    } else {
+      router.back();
+    }
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.black }}>
-      {/* Skip button */}
-      <Pressable
-        onPress={skip}
-        style={{
-          position: "absolute",
-          top: 58,
-          right: 20,
-          zIndex: 10,
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-        }}
-      >
-        <Text style={{ color: colors.grey, fontSize: 14, fontWeight: "500" }}>Skip</Text>
+    <View style={styles.container}>
+      <StatusBar style="light" />
+
+      {/* HQ wordmark */}
+      <View style={styles.logoWrap}>
+        <Text style={styles.logoText}>HQ</Text>
+      </View>
+
+      {/* Skip */}
+      <Pressable onPress={() => router.push("/esim" as any)} style={styles.skip}>
+        <Text style={{ color: MUTED, fontSize: 13, fontWeight: "500" }}>Skip</Text>
       </Pressable>
 
       {/* Slides */}
-      <Animated.FlatList
-        ref={flatListRef}
+      <FlatList
+        ref={flatRef}
         data={SLIDES}
+        keyExtractor={(item) => item.id}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
-        keyExtractor={(_, i) => String(i)}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
+        bounces={false}
+        scrollEnabled={false}
         onMomentumScrollEnd={(e) => {
-          const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+          const idx = Math.round(e.nativeEvent.contentOffset.x / W);
           setCurrentIndex(idx);
         }}
         renderItem={({ item }) => (
-          <View
-            style={{
-              width: SCREEN_WIDTH,
-              flex: 1,
-              paddingHorizontal: 28,
-              justifyContent: "center",
-              paddingBottom: 140,
-            }}
-          >
-            {/* Icon badge */}
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 24,
-                backgroundColor: "rgba(201, 168, 76, 0.1)",
-                borderWidth: 1.5,
-                borderColor: "rgba(201, 168, 76, 0.3)",
-                justifyContent: "center",
-                alignItems: "center",
-                marginBottom: 32,
-              }}
-            >
-              <Ionicons name={item.icon} size={36} color={colors.stone} />
-            </View>
+          <View style={styles.slide}>
+            {/* Subtle background blob */}
+            <View style={styles.blob} />
 
-            {/* Tag */}
-            <Text
-              style={{
-                color: colors.stone,
-                fontSize: 11,
-                fontWeight: "700",
-                letterSpacing: 2,
-                textTransform: "uppercase",
-                marginBottom: 14,
-              }}
-            >
-              {item.tag}
-            </Text>
+            {/* Content */}
+            <View style={styles.content}>
+              {/* Icon badge */}
+              <View style={styles.iconWrap}>
+                <Ionicons name={item.icon} size={36} color={PEARL} />
+              </View>
 
-            {/* Heading */}
-            <Text
-              style={{
-                color: colors.white,
-                fontSize: 34,
-                fontWeight: "800",
-                lineHeight: 42,
-                marginBottom: 20,
-                letterSpacing: -0.5,
-              }}
-            >
-              {item.title}
-            </Text>
+              <Text style={styles.tag}>{item.tag}</Text>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.body}>{item.body}</Text>
 
-            {/* Body */}
-            <Text
-              style={{
-                color: colors.grey,
-                fontSize: 16,
-                lineHeight: 26,
-                marginBottom: 24,
-              }}
-            >
-              {item.body}
-            </Text>
-
-            {/* Network/accent pill */}
-            <View
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor: "rgba(201, 168, 76, 0.08)",
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: "rgba(201, 168, 76, 0.2)",
-                paddingHorizontal: 14,
-                paddingVertical: 7,
-              }}
-            >
-              <Text
-                style={{
-                  color: "rgba(201, 168, 76, 0.8)",
-                  fontSize: 12,
-                  fontWeight: "600",
-                  letterSpacing: 0.5,
-                }}
-              >
-                {item.accent}
-              </Text>
+              {/* Accent pill */}
+              <View style={styles.accentPill}>
+                <Ionicons name={item.accent.icon} size={13} color={MUTED} />
+                <Text style={styles.accentText}>{item.accent.label}</Text>
+              </View>
             </View>
           </View>
         )}
       />
 
       {/* Bottom controls */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingHorizontal: 28,
-          paddingBottom: 48,
-          paddingTop: 16,
-          backgroundColor: colors.black,
-          borderTopWidth: 1,
-          borderTopColor: colors.darkBorder,
-        }}
-      >
-        {/* Dot indicators */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 6,
-            marginBottom: 24,
-          }}
-        >
-          {SLIDES.map((_, i) => {
-            const width = scrollX.interpolate({
-              inputRange: [
-                (i - 1) * SCREEN_WIDTH,
-                i * SCREEN_WIDTH,
-                (i + 1) * SCREEN_WIDTH,
-              ],
-              outputRange: [6, 20, 6],
-              extrapolate: "clamp",
-            });
-            const opacity = scrollX.interpolate({
-              inputRange: [
-                (i - 1) * SCREEN_WIDTH,
-                i * SCREEN_WIDTH,
-                (i + 1) * SCREEN_WIDTH,
-              ],
-              outputRange: [0.35, 1, 0.35],
-              extrapolate: "clamp",
-            });
-            return (
-              <Animated.View
-                key={i}
-                style={{
-                  width,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: colors.stone,
-                  opacity,
-                }}
-              />
-            );
-          })}
-        </View>
+      <View style={styles.controls}>
+        <View style={styles.navRow}>
+          {/* Back pill */}
+          <Pressable onPress={handleBack} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={16} color={WHITE} />
+          </Pressable>
 
-        {/* Next / Get Started button */}
-        <Pressable
-          onPress={next}
-          style={{
-            backgroundColor: colors.stone,
-            borderRadius: 14,
-            paddingVertical: 16,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          <Text style={{ color: colors.black, fontSize: 16, fontWeight: "700" }}>
-            {currentIndex === SLIDES.length - 1 ? "Get My Zimbabwe eSIM" : "Next"}
-          </Text>
-          {currentIndex < SLIDES.length - 1 && (
-            <Ionicons name="arrow-forward" size={18} color={colors.black} />
-          )}
-        </Pressable>
+          {/* Dots */}
+          <View style={styles.dots}>
+            {SLIDES.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === currentIndex ? styles.dotActive : styles.dotInactive,
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Continue pill */}
+          <Pressable
+            onPress={handleNext}
+            style={({ pressed }) => [
+              styles.continueBtn,
+              { opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Text style={styles.continueBtnText}>
+              {isLast ? "Get My eSIM" : "Next"}
+            </Text>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: BG,
+  },
+  logoWrap: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 62 : 46,
+    left: 28,
+    zIndex: 10,
+  },
+  logoText: {
+    color: PEARL,
+    fontSize: 20,
+    fontWeight: "800",
+    letterSpacing: 6,
+  },
+  skip: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 66 : 50,
+    right: 24,
+    zIndex: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  slide: {
+    width: W,
+    flex: 1,
+    position: "relative",
+  },
+  blob: {
+    position: "absolute",
+    top: -60,
+    right: -60,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "rgba(255,255,255,0.025)",
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 28,
+    justifyContent: "center",
+    paddingBottom: 150,
+    paddingTop: 100,
+  },
+  iconWrap: {
+    width: 76,
+    height: 76,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: LINE,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 28,
+  },
+  tag: {
+    color: MUTED,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    marginBottom: 14,
+  },
+  title: {
+    color: WHITE,
+    fontSize: 42,
+    fontWeight: "800",
+    lineHeight: 48,
+    letterSpacing: -0.5,
+    marginBottom: 20,
+  },
+  body: {
+    color: MUTED,
+    fontSize: 16,
+    lineHeight: 26,
+    marginBottom: 24,
+  },
+  accentPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    alignSelf: "flex-start",
+    backgroundColor: CARD,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: LINE,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  accentText: {
+    color: MUTED,
+    fontSize: 12,
+    fontWeight: "500",
+    letterSpacing: 0.3,
+  },
+  controls: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 28,
+    paddingBottom: Platform.OS === "ios" ? 52 : 36,
+    paddingTop: 16,
+    backgroundColor: BG,
+    borderTopWidth: 1,
+    borderTopColor: LINE,
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: CARD,
+    borderWidth: 1,
+    borderColor: LINE,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  dot: {
+    height: 4,
+    borderRadius: 2,
+  },
+  dotActive: {
+    width: 22,
+    backgroundColor: WHITE,
+  },
+  dotInactive: {
+    width: 6,
+    backgroundColor: LINE,
+  },
+  continueBtn: {
+    backgroundColor: WHITE,
+    borderRadius: 100,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  continueBtnText: {
+    color: BG,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+});

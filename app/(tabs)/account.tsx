@@ -425,8 +425,8 @@ export default function AccountTab() {
           <MenuItem
             icon="airplane-outline"
             label="eSIM & Travel"
-            subtitle="Stay connected abroad with Airalo"
-            onPress={() => router.push("/esim")}
+            subtitle="Get connected in Zimbabwe with Airalo"
+            onPress={() => router.push("/esim-intro" as any)}
           />
         </View>
       </View>
