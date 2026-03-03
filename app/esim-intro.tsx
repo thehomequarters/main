@@ -111,13 +111,13 @@ export default function ESIMIntroScreen() {
                 marginBottom: 32,
               }}
             >
-              <Ionicons name={item.icon} size={36} color={colors.gold} />
+              <Ionicons name={item.icon} size={36} color={colors.stone} />
             </View>
 
             {/* Tag */}
             <Text
               style={{
-                color: colors.gold,
+                color: colors.stone,
                 fontSize: 11,
                 fontWeight: "700",
                 letterSpacing: 2,
@@ -231,7 +231,7 @@ export default function ESIMIntroScreen() {
                   width,
                   height: 6,
                   borderRadius: 3,
-                  backgroundColor: colors.gold,
+                  backgroundColor: colors.stone,
                   opacity,
                 }}
               />
@@ -243,7 +243,7 @@ export default function ESIMIntroScreen() {
         <Pressable
           onPress={next}
           style={{
-            backgroundColor: colors.gold,
+            backgroundColor: colors.stone,
             borderRadius: 14,
             paddingVertical: 16,
             flexDirection: "row",

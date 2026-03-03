@@ -19,6 +19,10 @@ import Svg, {
   Line,
 } from "react-native-svg";
 
+// Warm pearl accent for the dark membership card (replaces gold)
+const PEARL = "#C4BDB5";
+const PEARL_DIM = "rgba(196,189,181,0.5)";
+
 const TIER_DISPLAY: Record<string, string> = {
   gold_card: "Gold Card",
   platinum_card: "Platinum Card",
@@ -82,8 +86,6 @@ export function MembershipCard({
 
   const isActive = status === "active";
 
-  // Renders the full card face (SVG background + glare + content).
-  // `p` = SVG gradient-ID prefix so card and reflection IDs don't collide.
   const renderFace = (p: string) => (
     <>
       {/* SVG metallic background */}
@@ -97,7 +99,7 @@ export function MembershipCard({
             <Stop offset="0%"   stopColor="#0c0c0c" stopOpacity="1" />
             <Stop offset="18%"  stopColor="#161410" stopOpacity="1" />
             <Stop offset="36%"  stopColor="#2a2318" stopOpacity="1" />
-            <Stop offset="48%"  stopColor="#332b1a" stopOpacity="1" />
+            <Stop offset="48%"  stopColor="#292520" stopOpacity="1" />
             <Stop offset="56%"  stopColor="#2a2318" stopOpacity="1" />
             <Stop offset="72%"  stopColor="#161410" stopOpacity="1" />
             <Stop offset="100%" stopColor="#0a0a0a" stopOpacity="1" />
@@ -105,17 +107,17 @@ export function MembershipCard({
           <SvgGradient id={`${p}sheen`} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0%"   stopColor="#ffffff" stopOpacity="0.000" />
             <Stop offset="28%"  stopColor="#ffffff" stopOpacity="0.028" />
-            <Stop offset="50%"  stopColor="#c9a84c" stopOpacity="0.040" />
+            <Stop offset="50%"  stopColor={PEARL}   stopOpacity="0.030" />
             <Stop offset="72%"  stopColor="#ffffff" stopOpacity="0.018" />
             <Stop offset="100%" stopColor="#ffffff" stopOpacity="0.000" />
           </SvgGradient>
           <SvgGradient id={`${p}top`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%"  stopColor="#c9a84c" stopOpacity="0.18" />
-            <Stop offset="8%"  stopColor="#c9a84c" stopOpacity="0.00" />
+            <Stop offset="0%"  stopColor={PEARL} stopOpacity="0.12" />
+            <Stop offset="8%"  stopColor={PEARL} stopOpacity="0.00" />
           </SvgGradient>
           <SvgGradient id={`${p}bot`} x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="88%"  stopColor="#c9a84c" stopOpacity="0.00" />
-            <Stop offset="100%" stopColor="#c9a84c" stopOpacity="0.10" />
+            <Stop offset="88%"  stopColor={PEARL} stopOpacity="0.00" />
+            <Stop offset="100%" stopColor={PEARL} stopOpacity="0.08" />
           </SvgGradient>
         </Defs>
 
@@ -128,8 +130,8 @@ export function MembershipCard({
           <Circle
             key={i}
             cx={CARD_WIDTH * 0.82} cy={CARD_HEIGHT * 0.28} r={CARD_HEIGHT * r}
-            fill="none" stroke="#c9a84c"
-            strokeOpacity={0.045 - i * 0.005} strokeWidth={0.8}
+            fill="none" stroke={PEARL}
+            strokeOpacity={0.035 - i * 0.004} strokeWidth={0.8}
           />
         ))}
 
@@ -138,17 +140,17 @@ export function MembershipCard({
             key={i}
             x1={0} y1={(CARD_HEIGHT / 15) * (i + 1)}
             x2={CARD_WIDTH} y2={(CARD_HEIGHT / 15) * (i + 1)}
-            stroke="#ffffff" strokeOpacity={0.012} strokeWidth={0.5}
+            stroke="#ffffff" strokeOpacity={0.010} strokeWidth={0.5}
           />
         ))}
 
         <Rect
           x={0.5} y={0.5} width={CARD_WIDTH - 1} height={CARD_HEIGHT - 1} rx={15.5}
-          fill="none" stroke="rgba(201,168,76,0.5)" strokeWidth={1}
+          fill="none" stroke={PEARL_DIM} strokeWidth={1}
         />
         <Rect
           x={3} y={3} width={CARD_WIDTH - 6} height={CARD_HEIGHT - 6} rx={13}
-          fill="none" stroke="rgba(201,168,76,0.14)" strokeWidth={0.5}
+          fill="none" stroke="rgba(196,189,181,0.12)" strokeWidth={0.5}
         />
       </Svg>
 
@@ -165,9 +167,9 @@ export function MembershipCard({
       >
         <View style={{ flex: 1, flexDirection: "row" }}>
           <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.00)" }} />
-          <View style={{ flex: 2, backgroundColor: "rgba(255,248,220,0.07)" }} />
-          <View style={{ flex: 4, backgroundColor: "rgba(255,248,220,0.13)" }} />
-          <View style={{ flex: 2, backgroundColor: "rgba(255,248,220,0.07)" }} />
+          <View style={{ flex: 2, backgroundColor: "rgba(255,250,245,0.06)" }} />
+          <View style={{ flex: 4, backgroundColor: "rgba(255,250,245,0.11)" }} />
+          <View style={{ flex: 2, backgroundColor: "rgba(255,250,245,0.06)" }} />
           <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.00)" }} />
         </View>
       </Animated.View>
@@ -185,7 +187,7 @@ export function MembershipCard({
       >
         <View style={{ flex: 1, flexDirection: "row" }}>
           <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.00)" }} />
-          <View style={{ flex: 3, backgroundColor: "rgba(255,248,220,0.06)" }} />
+          <View style={{ flex: 3, backgroundColor: "rgba(255,250,245,0.05)" }} />
           <View style={{ flex: 1, backgroundColor: "rgba(255,255,255,0.00)" }} />
         </View>
       </Animated.View>
@@ -203,25 +205,25 @@ export function MembershipCard({
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <View>
             <Text style={{
-              color: colors.gold, fontSize: 28, fontWeight: "800", letterSpacing: 5,
-              textShadowColor: "rgba(201,168,76,0.5)",
-              textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10,
+              color: PEARL, fontSize: 28, fontWeight: "800", letterSpacing: 5,
+              textShadowColor: "rgba(196,189,181,0.4)",
+              textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8,
             }}>HQ</Text>
             <Text style={{
-              color: "rgba(201,168,76,0.5)", fontSize: 7, fontWeight: "600",
+              color: PEARL_DIM, fontSize: 7, fontWeight: "600",
               letterSpacing: 2.5, textTransform: "uppercase", marginTop: -1,
             }}>HomeQuarters</Text>
           </View>
-          <View style={{ transform: [{ rotate: "90deg" }], opacity: 0.7 }}>
-            <Ionicons name="wifi" size={26} color={colors.gold} />
+          <View style={{ transform: [{ rotate: "90deg" }], opacity: 0.55 }}>
+            <Ionicons name="wifi" size={26} color={PEARL} />
           </View>
         </View>
 
         {/* EMV chip */}
         <View style={{
           width: 44, height: 34, borderRadius: 5,
-          backgroundColor: "rgba(201,168,76,0.18)",
-          borderWidth: 1, borderColor: "rgba(201,168,76,0.5)",
+          backgroundColor: "rgba(196,189,181,0.12)",
+          borderWidth: 1, borderColor: "rgba(196,189,181,0.35)",
           overflow: "hidden", justifyContent: "center", alignItems: "center",
         }}>
           <View style={{ gap: 4 }}>
@@ -230,8 +232,8 @@ export function MembershipCard({
                 {[0, 1].map((col) => (
                   <View key={col} style={{
                     width: 12, height: 7, borderRadius: 1,
-                    backgroundColor: "rgba(201,168,76,0.3)",
-                    borderWidth: 0.5, borderColor: "rgba(201,168,76,0.5)",
+                    backgroundColor: "rgba(196,189,181,0.22)",
+                    borderWidth: 0.5, borderColor: "rgba(196,189,181,0.35)",
                   }} />
                 ))}
               </View>
@@ -243,7 +245,7 @@ export function MembershipCard({
         <View>
           {tierLabel && (
             <Text style={{
-              color: "rgba(201,168,76,0.55)", fontSize: 7, fontWeight: "700",
+              color: PEARL_DIM, fontSize: 7, fontWeight: "700",
               letterSpacing: 3, textTransform: "uppercase", marginBottom: 4,
             }}>
               {tierLabel}
@@ -258,17 +260,17 @@ export function MembershipCard({
             {firstName} {lastName}
           </Text>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={{ color: "rgba(201,168,76,0.7)", fontSize: 11, letterSpacing: 3.5, fontWeight: "400" }}>
+            <Text style={{ color: "rgba(196,189,181,0.65)", fontSize: 11, letterSpacing: 3.5, fontWeight: "400" }}>
               {memberCode}
             </Text>
             <View style={{
-              backgroundColor: isActive ? "rgba(76,175,80,0.18)" : "rgba(201,168,76,0.18)",
+              backgroundColor: isActive ? "rgba(76,175,80,0.18)" : "rgba(196,189,181,0.15)",
               paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4,
               borderWidth: 0.5,
-              borderColor: isActive ? "rgba(76,175,80,0.45)" : "rgba(201,168,76,0.4)",
+              borderColor: isActive ? "rgba(76,175,80,0.45)" : "rgba(196,189,181,0.35)",
             }}>
               <Text style={{
-                color: isActive ? colors.green : colors.gold,
+                color: isActive ? colors.green : PEARL,
                 fontSize: 8, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase",
               }}>{status}</Text>
             </View>
@@ -288,9 +290,9 @@ export function MembershipCard({
           height: CARD_HEIGHT,
           borderRadius: CARD_RADIUS,
           overflow: "hidden",
-          shadowColor: colors.gold,
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.22,
+          shadowOpacity: 0.18,
           shadowRadius: 20,
           elevation: 10,
         }}
@@ -301,11 +303,6 @@ export function MembershipCard({
       {/* Reflection — only shown when showReflection is true */}
       {showReflection && (
         <>
-          {/*
-            Clip the flipped card face to REFL_HEIGHT.
-            borderTopLeftRadius + borderTopRightRadius match the card's
-            bottom corners so the reflection edge looks rounded, not sharp.
-          */}
           <View
             pointerEvents="none"
             style={{
@@ -323,7 +320,7 @@ export function MembershipCard({
             </View>
           </View>
 
-          {/* Gradient fade: transparent at top → opaque background at bottom */}
+          {/* Gradient fade over reflection */}
           <Svg
             width={CARD_WIDTH}
             height={REFL_HEIGHT}
@@ -332,9 +329,9 @@ export function MembershipCard({
           >
             <Defs>
               <SvgGradient id="reflFade" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0%"   stopColor={colors.black} stopOpacity="0.0" />
-                <Stop offset="45%"  stopColor={colors.black} stopOpacity="0.5" />
-                <Stop offset="100%" stopColor={colors.black} stopOpacity="1.0" />
+                <Stop offset="0%"   stopColor="#1C1C1E" stopOpacity="0.0" />
+                <Stop offset="45%"  stopColor="#1C1C1E" stopOpacity="0.5" />
+                <Stop offset="100%" stopColor="#1C1C1E" stopOpacity="1.0" />
               </SvgGradient>
             </Defs>
             <Rect width={CARD_WIDTH} height={REFL_HEIGHT} fill="url(#reflFade)" />

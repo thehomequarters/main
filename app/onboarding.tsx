@@ -11,16 +11,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 
 const { width: W, height: H } = Dimensions.get("window");
 
-/**
- * ONBOARDING SLIDES
- * Replace each `uri` with your own high-res lifestyle photography.
- * Recommended dimensions: 1170 × 2532 px (iPhone 14 Pro native resolution)
- * or import local assets: image: require("@/assets/onboarding-1.jpg")
- */
 const SLIDES = [
   {
     id: "1",
@@ -60,12 +55,17 @@ export default function OnboardingScreen() {
         animated: true,
       });
     } else {
-      handleFinish();
+      router.replace("/apply");
     }
   };
 
-  const handleFinish = () => {
-    router.replace("/house-rules-intro");
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      flatRef.current?.scrollToIndex({
+        index: currentIndex - 1,
+        animated: true,
+      });
+    }
   };
 
   const handleSignIn = () => {
@@ -108,7 +108,7 @@ export default function OnboardingScreen() {
               <Text style={styles.logoText}>HQ</Text>
             </View>
 
-            {/* Slide text — sits in bottom overlay */}
+            {/* Slide text — bottom area */}
             <View style={styles.textBlock}>
               <Text style={styles.eyebrow}>{item.eyebrow}</Text>
               <Text style={styles.title}>{item.title}</Text>
@@ -117,7 +117,14 @@ export default function OnboardingScreen() {
         )}
       />
 
-      {/* Fixed bottom controls (progress + CTA) */}
+      {/* Back button — only show when not on first slide */}
+      {currentIndex > 0 && (
+        <Pressable onPress={handleBack} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={18} color={colors.white} />
+        </Pressable>
+      )}
+
+      {/* Fixed bottom controls */}
       <View style={styles.controls}>
         <View style={styles.dots}>
           {SLIDES.map((_, i) => (
@@ -157,7 +164,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: "#1C1C1E",
   },
   slide: {
     width: W,
@@ -174,7 +181,7 @@ const styles = StyleSheet.create({
     left: 26,
   },
   logoText: {
-    color: colors.gold,
+    color: colors.white,
     fontSize: 26,
     fontWeight: "800",
     letterSpacing: 6,
@@ -182,14 +189,25 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
+  backBtn: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 62 : 46,
+    right: 24,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   textBlock: {
     position: "absolute",
-    bottom: 190,
+    bottom: 200,
     left: 28,
     right: 28,
   },
   eyebrow: {
-    color: colors.gold,
+    color: "rgba(255,255,255,0.7)",
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 3.5,
@@ -217,6 +235,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     paddingBottom: Platform.OS === "ios" ? 52 : 36,
     paddingTop: 12,
+    alignItems: "center",
   },
   dots: {
     flexDirection: "row",
@@ -231,21 +250,22 @@ const styles = StyleSheet.create({
   },
   dotActive: {
     width: 28,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.white,
   },
   dotInactive: {
     width: 6,
     backgroundColor: "rgba(255,255,255,0.25)",
   },
   btn: {
-    backgroundColor: colors.gold,
-    borderRadius: 14,
-    paddingVertical: 18,
+    backgroundColor: colors.white,
+    borderRadius: 100,
+    paddingVertical: 16,
+    paddingHorizontal: 40,
     alignItems: "center",
     marginBottom: 16,
   },
   btnText: {
-    color: colors.black,
+    color: "#1C1C1E",
     fontSize: 16,
     fontWeight: "800",
     letterSpacing: 0.3,
@@ -259,7 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signinLink: {
-    color: colors.gold,
+    color: "rgba(255,255,255,0.8)",
     fontWeight: "600",
   },
 });

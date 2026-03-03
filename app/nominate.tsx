@@ -374,7 +374,7 @@ export default function NominateScreen() {
               <Ionicons
                 name="shield-checkmark-outline"
                 size={18}
-                color={colors.gold}
+                color={colors.stone}
               />
               <Text style={styles.vouchInfoText}>
                 Vouching is a serious responsibility. You are adding your name as
@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   tabBtnTextActive: {
-    color: colors.gold,
+    color: colors.stone,
   },
   scroll: {
     paddingHorizontal: 20,
@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(201,168,76,0.3)",
   },
   counterPipFree: {
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
   },
   counterLabel: {
     color: colors.grey,
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   codeInput: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 3,
@@ -555,7 +555,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     flexDirection: "row",
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(76,175,80,0.25)",
   },
   inviteStatusText: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 1,

@@ -123,7 +123,7 @@ export default function BookingsScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -207,7 +207,7 @@ export default function BookingsScreen() {
             onPress={() => router.push("/(tabs)/events")}
             style={{
               marginTop: 20,
-              backgroundColor: colors.gold,
+              backgroundColor: colors.stone,
               borderRadius: 12,
               paddingHorizontal: 24,
               paddingVertical: 12,
@@ -243,7 +243,7 @@ export default function BookingsScreen() {
                 width: 4,
                 height: 20,
                 borderRadius: 2,
-                backgroundColor: colors.gold,
+                backgroundColor: colors.stone,
               }}
             />
             <Text
@@ -295,7 +295,7 @@ export default function BookingsScreen() {
                 >
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 20,
                       fontWeight: "800",
                     }}
@@ -304,7 +304,7 @@ export default function BookingsScreen() {
                   </Text>
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 10,
                       fontWeight: "600",
                       letterSpacing: 1,

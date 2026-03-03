@@ -294,7 +294,7 @@ export default function EventsTab() {
                   width: 4,
                   height: 20,
                   borderRadius: 2,
-                  backgroundColor: colors.gold,
+                  backgroundColor: colors.dark,
                 }}
               />
               <Text
@@ -342,7 +342,7 @@ export default function EventsTab() {
                   width: 4,
                   height: 20,
                   borderRadius: 2,
-                  backgroundColor: colors.gold,
+                  backgroundColor: colors.dark,
                 }}
               />
               <Text

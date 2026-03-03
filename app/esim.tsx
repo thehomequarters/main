@@ -14,13 +14,20 @@ import { Ionicons } from "@expo/vector-icons";
 // Replace with the real Airalo affiliate link once registered
 const AIRALO_BASE_URL = "https://ref.airalo.com/PLACEHOLDER";
 
+// Dark theme values for this premium feature screen
+const DARK_BG    = "#1C1C1E";
+const DARK_CARD  = "#252523";
+const DARK_LINE  = "rgba(255,255,255,0.09)";
+const PEARL_TEXT = "rgba(255,255,255,0.85)";
+const MUTED_TEXT = "rgba(255,255,255,0.45)";
+
 const REGIONS = [
-  { label: "Global", icon: "earth-outline" as const, url: AIRALO_BASE_URL },
-  { label: "Europe", icon: "business-outline" as const, url: `${AIRALO_BASE_URL}?region=europe` },
-  { label: "Americas", icon: "navigate-outline" as const, url: `${AIRALO_BASE_URL}?region=americas` },
-  { label: "Asia Pacific", icon: "partly-sunny-outline" as const, url: `${AIRALO_BASE_URL}?region=asia-pacific` },
-  { label: "Middle East", icon: "sunny-outline" as const, url: `${AIRALO_BASE_URL}?region=middle-east` },
-  { label: "Africa", icon: "leaf-outline" as const, url: `${AIRALO_BASE_URL}?region=africa` },
+  { label: "Global",       icon: "earth-outline" as const,         url: AIRALO_BASE_URL },
+  { label: "Europe",       icon: "business-outline" as const,      url: `${AIRALO_BASE_URL}?region=europe` },
+  { label: "Americas",     icon: "navigate-outline" as const,      url: `${AIRALO_BASE_URL}?region=americas` },
+  { label: "Asia Pacific", icon: "partly-sunny-outline" as const,  url: `${AIRALO_BASE_URL}?region=asia-pacific` },
+  { label: "Middle East",  icon: "sunny-outline" as const,         url: `${AIRALO_BASE_URL}?region=middle-east` },
+  { label: "Africa",       icon: "leaf-outline" as const,          url: `${AIRALO_BASE_URL}?region=africa` },
 ];
 
 const STEPS = [
@@ -40,7 +47,7 @@ export default function ESIMScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: DARK_BG }}
       contentContainerStyle={{ paddingBottom: 48 }}
     >
       {/* Header */}
@@ -60,9 +67,9 @@ export default function ESIMScreen() {
             width: 36,
             height: 36,
             borderRadius: 18,
-            backgroundColor: colors.dark,
+            backgroundColor: DARK_CARD,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: DARK_LINE,
             justifyContent: "center",
             alignItems: "center",
           }}
@@ -73,7 +80,7 @@ export default function ESIMScreen() {
           <Text style={{ color: colors.white, fontSize: 24, fontWeight: "700" }}>
             eSIM & Travel
           </Text>
-          <Text style={{ color: colors.grey, fontSize: 13, marginTop: 2 }}>
+          <Text style={{ color: MUTED_TEXT, fontSize: 13, marginTop: 2 }}>
             Member benefit
           </Text>
         </View>
@@ -84,10 +91,10 @@ export default function ESIMScreen() {
         style={{
           marginHorizontal: 20,
           marginTop: 16,
-          backgroundColor: colors.dark,
+          backgroundColor: DARK_CARD,
           borderRadius: 20,
           borderWidth: 1,
-          borderColor: "rgba(201, 168, 76, 0.25)",
+          borderColor: DARK_LINE,
           padding: 24,
         }}
       >
@@ -97,16 +104,16 @@ export default function ESIMScreen() {
               width: 40,
               height: 40,
               borderRadius: 12,
-              backgroundColor: "rgba(201, 168, 76, 0.12)",
+              backgroundColor: "rgba(255,255,255,0.07)",
               borderWidth: 1,
-              borderColor: "rgba(201, 168, 76, 0.25)",
+              borderColor: DARK_LINE,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Ionicons name="airplane-outline" size={20} color={colors.gold} />
+            <Ionicons name="airplane-outline" size={20} color={PEARL_TEXT} />
           </View>
-          <Text style={{ color: colors.gold, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>
+          <Text style={{ color: MUTED_TEXT, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>
             Member Perk · Powered by Airalo
           </Text>
         </View>
@@ -114,7 +121,7 @@ export default function ESIMScreen() {
         <Text style={{ color: colors.white, fontSize: 22, fontWeight: "700", lineHeight: 28, marginBottom: 10 }}>
           Stay Connected{"\n"}Anywhere You Go
         </Text>
-        <Text style={{ color: colors.grey, fontSize: 14, lineHeight: 21 }}>
+        <Text style={{ color: MUTED_TEXT, fontSize: 14, lineHeight: 21 }}>
           As an HQ member, access affordable eSIMs for 200+ destinations through our
           partner Airalo — no roaming charges, no physical SIM, instant activation.
         </Text>
@@ -126,8 +133,7 @@ export default function ESIMScreen() {
             marginTop: 20,
             paddingTop: 16,
             borderTopWidth: 1,
-            borderTopColor: colors.darkBorder,
-            gap: 0,
+            borderTopColor: DARK_LINE,
           }}
         >
           {[
@@ -144,14 +150,14 @@ export default function ESIMScreen() {
                     top: 4,
                     bottom: 4,
                     width: 1,
-                    backgroundColor: colors.darkBorder,
+                    backgroundColor: DARK_LINE,
                   }}
                 />
               )}
-              <Text style={{ color: colors.gold, fontSize: 16, fontWeight: "700" }}>
+              <Text style={{ color: PEARL_TEXT, fontSize: 16, fontWeight: "700" }}>
                 {stat.value}
               </Text>
-              <Text style={{ color: colors.grey, fontSize: 11, marginTop: 2 }}>
+              <Text style={{ color: MUTED_TEXT, fontSize: 11, marginTop: 2 }}>
                 {stat.label}
               </Text>
             </View>
@@ -163,7 +169,7 @@ export default function ESIMScreen() {
       <View style={{ marginTop: 28 }}>
         <Text
           style={{
-            color: colors.grey,
+            color: MUTED_TEXT,
             fontSize: 11,
             fontWeight: "600",
             letterSpacing: 1.5,
@@ -184,10 +190,10 @@ export default function ESIMScreen() {
             <Pressable
               onPress={() => openAiralo(item.url)}
               style={{
-                backgroundColor: colors.dark,
+                backgroundColor: DARK_CARD,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: colors.darkBorder,
+                borderColor: DARK_LINE,
                 paddingHorizontal: 16,
                 paddingVertical: 12,
                 alignItems: "center",
@@ -195,7 +201,7 @@ export default function ESIMScreen() {
                 minWidth: 90,
               }}
             >
-              <Ionicons name={item.icon} size={22} color={colors.gold} />
+              <Ionicons name={item.icon} size={22} color={PEARL_TEXT} />
               <Text style={{ color: colors.white, fontSize: 12, fontWeight: "500" }}>
                 {item.label}
               </Text>
@@ -208,7 +214,7 @@ export default function ESIMScreen() {
       <View style={{ marginTop: 28, paddingHorizontal: 20 }}>
         <Text
           style={{
-            color: colors.grey,
+            color: MUTED_TEXT,
             fontSize: 11,
             fontWeight: "600",
             letterSpacing: 1.5,
@@ -220,10 +226,10 @@ export default function ESIMScreen() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: DARK_CARD,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: DARK_LINE,
             overflow: "hidden",
           }}
         >
@@ -235,7 +241,7 @@ export default function ESIMScreen() {
                 padding: 16,
                 gap: 14,
                 borderBottomWidth: index < STEPS.length - 1 ? 1 : 0,
-                borderBottomColor: colors.darkBorder,
+                borderBottomColor: DARK_LINE,
               }}
             >
               <View
@@ -243,14 +249,14 @@ export default function ESIMScreen() {
                   width: 32,
                   height: 32,
                   borderRadius: 16,
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  backgroundColor: "rgba(255,255,255,0.07)",
                   borderWidth: 1,
-                  borderColor: "rgba(201, 168, 76, 0.25)",
+                  borderColor: DARK_LINE,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Text style={{ color: colors.gold, fontSize: 13, fontWeight: "700" }}>
+                <Text style={{ color: PEARL_TEXT, fontSize: 13, fontWeight: "700" }}>
                   {item.step}
                 </Text>
               </View>
@@ -258,7 +264,7 @@ export default function ESIMScreen() {
                 <Text style={{ color: colors.white, fontSize: 14, fontWeight: "600", marginBottom: 3 }}>
                   {item.title}
                 </Text>
-                <Text style={{ color: colors.grey, fontSize: 13, lineHeight: 19 }}>
+                <Text style={{ color: MUTED_TEXT, fontSize: 13, lineHeight: 19 }}>
                   {item.description}
                 </Text>
               </View>
@@ -272,7 +278,7 @@ export default function ESIMScreen() {
         <Pressable
           onPress={() => openAiralo(AIRALO_BASE_URL)}
           style={{
-            backgroundColor: colors.gold,
+            backgroundColor: colors.white,
             borderRadius: 14,
             paddingVertical: 16,
             alignItems: "center",
@@ -281,15 +287,15 @@ export default function ESIMScreen() {
             gap: 8,
           }}
         >
-          <Ionicons name="globe-outline" size={18} color={colors.black} />
-          <Text style={{ color: colors.black, fontSize: 16, fontWeight: "700" }}>
+          <Ionicons name="globe-outline" size={18} color={DARK_BG} />
+          <Text style={{ color: DARK_BG, fontSize: 16, fontWeight: "700" }}>
             Browse eSIM Plans
           </Text>
         </Pressable>
 
         <Text
           style={{
-            color: colors.darkBorder,
+            color: DARK_LINE,
             fontSize: 11,
             textAlign: "center",
             marginTop: 12,

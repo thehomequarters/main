@@ -55,7 +55,7 @@ export default function PendingScreen() {
           <Ionicons
             name={hasEnough ? "checkmark" : "hourglass-outline"}
             size={28}
-            color={hasEnough ? "#4CAF50" : colors.gold}
+            color={hasEnough ? "#4CAF50" : colors.stone}
           />
         </View>
       </View>
@@ -114,7 +114,7 @@ export default function PendingScreen() {
       {!hasEnough && (
         <View style={styles.codeCard}>
           <View style={styles.codeCardHeader}>
-            <Ionicons name="key-outline" size={16} color={colors.gold} />
+            <Ionicons name="key-outline" size={16} color={colors.stone} />
             <Text style={styles.codeCardTitle}>YOUR APPLICATION CODE</Text>
           </View>
 
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   wordmark: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 24,
     fontWeight: "800",
     letterSpacing: 7,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   progressFilled: {
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
   },
   progressFilledSecond: {
     backgroundColor: "#4CAF50",
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   progressCount: {},
   progressNum: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 28,
     fontWeight: "800",
   },
@@ -275,13 +275,13 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   codeCardTitle: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
   },
   code: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 24,
     fontWeight: "800",
     letterSpacing: 4,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
     borderRadius: 10,
     paddingVertical: 13,
   },
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
     marginTop: 6,
   },
   infoText: {

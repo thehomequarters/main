@@ -314,7 +314,7 @@ export default function DiscoverTab() {
           }}
         >
           <Text
-            style={{ color: colors.gold, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.dark, fontSize: 24, fontWeight: "800" }}
           >
             {members.length}
           </Text>
@@ -441,7 +441,7 @@ export default function DiscoverTab() {
                 width: 4,
                 height: 20,
                 borderRadius: 2,
-                backgroundColor: colors.gold,
+                backgroundColor: colors.dark,
               }}
             />
             <Text
@@ -455,7 +455,7 @@ export default function DiscoverTab() {
             </Text>
             <View
               style={{
-                backgroundColor: colors.gold,
+                backgroundColor: colors.dark,
                 borderRadius: 10,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
@@ -615,7 +615,7 @@ export default function DiscoverTab() {
             width: 4,
             height: 20,
             borderRadius: 2,
-            backgroundColor: colors.gold,
+            backgroundColor: colors.dark,
           }}
         />
         <Text

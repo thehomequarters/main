@@ -19,7 +19,6 @@ const SLIDES = [
   {
     id: "1",
     icon: "shield-checkmark" as const,
-    iconColor: colors.gold,
     eyebrow: "BEFORE YOU ENTER",
     title: "The House\nRules",
     body: "HomeQuarters is a private members' community built on trust, respect, and shared values. These rules protect the culture we're building together.",
@@ -28,7 +27,6 @@ const SLIDES = [
   {
     id: "2",
     icon: "heart" as const,
-    iconColor: colors.gold,
     eyebrow: "RULE 1 & 2",
     title: "Respect &\nHonour",
     body: "Treat every member, guest, and venue staff with dignity. Discrimination or harassment of any kind will not be tolerated.\n\nHonour our partner venues as you would your own home. Leave spaces as you found them, respect venue rules, and tip generously.",
@@ -37,7 +35,6 @@ const SLIDES = [
   {
     id: "3",
     icon: "lock-closed" as const,
-    iconColor: colors.gold,
     eyebrow: "RULE 3 & 4",
     title: "Confidence &\nAuthenticity",
     body: "What happens at HQ stays at HQ. Never share another member's personal information, conversations, or photos without their consent.\n\nShow up authentically. We are here for genuine connection — no spam, no hustling, no unsolicited pitches.",
@@ -46,7 +43,6 @@ const SLIDES = [
   {
     id: "4",
     icon: "qr-code" as const,
-    iconColor: colors.gold,
     eyebrow: "RULE 5, 6 & 7",
     title: "Redeem, Represent\n& Report",
     body: "Benefits are for personal use only — do not share or resell your QR codes. One redemption per benefit per visit.\n\nAs a member you represent our community. Carry yourself with pride everywhere you go. Report violations to the HQ team — never retaliate.",
@@ -55,10 +51,9 @@ const SLIDES = [
   {
     id: "5",
     icon: "card" as const,
-    iconColor: "#E53935",
     eyebrow: "YOUR MEMBERSHIP",
     title: "Protect Your\nAccess",
-    body: "Violation of the House Rules may result in the immediate suspension or permanent revocation of your HomeQuarters membership.\n\nYour membership is a privilege. By continuing, you agree to uphold these standards at all times.",
+    body: "Violation of the House Rules may result in the immediate suspension or permanent revocation of your HomeQuarters membership.\n\nYour membership is a privilege. Carry it with care.",
     isWarning: true,
   },
 ];
@@ -74,7 +69,15 @@ export default function HouseRulesIntroScreen() {
     if (currentIndex < SLIDES.length - 1) {
       flatRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
     } else {
-      router.replace("/apply");
+      router.back();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      flatRef.current?.scrollToIndex({ index: currentIndex - 1, animated: true });
+    } else {
+      router.back();
     }
   };
 
@@ -88,7 +91,7 @@ export default function HouseRulesIntroScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
       <FlatList
         ref={flatRef}
@@ -103,19 +106,19 @@ export default function HouseRulesIntroScreen() {
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
         renderItem={({ item }) => (
           <View style={styles.slide}>
-            {/* Background accent blob */}
+            {/* Subtle accent blob */}
             <View
               style={[
                 styles.blob,
                 {
                   backgroundColor: item.isWarning
-                    ? "rgba(229, 57, 53, 0.07)"
-                    : "rgba(201, 168, 76, 0.07)",
+                    ? "rgba(229, 57, 53, 0.05)"
+                    : "rgba(28, 28, 30, 0.04)",
                 },
               ]}
             />
 
-            {/* HQ logo */}
+            {/* HQ wordmark */}
             <View style={styles.logoWrap}>
               <Text style={styles.logoText}>HQ</Text>
             </View>
@@ -128,21 +131,25 @@ export default function HouseRulesIntroScreen() {
                   styles.iconWrap,
                   {
                     backgroundColor: item.isWarning
-                      ? "rgba(229, 57, 53, 0.12)"
-                      : "rgba(201, 168, 76, 0.12)",
+                      ? "rgba(229, 57, 53, 0.08)"
+                      : colors.sand,
                     borderColor: item.isWarning
-                      ? "rgba(229, 57, 53, 0.25)"
-                      : "rgba(201, 168, 76, 0.25)",
+                      ? "rgba(229, 57, 53, 0.2)"
+                      : colors.border,
                   },
                 ]}
               >
-                <Ionicons name={item.icon} size={34} color={item.iconColor} />
+                <Ionicons
+                  name={item.icon}
+                  size={34}
+                  color={item.isWarning ? colors.red : colors.dark}
+                />
               </View>
 
               <Text
                 style={[
                   styles.eyebrow,
-                  { color: item.isWarning ? "#E53935" : colors.gold },
+                  { color: item.isWarning ? colors.red : colors.stone },
                 ]}
               >
                 {item.eyebrow}
@@ -156,41 +163,47 @@ export default function HouseRulesIntroScreen() {
 
       {/* Fixed bottom controls */}
       <View style={styles.controls}>
-        {/* Progress dots */}
-        <View style={styles.dots}>
-          {SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                i === currentIndex
-                  ? [
-                      styles.dotActive,
-                      slide.isWarning && { backgroundColor: "#E53935" },
-                    ]
-                  : styles.dotInactive,
-              ]}
-            />
-          ))}
+        <View style={styles.navRow}>
+          {/* Back pill */}
+          <Pressable
+            onPress={handleBack}
+            style={styles.backBtn}
+          >
+            <Ionicons name="arrow-back" size={16} color={colors.dark} />
+          </Pressable>
+
+          {/* Progress dots */}
+          <View style={styles.dots}>
+            {SLIDES.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === currentIndex
+                    ? [
+                        styles.dotActive,
+                        slide.isWarning && { backgroundColor: colors.red },
+                      ]
+                    : styles.dotInactive,
+                ]}
+              />
+            ))}
+          </View>
+
+          {/* Continue pill */}
+          <Pressable
+            onPress={handleNext}
+            style={({ pressed }) => [
+              styles.continueBtn,
+              slide.isWarning && styles.continueBtnWarning,
+              { opacity: pressed ? 0.8 : 1 },
+            ]}
+          >
+            <Text style={styles.continueBtnText}>
+              {isLast ? "Got it" : "Next"}
+            </Text>
+          </Pressable>
         </View>
-
-        <Pressable
-          onPress={handleNext}
-          style={({ pressed }) => [
-            styles.btn,
-            slide.isWarning && styles.btnWarning,
-            { opacity: pressed ? 0.85 : 1 },
-          ]}
-        >
-          <Text style={styles.btnText}>
-            {isLast ? "I Agree — Enter HomeQuarters" : "Continue"}
-          </Text>
-        </Pressable>
-
-        {/* Slide counter */}
-        <Text style={styles.counter}>
-          {currentIndex + 1} of {SLIDES.length}
-        </Text>
       </View>
     </View>
   );
@@ -199,7 +212,7 @@ export default function HouseRulesIntroScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: colors.bg,
   },
   slide: {
     width: W,
@@ -220,7 +233,7 @@ const styles = StyleSheet.create({
     left: 28,
   },
   logoText: {
-    color: colors.gold,
+    color: colors.dark,
     fontSize: 22,
     fontWeight: "800",
     letterSpacing: 6,
@@ -229,7 +242,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 28,
     justifyContent: "center",
-    paddingBottom: 180,
+    paddingBottom: 160,
     paddingTop: 80,
   },
   iconWrap: {
@@ -249,7 +262,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   title: {
-    color: colors.white,
+    color: colors.dark,
     fontSize: 42,
     fontWeight: "800",
     lineHeight: 48,
@@ -257,7 +270,7 @@ const styles = StyleSheet.create({
     marginBottom: 22,
   },
   body: {
-    color: "rgba(255,255,255,0.6)",
+    color: colors.stone,
     fontSize: 15,
     lineHeight: 24,
   },
@@ -268,49 +281,55 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 28,
     paddingBottom: Platform.OS === "ios" ? 52 : 36,
-    paddingTop: 12,
-    backgroundColor: colors.black,
+    paddingTop: 16,
+    backgroundColor: colors.bg,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.06)",
+    borderTopColor: colors.border,
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  backBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.sand,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: "center",
+    alignItems: "center",
   },
   dots: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
     gap: 6,
-    marginBottom: 18,
   },
   dot: {
     height: 4,
     borderRadius: 2,
   },
   dotActive: {
-    width: 28,
-    backgroundColor: colors.gold,
+    width: 22,
+    backgroundColor: colors.dark,
   },
   dotInactive: {
     width: 6,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: colors.border,
   },
-  btn: {
-    backgroundColor: colors.gold,
-    borderRadius: 14,
-    paddingVertical: 18,
-    alignItems: "center",
-    marginBottom: 12,
+  continueBtn: {
+    backgroundColor: colors.dark,
+    borderRadius: 100,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
   },
-  btnWarning: {
-    backgroundColor: "#E53935",
+  continueBtnWarning: {
+    backgroundColor: colors.red,
   },
-  btnText: {
-    color: colors.black,
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  counter: {
-    color: "rgba(255,255,255,0.25)",
-    fontSize: 12,
-    textAlign: "center",
+  continueBtnText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "700",
   },
 });

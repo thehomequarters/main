@@ -98,7 +98,7 @@ export default function LoginScreen() {
         {/* HQ Logo */}
         <Text
           style={{
-            color: colors.gold,
+            color: colors.dark,
             fontSize: 40,
             fontWeight: "700",
             letterSpacing: 8,
@@ -177,7 +177,7 @@ export default function LoginScreen() {
           onPress={() => { setResetEmail(email); setResetVisible(true); }}
           style={{ alignSelf: "flex-end", marginTop: 10 }}
         >
-          <Text style={{ color: colors.gold, fontSize: 13 }}>
+          <Text style={{ color: colors.stone, fontSize: 13 }}>
             Forgot password?
           </Text>
         </Pressable>
@@ -215,7 +215,7 @@ export default function LoginScreen() {
             }}
           >
             Don't have an account?{" "}
-            <Text style={{ color: colors.gold }}>Apply</Text>
+            <Text style={{ color: colors.dark, fontWeight: "600" }}>Apply</Text>
           </Text>
         </Pressable>
       </ScrollView>

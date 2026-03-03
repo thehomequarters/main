@@ -185,19 +185,6 @@ export default function VenueDetailScreen() {
             )}
           />
 
-          {/* Gradient overlay */}
-          <View
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 120,
-              backgroundColor: "rgba(0,0,0,0.6)",
-              pointerEvents: "none",
-            }}
-          />
-
           {/* Dot indicators (only if multiple images) */}
           {carouselImages.length > 1 && (
             <View
@@ -221,7 +208,7 @@ export default function VenueDetailScreen() {
                     borderRadius: 3,
                     backgroundColor:
                       i === activeSlide
-                        ? colors.gold
+                        ? colors.white
                         : "rgba(255,255,255,0.4)",
                   }}
                 />
@@ -263,7 +250,7 @@ export default function VenueDetailScreen() {
                   height: 64,
                   borderRadius: 32,
                   borderWidth: 3,
-                  borderColor: colors.gold,
+                  borderColor: colors.border,
                   overflow: "hidden",
                   backgroundColor: colors.white,
                 }}
@@ -276,7 +263,7 @@ export default function VenueDetailScreen() {
               </Pressable>
               <Text
                 style={{
-                  color: colors.gold,
+                  color: colors.stone,
                   fontSize: 10,
                   fontWeight: "700",
                   letterSpacing: 1,
@@ -293,7 +280,7 @@ export default function VenueDetailScreen() {
           {/* Category */}
           <Text
             style={{
-              color: colors.gold,
+              color: colors.stone,
               fontSize: 11,
               fontWeight: "600",
               letterSpacing: 2,
@@ -395,22 +382,23 @@ export default function VenueDetailScreen() {
                 resizeMode="cover"
                 onError={() => setMapFailed(true)}
               />
+              {/* Open in Maps pill */}
               <View
                 style={{
                   position: "absolute",
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  backgroundColor: "rgba(0,0,0,0.60)",
+                  bottom: 10,
+                  alignSelf: "center",
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 6,
+                  gap: 5,
+                  backgroundColor: "rgba(255,255,255,0.93)",
+                  borderRadius: 20,
                   paddingHorizontal: 14,
-                  paddingVertical: 10,
+                  paddingVertical: 7,
                 }}
               >
-                <Ionicons name="navigate-outline" size={14} color={colors.gold} />
-                <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }}>
+                <Ionicons name="navigate-outline" size={13} color={colors.dark} />
+                <Text style={{ color: colors.dark, fontSize: 12, fontWeight: "700" }}>
                   Open in Maps
                 </Text>
               </View>

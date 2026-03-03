@@ -147,7 +147,7 @@ export default function MemberProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color={colors.gold} size="large" />
+        <ActivityIndicator color={colors.stone} size="large" />
       </View>
     );
   }
@@ -210,8 +210,8 @@ export default function MemberProfileScreen() {
             ) : null}
             {member.industry ? (
               <View style={styles.metaItem}>
-                <Ionicons name="briefcase-outline" size={12} color={colors.gold} />
-                <Text style={[styles.metaText, { color: colors.gold }]}>
+                <Ionicons name="briefcase-outline" size={12} color={colors.stone} />
+                <Text style={[styles.metaText, { color: colors.stone }]}>
                   {member.industry.charAt(0).toUpperCase() + member.industry.slice(1)}
                 </Text>
               </View>
@@ -245,7 +245,7 @@ export default function MemberProfileScreen() {
               }
               size={16}
               color={
-                isConnected ? "#4CAF50" : isPending ? colors.grey : colors.gold
+                isConnected ? "#4CAF50" : isPending ? colors.grey : colors.stone
               }
             />
             <Text
@@ -256,7 +256,7 @@ export default function MemberProfileScreen() {
                     ? "#4CAF50"
                     : isPending
                     ? colors.grey
-                    : colors.gold,
+                    : colors.stone,
                 },
               ]}
             >
@@ -445,8 +445,8 @@ const styles = StyleSheet.create({
     borderColor: "rgba(160,160,160,0.2)",
   },
   actionBtnMsg: {
-    backgroundColor: colors.gold,
-    borderColor: colors.gold,
+    backgroundColor: colors.stone,
+    borderColor: colors.stone,
   },
   actionBtnText: {
     fontSize: 14,

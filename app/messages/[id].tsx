@@ -217,7 +217,7 @@ export default function ChatScreen() {
           }}
         >
           <Text
-            style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}
+            style={{ color: colors.stone, fontSize: 12, fontWeight: "700" }}
           >
             {getOtherInitials()}
           </Text>
@@ -272,7 +272,7 @@ export default function ChatScreen() {
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.stone,
                     fontSize: 14,
                     fontWeight: "500",
                   }}
@@ -450,7 +450,7 @@ export default function ChatScreen() {
             borderRadius: 20,
             backgroundColor:
               newMessage.trim() || imageUri
-                ? colors.gold
+                ? colors.stone
                 : "rgba(201, 168, 76, 0.2)",
             justifyContent: "center",
             alignItems: "center",

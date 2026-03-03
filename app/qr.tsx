@@ -108,7 +108,7 @@ export default function QRCodeScreen() {
       </Text>
       <Text
         style={{
-          color: colors.gold,
+          color: colors.stone,
           fontSize: 14,
           fontWeight: "500",
           textAlign: "center",
@@ -127,7 +127,7 @@ export default function QRCodeScreen() {
           alignItems: "center",
           borderWidth: 1,
           borderColor: "rgba(201, 168, 76, 0.2)",
-          shadowColor: colors.gold,
+          shadowColor: colors.stone,
           shadowOffset: { width: 0, height: 0 },
           shadowOpacity: 0.15,
           shadowRadius: 20,
@@ -190,7 +190,7 @@ export default function QRCodeScreen() {
             marginTop: 24,
             backgroundColor: redeemed
               ? "rgba(76, 175, 80, 0.15)"
-              : colors.gold,
+              : colors.stone,
             borderRadius: 12,
             paddingVertical: 14,
             paddingHorizontal: 40,

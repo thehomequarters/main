@@ -32,7 +32,7 @@ export function VenueCard({
   const screenWidth = Dimensions.get("window").width;
   const isFeatured = variant === "featured";
   const cardWidth = isFeatured ? screenWidth * 0.72 : screenWidth - 40;
-  const cardHeight = isFeatured ? 260 : 240;
+  const imageHeight = isFeatured ? 170 : 190;
 
   const imgSource = imageUrl || PLACEHOLDER_IMAGES[category] || PLACEHOLDER_IMAGES.restaurant;
 
@@ -41,189 +41,123 @@ export function VenueCard({
       onPress={onPress}
       style={{
         width: cardWidth,
-        height: cardHeight,
         borderRadius: 16,
         overflow: "hidden",
-        backgroundColor: colors.dark,
+        backgroundColor: colors.white,
+        borderWidth: 1,
+        borderColor: colors.border,
         marginRight: isFeatured ? 16 : 0,
         marginBottom: isFeatured ? 0 : 16,
       }}
     >
-      {/* Full-bleed image */}
-      <Image
-        source={{ uri: imgSource }}
-        style={{
-          width: "100%",
-          height: "100%",
-          position: "absolute",
-        }}
-        resizeMode="cover"
-      />
+      {/* Image section — no overlays */}
+      <View style={{ height: imageHeight, position: "relative" }}>
+        <Image
+          source={{ uri: imgSource }}
+          style={{ width: "100%", height: "100%" }}
+          resizeMode="cover"
+        />
 
-      {/* Top gradient overlay (light fade for top buttons) */}
-      <View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 80,
-          backgroundColor: "rgba(0,0,0,0.25)",
-        }}
-      />
-
-      {/* Bottom gradient overlay */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "55%",
-          backgroundColor: "rgba(0,0,0,0.60)",
-        }}
-      />
-
-      {/* Top-left: Venue name + location */}
-      <View
-        style={{
-          position: "absolute",
-          top: 14,
-          left: 14,
-          right: 100,
-        }}
-      >
-        <Text
+        {/* Category pill — top left on image */}
+        <View
           style={{
-            color: colors.white,
-            fontSize: 17,
-            fontWeight: "700",
-            textShadowColor: "rgba(0,0,0,0.4)",
-            textShadowOffset: { width: 0, height: 1 },
-            textShadowRadius: 3,
+            position: "absolute",
+            top: 10,
+            left: 10,
+            backgroundColor: "rgba(255,255,255,0.92)",
+            borderRadius: 20,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
           }}
-          numberOfLines={1}
         >
-          {name}
-        </Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 3, marginTop: 3 }}>
-          <Ionicons name="location-outline" size={11} color="rgba(255,255,255,0.8)" />
           <Text
             style={{
-              color: "rgba(255,255,255,0.8)",
+              color: colors.dark,
               fontSize: 11,
-              fontWeight: "500",
+              fontWeight: "600",
               textTransform: "capitalize",
             }}
           >
             {category}
           </Text>
         </View>
-      </View>
 
-      {/* Top-right: share + heart buttons */}
-      <View
-        style={{
-          position: "absolute",
-          top: 12,
-          right: 12,
-          flexDirection: "row",
-          gap: 8,
-        }}
-      >
+        {/* Action buttons — top right */}
         <View
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: "rgba(255,255,255,0.92)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Ionicons name="share-outline" size={17} color={colors.dark} />
-        </View>
-        <View
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 18,
-            backgroundColor: "rgba(255,255,255,0.92)",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Ionicons name="heart-outline" size={17} color={colors.dark} />
-        </View>
-      </View>
-
-      {/* Bottom strip */}
-      <View
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: 14,
-          paddingBottom: 16,
-        }}
-      >
-        {/* Deal/category row */}
-        <View
-          style={{
+            position: "absolute",
+            top: 10,
+            right: 10,
             flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 6,
+            gap: 8,
           }}
         >
-          {/* Gold circle with $ icon */}
           <View
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 14,
-              backgroundColor: colors.gold,
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              backgroundColor: "rgba(255,255,255,0.92)",
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Text style={{ color: colors.white, fontSize: 13, fontWeight: "700" }}>
-              $
-            </Text>
+            <Ionicons name="share-outline" size={16} color={colors.dark} />
           </View>
-          <Text
+          <View
             style={{
-              color: colors.white,
-              fontSize: 13,
-              fontWeight: "600",
-              flex: 1,
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              backgroundColor: "rgba(255,255,255,0.92)",
+              justifyContent: "center",
+              alignItems: "center",
             }}
-            numberOfLines={1}
           >
-            {dealHeadline || "Member Benefit"}
-          </Text>
-        </View>
-
-        {/* Rating + capacity row */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Text style={{ fontSize: 12 }}>⭐</Text>
-            <Text style={{ color: colors.white, fontSize: 12, fontWeight: "600" }}>
-              4.7
-            </Text>
+            <Ionicons name="heart-outline" size={16} color={colors.dark} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Ionicons name="people-outline" size={13} color="rgba(255,255,255,0.8)" />
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>
-              Members only
-            </Text>
+        </View>
+      </View>
+
+      {/* Info strip */}
+      <View style={{ paddingHorizontal: 14, paddingVertical: 12 }}>
+        <Text
+          style={{
+            color: colors.dark,
+            fontSize: 15,
+            fontWeight: "700",
+            marginBottom: 6,
+          }}
+          numberOfLines={1}
+        >
+          {name}
+        </Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {/* Deal pill */}
+          {dealHeadline && (
+            <View
+              style={{
+                backgroundColor: colors.sand,
+                borderRadius: 20,
+                paddingHorizontal: 10,
+                paddingVertical: 3,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <Text style={{ color: colors.dark, fontSize: 11, fontWeight: "600" }} numberOfLines={1}>
+                {dealHeadline}
+              </Text>
+            </View>
+          )}
+
+          {/* Rating + members */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={{ fontSize: 12 }}>⭐</Text>
+            <Text style={{ color: colors.stone, fontSize: 12 }}>4.7</Text>
+            <Text style={{ color: colors.border, fontSize: 12 }}>·</Text>
+            <Text style={{ color: colors.stone, fontSize: 12 }}>Members only</Text>
           </View>
         </View>
       </View>

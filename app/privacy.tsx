@@ -74,7 +74,7 @@ export default function PrivacyScreen() {
 
       {/* Info banner */}
       <View style={styles.infoBanner}>
-        <Ionicons name="eye-outline" size={16} color={colors.gold} />
+        <Ionicons name="eye-outline" size={16} color={colors.stone} />
         <Text style={styles.infoBannerText}>
           Your name and photo are always visible to active members. These settings
           control additional profile details.
@@ -193,7 +193,7 @@ function ToggleRow({ icon, label, subtitle, value, onToggle, disabled }: ToggleR
           false: "rgba(160,160,160,0.2)",
           true: "rgba(201,168,76,0.5)",
         }}
-        thumbColor={value ? colors.gold : "rgba(160,160,160,0.6)"}
+        thumbColor={value ? colors.stone : "rgba(160,160,160,0.6)"}
         ios_backgroundColor="rgba(160,160,160,0.2)"
       />
     </View>
@@ -341,13 +341,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   radioCircleActive: {
-    borderColor: colors.gold,
+    borderColor: colors.stone,
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
   },
   policyNote: {
     color: "rgba(160,160,160,0.4)",

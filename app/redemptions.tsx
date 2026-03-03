@@ -113,7 +113,7 @@ export default function RedemptionsScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -199,7 +199,7 @@ export default function RedemptionsScreen() {
             onPress={() => router.push("/(tabs)")}
             style={{
               marginTop: 20,
-              backgroundColor: colors.gold,
+              backgroundColor: colors.stone,
               borderRadius: 12,
               paddingHorizontal: 24,
               paddingVertical: 12,
@@ -280,11 +280,11 @@ export default function RedemptionsScreen() {
                   <Ionicons
                     name="storefront-outline"
                     size={12}
-                    color={colors.gold}
+                    color={colors.stone}
                   />
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 12,
                       fontWeight: "500",
                     }}

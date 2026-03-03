@@ -188,7 +188,7 @@ export default function NotificationsScreen() {
 
       {loading ? (
         <View style={styles.loader}>
-          <ActivityIndicator color={colors.gold} />
+          <ActivityIndicator color={colors.stone} />
         </View>
       ) : items.length === 0 ? (
         <View style={styles.empty}>
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(201,168,76,0.25)",
   },
   avatarText: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
     flexShrink: 0,
   },
   inlineActions: {

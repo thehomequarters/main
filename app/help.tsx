@@ -111,7 +111,7 @@ export default function HelpScreen() {
               alignItems: "center",
             }}
           >
-            <Ionicons name="mail-outline" size={20} color={colors.gold} />
+            <Ionicons name="mail-outline" size={20} color={colors.stone} />
           </View>
           <View style={{ flex: 1 }}>
             <Text
@@ -161,7 +161,7 @@ export default function HelpScreen() {
               alignItems: "center",
             }}
           >
-            <Ionicons name="logo-instagram" size={20} color={colors.gold} />
+            <Ionicons name="logo-instagram" size={20} color={colors.stone} />
           </View>
           <View style={{ flex: 1 }}>
             <Text
@@ -200,7 +200,7 @@ export default function HelpScreen() {
               width: 4,
               height: 20,
               borderRadius: 2,
-              backgroundColor: colors.gold,
+              backgroundColor: colors.stone,
             }}
           />
           <Text

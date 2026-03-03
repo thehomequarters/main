@@ -99,7 +99,7 @@ export default function GroupScreen() {
   if (loadingGroup) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color={colors.gold} />
+        <ActivityIndicator color={colors.stone} />
       </View>
     );
   }
@@ -124,7 +124,7 @@ export default function GroupScreen() {
           <Ionicons
             name={(group?.icon ?? "people-outline") as any}
             size={18}
-            color={colors.gold}
+            color={colors.stone}
           />
         </View>
       </View>
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   msgAvatarText: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 10,
     fontWeight: "700",
   },
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   msgBubbleMe: {
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
     borderBottomRightRadius: 4,
   },
   msgBubbleThem: {
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   msgAuthor: {
-    color: colors.gold,
+    color: colors.stone,
     fontSize: 11,
     fontWeight: "700",
     marginBottom: 3,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: colors.gold,
+    backgroundColor: colors.stone,
     justifyContent: "center",
     alignItems: "center",
   },

@@ -39,7 +39,7 @@ function TabIcon({
         {!!badge && (
           <View
             style={{
-              backgroundColor: colors.gold,
+              backgroundColor: colors.red,
               borderRadius: 7,
               minWidth: 14,
               height: 14,
@@ -48,7 +48,7 @@ function TabIcon({
               paddingHorizontal: 3,
             }}
           >
-            <Text style={{ color: colors.dark, fontSize: 8, fontWeight: "800" }}>
+            <Text style={{ color: colors.white, fontSize: 8, fontWeight: "800" }}>
               {badge}
             </Text>
           </View>
@@ -68,7 +68,7 @@ function TabIcon({
             width: 8,
             height: 8,
             borderRadius: 4,
-            backgroundColor: colors.gold,
+            backgroundColor: colors.red,
           }}
         />
       )}
@@ -95,17 +95,14 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
+          position: "absolute",
+          elevation: 0,
+          shadowOpacity: 0,
           height: Platform.OS === "ios" ? 90 : 72,
           paddingBottom: Platform.OS === "ios" ? 24 : 10,
           paddingTop: 6,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.06,
-          shadowRadius: 10,
-          elevation: 10,
         },
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.white,

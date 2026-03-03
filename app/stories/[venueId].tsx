@@ -137,7 +137,7 @@ export default function StoriesScreen() {
           alignItems: "center",
         }}
       >
-        <ActivityIndicator color={colors.gold} />
+        <ActivityIndicator color={colors.stone} />
       </View>
     );
   }
@@ -170,7 +170,7 @@ export default function StoriesScreen() {
           onPress={() => router.back()}
           style={{
             marginTop: 24,
-            backgroundColor: colors.gold,
+            backgroundColor: colors.stone,
             borderRadius: 12,
             paddingHorizontal: 28,
             paddingVertical: 12,

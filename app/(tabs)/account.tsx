@@ -90,7 +90,7 @@ function MenuItem({
             width: 8,
             height: 8,
             borderRadius: 4,
-            backgroundColor: colors.gold,
+            backgroundColor: colors.stone,
             marginRight: 8,
           }}
         />
@@ -165,7 +165,7 @@ export default function AccountTab() {
                   height: 72,
                   borderRadius: 36,
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.border,
                 }}
               />
             ) : (
@@ -174,16 +174,16 @@ export default function AccountTab() {
                   width: 72,
                   height: 72,
                   borderRadius: 36,
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  backgroundColor: colors.sand,
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.border,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.dark,
                     fontSize: 26,
                     fontWeight: "700",
                     letterSpacing: 1,
@@ -220,8 +220,8 @@ export default function AccountTab() {
                 alignSelf: "flex-start",
                 backgroundColor:
                   profile?.membership_status === "active"
-                    ? "rgba(76, 175, 80, 0.15)"
-                    : "rgba(201, 168, 76, 0.15)",
+                    ? "rgba(76, 175, 80, 0.12)"
+                    : colors.sand,
                 paddingHorizontal: 10,
                 paddingVertical: 3,
                 borderRadius: 4,
@@ -233,7 +233,7 @@ export default function AccountTab() {
                   color:
                     profile?.membership_status === "active"
                       ? colors.green
-                      : colors.gold,
+                      : colors.stone,
                   fontSize: 9,
                   fontWeight: "700",
                   letterSpacing: 2,
@@ -282,17 +282,17 @@ export default function AccountTab() {
             accessibilityRole="button"
             style={{
               flex: 1,
-              backgroundColor: "rgba(201, 168, 76, 0.1)",
+              backgroundColor: colors.sand,
               borderRadius: 12,
               borderWidth: 1,
-              borderColor: "rgba(201, 168, 76, 0.25)",
+              borderColor: colors.border,
               paddingVertical: 12,
               alignItems: "center",
             }}
           >
             <Text
               style={{
-                color: colors.gold,
+                color: colors.dark,
                 fontSize: 13,
                 fontWeight: "600",
               }}
@@ -470,7 +470,7 @@ export default function AccountTab() {
             icon="shield-checkmark-outline"
             label="House Rules"
             subtitle="Review the house rules"
-            onPress={() => router.push("/house-rules")}
+            onPress={() => router.push("/house-rules-intro" as any)}
           />
           <MenuItem
             icon="help-circle-outline"

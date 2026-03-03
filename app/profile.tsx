@@ -249,7 +249,7 @@ export default function ProfileScreen() {
                   height: 100,
                   borderRadius: 50,
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.stone,
                 }}
               />
             ) : (
@@ -260,14 +260,14 @@ export default function ProfileScreen() {
                   borderRadius: 50,
                   backgroundColor: "rgba(201, 168, 76, 0.15)",
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.stone,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.stone,
                     fontSize: 36,
                     fontWeight: "700",
                     letterSpacing: 2,
@@ -286,7 +286,7 @@ export default function ProfileScreen() {
                 width: 32,
                 height: 32,
                 borderRadius: 16,
-                backgroundColor: colors.gold,
+                backgroundColor: colors.stone,
                 justifyContent: "center",
                 alignItems: "center",
                 borderWidth: 3,
@@ -340,7 +340,7 @@ export default function ProfileScreen() {
                 color:
                   profile?.membership_status === "active"
                     ? colors.green
-                    : colors.gold,
+                    : colors.stone,
                 fontSize: 10,
                 fontWeight: "700",
                 letterSpacing: 2,
@@ -475,7 +475,7 @@ export default function ProfileScreen() {
                     borderRadius: 20,
                     borderWidth: 1,
                     borderColor: isSelected
-                      ? colors.gold
+                      ? colors.stone
                       : "rgba(160, 160, 160, 0.25)",
                     backgroundColor: isSelected
                       ? "rgba(201, 168, 76, 0.12)"
@@ -484,7 +484,7 @@ export default function ProfileScreen() {
                 >
                   <Text
                     style={{
-                      color: isSelected ? colors.gold : colors.grey,
+                      color: isSelected ? colors.stone : colors.grey,
                       fontSize: 13,
                       fontWeight: "600",
                     }}
@@ -523,7 +523,7 @@ export default function ProfileScreen() {
               onPress={handleSave}
               disabled={saving}
               style={{
-                backgroundColor: colors.gold,
+                backgroundColor: colors.stone,
                 borderRadius: 12,
                 paddingVertical: 16,
                 opacity: saving ? 0.6 : 1,

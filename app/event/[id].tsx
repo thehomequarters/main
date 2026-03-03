@@ -176,7 +176,7 @@ export default function EventDetailScreen() {
 
   const spotsLeft = event.capacity - attendeeCount;
   const isFull = spotsLeft <= 0;
-  const catColor = CATEGORY_COLORS[event.category] ?? colors.gold;
+  const catColor = CATEGORY_COLORS[event.category] ?? colors.stone;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.black }}>
@@ -284,7 +284,7 @@ export default function EventDetailScreen() {
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="calendar-outline" size={16} color={colors.gold} />
+                <Ionicons name="calendar-outline" size={16} color={colors.stone} />
               </View>
               <Text style={{ color: colors.white, fontSize: 14, fontWeight: "500" }}>
                 {formatDate(event.date)}
@@ -302,7 +302,7 @@ export default function EventDetailScreen() {
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="time-outline" size={16} color={colors.gold} />
+                <Ionicons name="time-outline" size={16} color={colors.stone} />
               </View>
               <Text style={{ color: colors.white, fontSize: 14, fontWeight: "500" }}>
                 {formatTime(event.time)} – {formatTime(event.end_time)}
@@ -320,7 +320,7 @@ export default function EventDetailScreen() {
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="location-outline" size={16} color={colors.gold} />
+                <Ionicons name="location-outline" size={16} color={colors.stone} />
               </View>
               <Text style={{ color: colors.white, fontSize: 14, fontWeight: "500" }}>
                 {event.venue}
@@ -338,7 +338,7 @@ export default function EventDetailScreen() {
                   alignItems: "center",
                 }}
               >
-                <Ionicons name="people-outline" size={16} color={colors.gold} />
+                <Ionicons name="people-outline" size={16} color={colors.stone} />
               </View>
               <Text
                 style={{
@@ -412,14 +412,14 @@ export default function EventDetailScreen() {
               {/* Footer row */}
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 12 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-                  <Ionicons name="navigate-outline" size={16} color={colors.gold} />
+                  <Ionicons name="navigate-outline" size={16} color={colors.stone} />
                   <Text style={{ color: colors.white, fontSize: 13, fontWeight: "600" }} numberOfLines={1}>
                     {event.venue}
                   </Text>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(201,168,76,0.1)", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5 }}>
-                  <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "600" }}>Directions</Text>
-                  <Ionicons name="open-outline" size={12} color={colors.gold} />
+                  <Text style={{ color: colors.stone, fontSize: 12, fontWeight: "600" }}>Directions</Text>
+                  <Ionicons name="open-outline" size={12} color={colors.stone} />
                 </View>
               </View>
             </Pressable>
@@ -468,8 +468,8 @@ export default function EventDetailScreen() {
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-                <Ionicons name="open-outline" size={18} color={colors.gold} />
-                <Text style={{ color: colors.gold, fontSize: 14, fontWeight: "600" }}>
+                <Ionicons name="open-outline" size={18} color={colors.stone} />
+                <Text style={{ color: colors.stone, fontSize: 14, fontWeight: "600" }}>
                   Read More / Event Page
                 </Text>
               </View>
@@ -501,7 +501,7 @@ export default function EventDetailScreen() {
               ? "rgba(76,175,80,0.15)"
               : isFull
               ? "rgba(160,160,160,0.1)"
-              : colors.gold,
+              : colors.stone,
             borderWidth: userBooking ? 1 : 0,
             borderColor: userBooking ? "rgba(76,175,80,0.4)" : undefined,
             borderRadius: 12,

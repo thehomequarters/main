@@ -60,7 +60,7 @@ export default function HouseRulesScreen() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       {/* Header */}
@@ -82,26 +82,20 @@ export default function HouseRulesScreen() {
             width: 36,
             height: 36,
             borderRadius: 18,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.sand,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <Ionicons name="arrow-back" size={18} color={colors.white} />
+          <Ionicons name="arrow-back" size={18} color={colors.dark} />
         </Pressable>
         <View>
-          <Text
-            style={{
-              color: colors.white,
-              fontSize: 24,
-              fontWeight: "700",
-            }}
-          >
+          <Text style={{ color: colors.dark, fontSize: 24, fontWeight: "700" }}>
             House Rules
           </Text>
-          <Text style={{ color: colors.grey, fontSize: 13, marginTop: 2 }}>
+          <Text style={{ color: colors.stone, fontSize: 13, marginTop: 2 }}>
             The code we live by
           </Text>
         </View>
@@ -113,16 +107,16 @@ export default function HouseRulesScreen() {
           marginHorizontal: 20,
           marginTop: 20,
           marginBottom: 24,
-          backgroundColor: "rgba(201, 168, 76, 0.08)",
+          backgroundColor: colors.sand,
           borderRadius: 14,
           borderWidth: 1,
-          borderColor: "rgba(201, 168, 76, 0.15)",
+          borderColor: colors.border,
           padding: 18,
         }}
       >
         <Text
           style={{
-            color: colors.gold,
+            color: colors.dark,
             fontSize: 14,
             lineHeight: 21,
             fontWeight: "500",
@@ -143,15 +137,15 @@ export default function HouseRulesScreen() {
             style={{
               flexDirection: "row",
               marginHorizontal: 20,
-              marginBottom: 16,
+              marginBottom: 12,
               backgroundColor: isRevocation
-                ? "rgba(229, 57, 53, 0.06)"
-                : colors.dark,
+                ? "rgba(229, 57, 53, 0.04)"
+                : colors.white,
               borderRadius: 14,
               borderWidth: 1,
               borderColor: isRevocation
-                ? "rgba(229, 57, 53, 0.25)"
-                : colors.darkBorder,
+                ? "rgba(229, 57, 53, 0.2)"
+                : colors.border,
               padding: 16,
               gap: 14,
             }}
@@ -162,8 +156,8 @@ export default function HouseRulesScreen() {
                 height: 40,
                 borderRadius: 12,
                 backgroundColor: isRevocation
-                  ? "rgba(229, 57, 53, 0.12)"
-                  : "rgba(201, 168, 76, 0.1)",
+                  ? "rgba(229, 57, 53, 0.08)"
+                  : colors.sand,
                 justifyContent: "center",
                 alignItems: "center",
               }}
@@ -171,13 +165,13 @@ export default function HouseRulesScreen() {
               <Ionicons
                 name={rule.icon}
                 size={18}
-                color={isRevocation ? "#E53935" : colors.gold}
+                color={isRevocation ? colors.red : colors.dark}
               />
             </View>
             <View style={{ flex: 1 }}>
               <Text
                 style={{
-                  color: isRevocation ? "#E53935" : colors.white,
+                  color: isRevocation ? colors.red : colors.dark,
                   fontSize: 15,
                   fontWeight: "600",
                   marginBottom: 4,
@@ -187,7 +181,7 @@ export default function HouseRulesScreen() {
               </Text>
               <Text
                 style={{
-                  color: colors.grey,
+                  color: colors.stone,
                   fontSize: 13,
                   lineHeight: 20,
                 }}
@@ -202,10 +196,10 @@ export default function HouseRulesScreen() {
       {/* Footer */}
       <Text
         style={{
-          color: colors.grey,
+          color: colors.stone,
           fontSize: 12,
           textAlign: "center",
-          marginTop: 8,
+          marginTop: 12,
           paddingHorizontal: 40,
           lineHeight: 18,
           opacity: 0.7,
