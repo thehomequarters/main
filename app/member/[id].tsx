@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Dimensions,
+  Linking,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -20,14 +22,15 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
-  updateDoc,
-  increment,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Profile, Connection } from "@/lib/database.types";
+
+const { width: W } = Dimensions.get("window");
+const HERO_H = 340;
 
 export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -162,48 +165,62 @@ export default function MemberProfileScreen() {
   const isConnected = connection?.status === "accepted";
   const isPending = connection?.status === "pending";
 
+  const safeTop = Platform.OS === "ios" ? 58 : 42;
+
   return (
     <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-      {/* Back button */}
-      <Pressable onPress={() => router.back()} style={styles.backBtn}>
-        <Ionicons name="chevron-back" size={20} color={colors.white} />
-      </Pressable>
 
-      {/* Hero */}
-      <View style={styles.hero}>
+      {/* ── Full-bleed hero ── */}
+      <View style={{ width: W, height: HERO_H }}>
         {member.avatar_url ? (
-          <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+          <Image
+            source={{ uri: member.avatar_url }}
+            style={StyleSheet.absoluteFillObject}
+            resizeMode="cover"
+          />
         ) : (
-          <View style={styles.avatarFallback}>
-            <Text style={styles.avatarText}>{initials.toUpperCase()}</Text>
-          </View>
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "#111" }]} />
         )}
 
-        <Text style={styles.name}>
-          {member.first_name} {member.last_name}
-        </Text>
-        {member.title && (
-          <Text style={styles.title}>{member.title}</Text>
-        )}
-        <View style={styles.metaRow}>
-          {member.city && (
-            <View style={styles.metaItem}>
-              <Ionicons name="location-outline" size={12} color={colors.grey} />
-              <Text style={styles.metaText}>{member.city}</Text>
-            </View>
-          )}
-          {member.industry && (
-            <View style={styles.metaItem}>
-              <Ionicons name="briefcase-outline" size={12} color={colors.gold} />
-              <Text style={[styles.metaText, { color: colors.gold }]}>
-                {member.industry.charAt(0).toUpperCase() + member.industry.slice(1)}
-              </Text>
-            </View>
-          )}
+        {/* Bottom gradient fade */}
+        <View style={styles.heroGradient} />
+
+        {/* Back button */}
+        <Pressable
+          onPress={() => router.back()}
+          style={[styles.backBtn, { top: safeTop }]}
+        >
+          <Ionicons name="chevron-back" size={20} color={colors.white} />
+        </Pressable>
+
+        {/* Name + title over the hero */}
+        <View style={styles.heroText}>
+          <Text style={styles.heroName}>
+            {member.first_name} {member.last_name}
+          </Text>
+          {member.title ? (
+            <Text style={styles.heroTitle}>{member.title}</Text>
+          ) : null}
+          <View style={styles.metaRow}>
+            {member.city ? (
+              <View style={styles.metaItem}>
+                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.6)" />
+                <Text style={styles.metaText}>{member.city}</Text>
+              </View>
+            ) : null}
+            {member.industry ? (
+              <View style={styles.metaItem}>
+                <Ionicons name="briefcase-outline" size={12} color={colors.gold} />
+                <Text style={[styles.metaText, { color: colors.gold }]}>
+                  {member.industry.charAt(0).toUpperCase() + member.industry.slice(1)}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         </View>
       </View>
 
-      {/* Action buttons */}
+      {/* ── Action buttons ── */}
       {user?.uid !== member.id && (
         <View style={styles.actions}>
           <Pressable
@@ -262,7 +279,7 @@ export default function MemberProfileScreen() {
         </View>
       )}
 
-      {/* Bio */}
+      {/* ── Bio ── */}
       {member.bio ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>About</Text>
@@ -270,7 +287,7 @@ export default function MemberProfileScreen() {
         </View>
       ) : null}
 
-      {/* Interests */}
+      {/* ── Interests ── */}
       {member.interests && member.interests.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Interests</Text>
@@ -284,7 +301,45 @@ export default function MemberProfileScreen() {
         </View>
       )}
 
-      {/* Member code */}
+      {/* ── Social links ── */}
+      {(member.instagram_handle || member.linkedin_handle) && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Find me online</Text>
+          {member.instagram_handle ? (
+            <Pressable
+              onPress={() =>
+                Linking.openURL(`https://instagram.com/${member.instagram_handle}`)
+              }
+              style={styles.socialRow}
+            >
+              <View style={[styles.socialIconWrap, { backgroundColor: "rgba(225,48,108,0.12)" }]}>
+                <Ionicons name="logo-instagram" size={18} color="#E1306C" />
+              </View>
+              <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.grey} style={{ marginLeft: "auto" }} />
+            </Pressable>
+          ) : null}
+          {member.linkedin_handle ? (
+            <Pressable
+              onPress={() => {
+                const url = member.linkedin_handle!.startsWith("http")
+                  ? member.linkedin_handle!
+                  : `https://linkedin.com/in/${member.linkedin_handle}`;
+                Linking.openURL(url);
+              }}
+              style={styles.socialRow}
+            >
+              <View style={[styles.socialIconWrap, { backgroundColor: "rgba(0,119,181,0.12)" }]}>
+                <Ionicons name="logo-linkedin" size={18} color="#0077B5" />
+              </View>
+              <Text style={styles.socialHandle}>{member.linkedin_handle}</Text>
+              <Ionicons name="chevron-forward" size={14} color={colors.grey} style={{ marginLeft: "auto" }} />
+            </Pressable>
+          ) : null}
+        </View>
+      )}
+
+      {/* ── Member code ── */}
       <View style={styles.codeRow}>
         <Text style={styles.codeLabel}>MEMBER CODE</Text>
         <Text style={styles.code}>{member.member_code}</Text>
@@ -309,65 +364,45 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 60 : 44,
     left: 20,
     zIndex: 10,
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.45)",
     justifyContent: "center",
     alignItems: "center",
   },
-  hero: {
-    alignItems: "center",
-    paddingTop: Platform.OS === "ios" ? 110 : 90,
-    paddingBottom: 28,
-    paddingHorizontal: 28,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.darkBorder,
+  heroGradient: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: HERO_H * 0.55,
+    backgroundColor: "rgba(0,0,0,0.70)",
   },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 2.5,
-    borderColor: colors.gold,
-    marginBottom: 16,
+  heroText: {
+    position: "absolute",
+    bottom: 24,
+    left: 22,
+    right: 22,
   },
-  avatarFallback: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: "rgba(201,168,76,0.12)",
-    borderWidth: 2.5,
-    borderColor: colors.gold,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  avatarText: {
-    color: colors.gold,
-    fontSize: 34,
-    fontWeight: "700",
-    letterSpacing: 2,
-  },
-  name: {
+  heroName: {
     color: colors.white,
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
+    fontSize: 30,
+    fontWeight: "800",
+    letterSpacing: -0.3,
     marginBottom: 4,
   },
-  title: {
-    color: colors.grey,
+  heroTitle: {
+    color: "rgba(255,255,255,0.65)",
     fontSize: 14,
-    textAlign: "center",
-    marginBottom: 12,
+    fontWeight: "500",
+    marginBottom: 10,
   },
   metaRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: 14,
   },
   metaItem: {
     flexDirection: "row",
@@ -375,14 +410,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
-    color: colors.grey,
+    color: "rgba(255,255,255,0.55)",
     fontSize: 13,
     fontWeight: "500",
   },
   actions: {
     flexDirection: "row",
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 18,
     gap: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.darkBorder,
@@ -427,7 +462,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   bio: {
     color: "rgba(160,160,160,0.85)",
@@ -450,6 +485,26 @@ const styles = StyleSheet.create({
   tagText: {
     color: colors.grey,
     fontSize: 13,
+    fontWeight: "500",
+  },
+  socialRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.04)",
+  },
+  socialIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  socialHandle: {
+    color: colors.white,
+    fontSize: 14,
     fontWeight: "500",
   },
   codeRow: {

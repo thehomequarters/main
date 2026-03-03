@@ -97,6 +97,12 @@ export default function ProfileScreen() {
   const [interestsText, setInterestsText] = useState(
     (profile?.interests ?? []).join(", ")
   );
+  const [instagramHandle, setInstagramHandle] = useState(
+    profile?.instagram_handle ?? ""
+  );
+  const [linkedinHandle, setLinkedinHandle] = useState(
+    profile?.linkedin_handle ?? ""
+  );
   const [saving, setSaving] = useState(false);
   const [avatarLocal, setAvatarLocal] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -134,7 +140,9 @@ export default function ProfileScreen() {
     bio !== (profile?.bio ?? "") ||
     city !== (profile?.city ?? "") ||
     industry !== (profile?.industry ?? null) ||
-    interestsText !== (profile?.interests ?? []).join(", ");
+    interestsText !== (profile?.interests ?? []).join(", ") ||
+    instagramHandle !== (profile?.instagram_handle ?? "") ||
+    linkedinHandle !== (profile?.linkedin_handle ?? "");
 
   const handleSave = async () => {
     if (!user?.uid) return;
@@ -159,6 +167,8 @@ export default function ProfileScreen() {
         city: city.trim() || null,
         industry: industry,
         interests: interests,
+        instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
+        linkedin_handle: linkedinHandle.trim() || null,
       });
       await refreshProfile();
       Alert.alert("Saved", "Your profile has been updated.");
@@ -491,6 +501,20 @@ export default function ProfileScreen() {
             value={interestsText}
             onChangeText={setInterestsText}
             placeholder="Photography, Music, Startups (comma separated)"
+          />
+
+          <FieldLabel label="INSTAGRAM" />
+          <FieldInput
+            value={instagramHandle}
+            onChangeText={setInstagramHandle}
+            placeholder="@yourhandle"
+          />
+
+          <FieldLabel label="LINKEDIN" />
+          <FieldInput
+            value={linkedinHandle}
+            onChangeText={setLinkedinHandle}
+            placeholder="yourname or full profile URL"
           />
 
           {/* Save Button */}

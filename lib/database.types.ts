@@ -32,6 +32,9 @@ export interface Profile {
   city: string | null;
   industry: MemberIndustry | null;
   interests: string[];
+  // Social handles
+  instagram_handle: string | null;
+  linkedin_handle: string | null;
   // Push notifications
   push_token: string | null;
   // Nomination system

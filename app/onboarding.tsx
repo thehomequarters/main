@@ -30,7 +30,6 @@ const SLIDES = [
     },
     eyebrow: "WELCOME TO",
     title: "Home\nQuarters",
-    body: "A private members' community built for the diaspora. Curated connections, exclusive venues, and a place to belong.",
   },
   {
     id: "2",
@@ -39,7 +38,6 @@ const SLIDES = [
     },
     eyebrow: "EXCLUSIVE ACCESS",
     title: "The Best of\nYour City",
-    body: "Unlock handpicked restaurants, bars, and experiences — with member-only deals and privileges at every partner venue.",
   },
   {
     id: "3",
@@ -48,7 +46,6 @@ const SLIDES = [
     },
     eyebrow: "YOUR PEOPLE",
     title: "Connect &\nBelong",
-    body: "Find fellow members, collaborate, attend events, and build relationships that last beyond the city.",
   },
 ];
 
@@ -124,7 +121,6 @@ export default function OnboardingScreen() {
             <View style={styles.textBlock}>
               <Text style={styles.eyebrow}>{item.eyebrow}</Text>
               <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.body}>{item.body}</Text>
             </View>
           </View>
         )}
@@ -181,24 +177,23 @@ const styles = StyleSheet.create({
     width: W,
     height: H,
   },
-  // Soft black at the very top so the logo reads against any image
+  // Soft vignette at top so the logo reads
   topOverlay: {
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: 160,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    // Fade effect via multiple layers not needed — single semi-transparent block is clean enough
+    height: 120,
+    backgroundColor: "rgba(0,0,0,0.30)",
   },
-  // Heavy black fade from ~45% height down to the bottom
+  // Thin fade at the very bottom for text legibility only
   bottomOverlay: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: H * 0.62,
-    backgroundColor: "rgba(0,0,0,0.82)",
+    height: H * 0.38,
+    backgroundColor: "rgba(0,0,0,0.72)",
   },
   logoWrap: {
     position: "absolute",
@@ -213,7 +208,7 @@ const styles = StyleSheet.create({
   },
   textBlock: {
     position: "absolute",
-    bottom: 210,
+    bottom: 190,
     left: 28,
     right: 28,
   },
@@ -231,13 +226,6 @@ const styles = StyleSheet.create({
     lineHeight: 52,
     letterSpacing: -0.5,
     marginBottom: 18,
-  },
-  body: {
-    color: "rgba(255,255,255,0.68)",
-    fontSize: 16,
-    lineHeight: 25,
-    fontWeight: "400",
-    maxWidth: W - 56,
   },
   controls: {
     position: "absolute",

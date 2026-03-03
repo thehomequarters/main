@@ -278,6 +278,52 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
+          {/* Embedded map preview */}
+          {venue.latitude && venue.longitude && (
+            <Pressable
+              onPress={openMap}
+              style={{
+                borderRadius: 14,
+                overflow: "hidden",
+                marginBottom: 16,
+                height: 180,
+              }}
+            >
+              <Image
+                source={{
+                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=16&size=600x360&markers=${venue.latitude},${venue.longitude},red`,
+                }}
+                style={{ width: "100%", height: "100%" }}
+                resizeMode="cover"
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  backgroundColor: "rgba(0,0,0,0.60)",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 6,
+                  paddingHorizontal: 14,
+                  paddingVertical: 10,
+                }}
+              >
+                <Ionicons name="navigate-outline" size={14} color={colors.gold} />
+                <Text
+                  style={{
+                    color: colors.white,
+                    fontSize: 13,
+                    fontWeight: "600",
+                  }}
+                >
+                  Open in Maps
+                </Text>
+              </View>
+            </Pressable>
+          )}
+
           {/* Action Buttons */}
           <View
             style={{
