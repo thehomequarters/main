@@ -1,13 +1,31 @@
-import React from "react";
-import { Stack } from "expo-router";
+import React, { useEffect } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import "../global.css";
+
+/** Watches auth state inside the router tree and redirects on sign-out. */
+function AuthGuard() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (loading) return;
+    const inTabs = segments[0] === "(tabs)";
+    if (!user && inTabs) {
+      router.replace("/onboarding");
+    }
+  }, [user, loading, segments]);
+
+  return null;
+}
 
 export default function RootLayout() {
   return (
     <AuthProvider>
+      <AuthGuard />
       <StatusBar style="dark" />
       <Stack
         screenOptions={{

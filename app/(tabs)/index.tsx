@@ -37,8 +37,8 @@ interface VenueWithDeal extends Venue {
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CATEGORY_PILLS = [
-  { key: "venues", label: "Venues", icon: "storefront-outline" as const },
-  { key: "events", label: "Events", icon: "calendar-outline" as const },
+  { key: "venues",  label: "Venues",  icon: "storefront-outline" as const },
+  { key: "events",  label: "Events",  icon: "calendar-outline" as const },
   { key: "members", label: "Members", icon: "people-outline" as const },
 ];
 
@@ -49,6 +49,7 @@ export default function HomeTab() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
+  const [allEvents, setAllEvents] = useState<HQEvent[]>([]);
   const [activeCategory, setActiveCategory] = useState("venues");
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -88,9 +89,9 @@ export default function HomeTab() {
       const eventsSnap = await getDocs(eventsQuery);
       const eventList = eventsSnap.docs
         .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(0, 4);
-      setUpcomingEvents(eventList);
+        .sort((a, b) => a.date.localeCompare(b.date));
+      setAllEvents(eventList);
+      setUpcomingEvents(eventList.slice(0, 4));
     } catch (e: any) {
       Alert.alert("Error", "Could not load data. Pull down to try again.");
     } finally {
@@ -258,7 +259,13 @@ export default function HomeTab() {
             return (
               <Pressable
                 key={cat.key}
-                onPress={() => setActiveCategory(cat.key)}
+                onPress={() => {
+                  if (cat.key === "members") {
+                    router.push("/(tabs)/discover" as any);
+                  } else {
+                    setActiveCategory(cat.key);
+                  }
+                }}
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
@@ -290,80 +297,120 @@ export default function HomeTab() {
           })}
         </ScrollView>
 
-        {/* Membership Card */}
-        <View style={{ paddingHorizontal: 20, marginBottom: 32 }}>
-          <MembershipCard
-            firstName={profile?.first_name ?? ""}
-            lastName={profile?.last_name ?? ""}
-            memberCode={profile?.member_code ?? ""}
-            status={profile?.membership_status ?? "pending"}
-            showReflection={false}
-          />
-        </View>
+        {/* Venues tab */}
+        {activeCategory === "venues" && (
+          <>
+            {/* Membership Card */}
+            <View style={{ paddingHorizontal: 20, marginBottom: 32 }}>
+              <MembershipCard
+                firstName={profile?.first_name ?? ""}
+                lastName={profile?.last_name ?? ""}
+                memberCode={profile?.member_code ?? ""}
+                status={profile?.membership_status ?? "pending"}
+                showReflection={false}
+              />
+            </View>
 
-        {/* Upcoming Events */}
-        {upcomingEvents.length > 0 && (
-          <View style={{ marginBottom: 32 }}>
+            {/* Upcoming Events preview */}
+            {upcomingEvents.length > 0 && (
+              <View style={{ marginBottom: 32 }}>
+                <SectionHeader
+                  title="Upcoming Events"
+                  actionLabel="See All"
+                  onAction={() => router.push("/(tabs)/events" as any)}
+                />
+                <FlatList
+                  horizontal
+                  data={upcomingEvents}
+                  keyExtractor={(item) => item.id}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 20 }}
+                  renderItem={({ item }) => (
+                    <EventCard event={item} variant="compact" />
+                  )}
+                />
+              </View>
+            )}
+
+            {/* All Venues */}
+            <View style={{ paddingHorizontal: 20 }}>
+              <Text
+                style={{
+                  color: colors.dark,
+                  fontSize: 20,
+                  fontWeight: "700",
+                  letterSpacing: 0.3,
+                  marginBottom: 16,
+                }}
+              >
+                All Venues
+              </Text>
+              {venues.map((venue) => (
+                <VenueCard
+                  key={venue.id}
+                  name={venue.name}
+                  category={venue.category}
+                  imageUrl={venue.image_url}
+                  dealHeadline={venue.deals?.[0]?.title}
+                  tags={venue.tags}
+                  onPress={() => router.push(`/venue/${venue.id}`)}
+                  variant="list"
+                />
+              ))}
+
+              {venues.length === 0 && (
+                <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
+                  <Ionicons name="storefront-outline" size={48} color={colors.border} />
+                  <Text
+                    style={{
+                      color: colors.stone,
+                      fontSize: 14,
+                      textAlign: "center",
+                      paddingHorizontal: 20,
+                    }}
+                  >
+                    Partner venues are being added. Check back soon!
+                  </Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* Events tab */}
+        {activeCategory === "events" && (
+          <View style={{ paddingHorizontal: 20 }}>
             <SectionHeader
               title="Upcoming Events"
               actionLabel="See All"
               onAction={() => router.push("/(tabs)/events" as any)}
             />
-            <FlatList
-              horizontal
-              data={upcomingEvents}
-              keyExtractor={(item) => item.id}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
-              renderItem={({ item }) => (
-                <EventCard event={item} variant="compact" />
-              )}
-            />
+            {allEvents.length > 0 ? (
+              allEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  variant="full"
+                  onPress={() => router.push(`/event/${event.id}` as any)}
+                />
+              ))
+            ) : (
+              <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
+                <Ionicons name="calendar-outline" size={48} color={colors.border} />
+                <Text
+                  style={{
+                    color: colors.stone,
+                    fontSize: 14,
+                    textAlign: "center",
+                    paddingHorizontal: 20,
+                  }}
+                >
+                  No upcoming events. Check back soon!
+                </Text>
+              </View>
+            )}
           </View>
         )}
-
-        {/* All Venues */}
-        <View style={{ paddingHorizontal: 20 }}>
-          <Text
-            style={{
-              color: colors.dark,
-              fontSize: 20,
-              fontWeight: "700",
-              letterSpacing: 0.3,
-              marginBottom: 16,
-            }}
-          >
-            All Venues
-          </Text>
-          {venues.map((venue) => (
-            <VenueCard
-              key={venue.id}
-              name={venue.name}
-              category={venue.category}
-              imageUrl={venue.image_url}
-              dealHeadline={venue.deals?.[0]?.title}
-              tags={venue.tags}
-              onPress={() => router.push(`/venue/${venue.id}`)}
-              variant="list"
-            />
-          ))}
-
-          {venues.length === 0 && (
-            <View style={{ alignItems: "center", marginTop: 40, gap: 12 }}>
-              <Ionicons name="storefront-outline" size={48} color={colors.border} />
-              <Text
-                style={{
-                  color: colors.stone,
-                  fontSize: 14,
-                  textAlign: "center",
-                  paddingHorizontal: 20,
-                }}
-              >
-                Partner venues are being added. Check back soon!
-              </Text>
-            </View>
-          )}
-        </View>
       </ScrollView>
 
       {/* Search Modal */}
