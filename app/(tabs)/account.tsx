@@ -422,6 +422,12 @@ export default function AccountTab() {
               )
             }
           />
+          <MenuItem
+            icon="airplane-outline"
+            label="eSIM & Travel"
+            subtitle="Stay connected abroad with Airalo"
+            onPress={() => router.push("/esim")}
+          />
         </View>
       </View>
 
