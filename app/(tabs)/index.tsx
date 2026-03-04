@@ -6,7 +6,6 @@ import {
   FlatList,
   RefreshControl,
   Pressable,
-  Alert,
   Image,
   Dimensions,
   Modal,
@@ -107,7 +106,7 @@ export default function HomeTab() {
         setLikedVenueIds(new Set(likesSnap.docs.map((d) => d.data().venue_id as string)));
       }
     } catch (e: any) {
-      Alert.alert("Error", "Could not load data. Pull down to try again.");
+      console.warn("Home screen load error:", e?.message ?? e);
     } finally {
       setLoading(false);
     }
@@ -189,7 +188,7 @@ export default function HomeTab() {
           }}
         >
           <Pressable
-            onPress={() => router.push("/profile")}
+            onPress={() => router.push("/(tabs)/account" as any)}
             style={{
               width: 42,
               height: 42,

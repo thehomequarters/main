@@ -147,9 +147,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="account"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} name="person" label="Account" />
-          ),
+          tabBarButton: () => null,
         }}
       />
     </Tabs>
