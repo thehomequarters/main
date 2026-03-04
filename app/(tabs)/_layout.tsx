@@ -57,10 +57,11 @@ function TabIcon({
     );
   }
 
-  // Unfocused: icon only
+  // Unfocused: icon + label stacked vertically
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", marginTop: 4, position: "relative" }}>
-      <Ionicons name={name} size={22} color={colors.stone} />
+    <View style={{ alignItems: "center", justifyContent: "center", marginTop: 4, position: "relative", gap: 3 }}>
+      <Ionicons name={name} size={20} color={colors.stone} />
+      <Text style={{ color: colors.stone, fontSize: 10, fontWeight: "500" }}>{label}</Text>
       {!!badge && (
         <View
           style={{
