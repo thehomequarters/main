@@ -23,6 +23,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import type { HQEvent, Booking } from "@/lib/database.types";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -58,6 +60,7 @@ export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user, profile } = useAuth();
+  const { toast } = useToast();
   const isGrace = profile?.membership_status === "accepted";
 
   const [event, setEvent] = useState<HQEvent | null>(null);
@@ -129,7 +132,8 @@ export default function EventDetailScreen() {
     }
 
     if (attendeeCount >= event.capacity) {
-      Alert.alert("Full", "This event has reached capacity.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      toast("This event has reached capacity.", "error");
       return;
     }
 
@@ -147,7 +151,8 @@ export default function EventDetailScreen() {
           setUserBooking({ id: ref.id, member_id: user.uid!, event_id: id, created_at: new Date().toISOString() });
           setAttendeeCount((c) => c + 1);
           setBooking(false);
-          Alert.alert("Confirmed", "You're on the list!");
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          toast("You're on the list!", "success");
         },
       },
     ]);

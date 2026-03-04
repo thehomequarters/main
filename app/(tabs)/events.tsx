@@ -22,8 +22,10 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { EventCard } from "@/components/EventCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { useToast } from "@/components/Toast";
 import { useRouter } from "expo-router";
 import type { HQEvent, Booking, EventCategory } from "@/lib/database.types";
 
@@ -39,6 +41,7 @@ const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
 export default function EventsTab() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [events, setEvents] = useState<HQEvent[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingCounts, setBookingCounts] = useState<Record<string, number>>(
@@ -129,7 +132,8 @@ export default function EventsTab() {
     // Check capacity
     const currentCount = bookingCounts[event.id] || 0;
     if (currentCount >= event.capacity) {
-      Alert.alert("Full", "This event has reached capacity.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      toast("This event has reached capacity.", "error");
       return;
     }
 
@@ -147,7 +151,8 @@ export default function EventsTab() {
               created_at: new Date().toISOString(),
             });
             await fetchEvents();
-            Alert.alert("Confirmed", "You're on the list!");
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            toast("You're on the list!", "success");
           },
         },
       ]

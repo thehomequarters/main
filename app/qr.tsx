@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, Dimensions, Alert } from "react-native";
+import { View, Text, Pressable, Dimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
@@ -17,6 +19,7 @@ export default function QRCodeScreen() {
   }>();
   const { user, profile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const screenWidth = Dimensions.get("window").width;
   const qrSize = screenWidth * 0.5;
   const [redeemed, setRedeemed] = useState(false);
@@ -45,9 +48,10 @@ export default function QRCodeScreen() {
         redeemed_at: new Date().toISOString(),
       });
       setRedeemed(true);
-      Alert.alert("Redeemed", "This benefit has been recorded.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      toast("Benefit recorded successfully.", "success");
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast(e.message, "error");
     } finally {
       setRedeeming(false);
     }

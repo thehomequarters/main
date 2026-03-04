@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -21,6 +20,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Connection, Profile, Conversation } from "@/lib/database.types";
@@ -43,6 +44,7 @@ function timeAgo(dateStr: string): string {
 export default function NotificationsScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [items, setItems] = useState<NotifItem[]>([]);
   const [loading, setLoading] = useState(true);
   // Track request IDs that have been acted on so we can hide them immediately
@@ -162,8 +164,9 @@ export default function NotificationsScreen() {
         created_at: new Date().toISOString(),
       });
       setHandledIds((prev) => new Set(prev).add(conn.id));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     }
   };
 
@@ -171,8 +174,9 @@ export default function NotificationsScreen() {
     try {
       await updateDoc(doc(db, "connections", conn.id), { status: "rejected" });
       setHandledIds((prev) => new Set(prev).add(conn.id));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     }
   };
 

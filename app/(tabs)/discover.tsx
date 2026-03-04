@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Alert,
   RefreshControl,
   Image,
 } from "react-native";
@@ -23,7 +22,9 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { useToast } from "@/components/Toast";
 import type { Profile, Connection, MemberIndustry } from "@/lib/database.types";
 
 const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
@@ -39,6 +40,7 @@ const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
 export default function DiscoverTab() {
   const { user, profile: myProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [members, setMembers] = useState<Profile[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [inboundRequests, setInboundRequests] = useState<
@@ -114,6 +116,7 @@ export default function DiscoverTab() {
 
     const existing = connections.find((c) => c.to_id === member.id);
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (existing) {
       // Remove connection
       await deleteDoc(doc(db, "connections", existing.id));
@@ -197,8 +200,9 @@ export default function DiscoverTab() {
       });
       setInboundRequests((prev) => prev.filter((r) => r.id !== conn.id));
       await fetchMembers();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     }
   };
 
@@ -208,8 +212,9 @@ export default function DiscoverTab() {
         status: "rejected",
       });
       setInboundRequests((prev) => prev.filter((r) => r.id !== conn.id));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     }
   };
 

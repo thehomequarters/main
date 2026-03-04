@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   Image,
-  Alert,
   StyleSheet,
   Platform,
   ActivityIndicator,
@@ -25,6 +24,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Profile, Connection } from "@/lib/database.types";
@@ -36,6 +36,7 @@ export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, profile: myProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [member, setMember] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,7 +92,7 @@ export default function MemberProfileScreen() {
         });
       }
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     } finally {
       setActionLoading(false);
     }
@@ -138,7 +139,7 @@ export default function MemberProfileScreen() {
 
       router.push(`/messages/${ref.id}`);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     } finally {
       setActionLoading(false);
     }

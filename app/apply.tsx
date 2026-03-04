@@ -7,13 +7,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 
 /** Generate a random code like HQ-XXXX-XXXX */
@@ -24,6 +25,7 @@ function genCode(prefix: string) {
 
 export default function ApplyScreen() {
   const router = useRouter();
+  const { toast } = useToast();
 
   // Step 1: verify invite code
   const [inviteCode, setInviteCode] = useState("");
@@ -42,31 +44,27 @@ export default function ApplyScreen() {
   const handleVerifyCode = async () => {
     const code = inviteCode.trim().toUpperCase();
     if (!code) {
-      Alert.alert("Enter your invitation code to continue.");
+      toast("Enter your invitation code to continue.", "error");
       return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setVerifying(true);
     try {
       const snap = await getDoc(doc(db, "invites", code));
       if (!snap.exists()) {
-        Alert.alert(
-          "Invalid Code",
-          "This invitation code is not recognised. Check the code and try again."
-        );
+        toast("This invitation code is not recognised. Check the code and try again.", "error");
         return;
       }
       const data = snap.data();
       if (data.used) {
-        Alert.alert(
-          "Code Already Used",
-          "This invitation has already been claimed. Request a new one from your contact."
-        );
+        toast("This invitation has already been claimed. Request a new one from your contact.", "error");
         return;
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setInviteData({ ...data, id: code });
       setVerified(true);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast(e.message, "error");
     } finally {
       setVerifying(false);
     }
@@ -74,11 +72,11 @@ export default function ApplyScreen() {
 
   const handleSubmit = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      Alert.alert("Please complete all required fields.");
+      toast("Please complete all required fields.", "error");
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Password must be at least 6 characters.");
+      toast("Password must be at least 6 characters.", "error");
       return;
     }
     setSubmitting(true);
@@ -134,7 +132,8 @@ export default function ApplyScreen() {
         error.code === "auth/email-already-in-use"
           ? "This email is already registered. Try signing in instead."
           : error.message || "Something went wrong.";
-      Alert.alert("Error", msg);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      toast(msg, "error");
     } finally {
       setSubmitting(false);
     }

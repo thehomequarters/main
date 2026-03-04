@@ -7,17 +7,19 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   Modal,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import * as Haptics from "expo-haptics";
 import { auth } from "@/lib/firebase";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,7 +31,7 @@ export default function LoginScreen() {
   const handlePasswordReset = async () => {
     const addr = resetEmail.trim().toLowerCase();
     if (!addr) {
-      Alert.alert("Required", "Please enter your email address.");
+      toast("Please enter your email address.", "error");
       return;
     }
     setResetLoading(true);
@@ -52,14 +54,15 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert("Required", "Please enter your email address.");
+      toast("Please enter your email address.", "error");
       return;
     }
     if (!password) {
-      Alert.alert("Required", "Please enter your password.");
+      toast("Please enter your password.", "error");
       return;
     }
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
       await signInWithEmailAndPassword(
@@ -75,7 +78,8 @@ export default function LoginScreen() {
           : error.code === "auth/user-not-found"
             ? "No account found with this email."
             : error.message || "Something went wrong.";
-      Alert.alert("Error", msg);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      toast(msg, "error");
     } finally {
       setLoading(false);
     }

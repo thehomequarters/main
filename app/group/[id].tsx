@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -24,6 +23,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Group, GroupMessage } from "@/lib/database.types";
@@ -42,6 +42,7 @@ export default function GroupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, profile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [group, setGroup] = useState<Group | null>(null);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
@@ -90,7 +91,7 @@ export default function GroupScreen() {
       setText("");
       setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Failed to send message.", "error");
     } finally {
       setSending(false);
     }

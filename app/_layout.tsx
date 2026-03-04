@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { ToastProvider } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import "../global.css";
 
@@ -25,15 +26,17 @@ function AuthGuard() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <AuthGuard />
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.bg },
-          animation: "fade",
-        }}
-      />
+      <ToastProvider>
+        <AuthGuard />
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.bg },
+            animation: "fade",
+          }}
+        />
+      </ToastProvider>
     </AuthProvider>
   );
 }

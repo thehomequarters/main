@@ -8,10 +8,13 @@ import {
   Share,
   Image,
 } from "react-native";
+
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { MembershipCard } from "@/components/MembershipCard";
 import { GraceBanner } from "@/components/GraceBanner";
 
@@ -106,6 +109,7 @@ function MenuItem({
 export default function AccountTab() {
   const { user, profile, signOut } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const isGrace = profile?.membership_status === "accepted";
 
   const initials =
@@ -350,13 +354,10 @@ export default function AccountTab() {
             icon="card-outline"
             label="Membership Details"
             subtitle="View your membership information"
-            onPress={() =>
-              Alert.alert(
-                "Membership Details",
-                `Member: ${profile?.first_name} ${profile?.last_name}\nCode: ${profile?.member_code}\nStatus: ${profile?.membership_status?.toUpperCase()}\nEmail: ${profile?.email}`,
-                [{ text: "OK" }]
-              )
-            }
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toast(`${profile?.member_code} · ${profile?.membership_status?.toUpperCase()}`, "info");
+            }}
           />
           <MenuItem
             icon="person-circle-outline"
@@ -431,12 +432,10 @@ export default function AccountTab() {
             icon="heart-outline"
             label="Saved Venues"
             subtitle="Your favourite spots"
-            onPress={() =>
-              Alert.alert(
-                "Saved Venues",
-                "Saved venues are coming soon. You'll be able to favourite your go-to spots for quick access."
-              )
-            }
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toast("Saved venues coming soon — favourite your go-to spots.", "info");
+            }}
           />
           <MenuItem
             icon="airplane-outline"

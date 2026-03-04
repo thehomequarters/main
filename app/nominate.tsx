@@ -5,7 +5,6 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  Alert,
   Share,
   KeyboardAvoidingView,
   Platform,
@@ -26,6 +25,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -41,6 +42,7 @@ type Tab = "send" | "vouch";
 export default function NominateScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("send");
 
   // Send nomination tab
@@ -82,7 +84,7 @@ export default function NominateScreen() {
     if (!user?.uid || !profile) return;
     if (!canNominate) return;
     if (!recipientEmail.trim()) {
-      Alert.alert("Enter the email of the person you wish to nominate.");
+      toast("Enter the email of the person you wish to nominate.", "error");
       return;
     }
 
@@ -118,11 +120,12 @@ export default function NominateScreen() {
           `This invitation is personal and non-transferable.`,
       });
 
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setRecipientEmail("");
       setNote("");
       await fetchSentInvites();
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast(e.message, "error");
     } finally {
       setSending(false);
     }
@@ -132,7 +135,7 @@ export default function NominateScreen() {
     if (!user?.uid || !profile) return;
     const code = vouchCode.trim().toUpperCase();
     if (!code) {
-      Alert.alert("Enter the applicant's application code.");
+      toast("Enter the applicant's application code.", "error");
       return;
     }
 
@@ -146,10 +149,7 @@ export default function NominateScreen() {
       );
       const snap = await getDocs(q);
       if (snap.empty) {
-        Alert.alert(
-          "Not Found",
-          "No pending application found with this code. Double-check the code with the applicant."
-        );
+        toast("No pending application found with this code. Double-check the code with the applicant.", "error");
         return;
       }
 
@@ -158,16 +158,13 @@ export default function NominateScreen() {
 
       // Check: member hasn't already vouched
       if ((applicantData.vouchers ?? []).includes(user.uid)) {
-        Alert.alert(
-          "Already Vouched",
-          "You have already vouched for this applicant."
-        );
+        toast("You have already vouched for this applicant.", "error");
         return;
       }
 
       // Check: member isn't vouching for themselves
       if (applicantDoc.id === user.uid) {
-        Alert.alert("You cannot vouch for yourself.");
+        toast("You cannot vouch for yourself.", "error");
         return;
       }
 
@@ -181,16 +178,16 @@ export default function NominateScreen() {
       const applicantName = `${applicantData.first_name} ${applicantData.last_name}`;
       const isNowComplete = newCount >= 2;
 
-      Alert.alert(
-        "Vouch Submitted",
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      toast(
         isNowComplete
-          ? `${applicantName} now has all required nominations and their application has been submitted for review.`
-          : `Your vouch for ${applicantName} has been recorded. They need ${2 - newCount} more nomination.`
+          ? `${applicantName}'s application is now complete and in review.`
+          : `Vouch recorded. ${applicantName} needs ${2 - newCount} more nomination.`,
+        "success"
       );
-
       setVouchCode("");
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast(e.message, "error");
     } finally {
       setVouching(false);
     }

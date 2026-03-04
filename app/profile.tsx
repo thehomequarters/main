@@ -5,16 +5,18 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickImage, uploadAvatar } from "@/lib/storage";
@@ -84,6 +86,7 @@ function FieldInput({
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [firstName, setFirstName] = useState(profile?.first_name ?? "");
   const [lastName, setLastName] = useState(profile?.last_name ?? "");
@@ -125,7 +128,7 @@ export default function ProfileScreen() {
       });
       await refreshProfile();
     } catch (e: any) {
-      Alert.alert("Upload failed", e.message);
+      toast("Upload failed. Please try again.", "error");
       setAvatarLocal(null);
     } finally {
       setUploadingAvatar(false);
@@ -147,10 +150,11 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     if (!user?.uid) return;
     if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert("Error", "First and last name are required.");
+      toast("First and last name are required.", "error");
       return;
     }
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSaving(true);
     try {
       const interests = interestsText
@@ -171,9 +175,10 @@ export default function ProfileScreen() {
         linkedin_handle: linkedinHandle.trim() || null,
       });
       await refreshProfile();
-      Alert.alert("Saved", "Your profile has been updated.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      toast("Profile updated.", "success");
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast(e.message, "error");
     } finally {
       setSaving(false);
     }

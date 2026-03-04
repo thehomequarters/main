@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -26,6 +27,7 @@ import type { HQEvent, Booking } from "@/lib/database.types";
 export default function BookingsScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<(Booking & { event?: HQEvent })[]>(
     []
   );
@@ -64,7 +66,7 @@ export default function BookingsScreen() {
 
       setBookings(combined);
     } catch (e: any) {
-      Alert.alert("Error", "Could not load bookings. Please try again.");
+      toast("Could not load bookings. Please try again.", "error");
     } finally {
       setLoading(false);
     }

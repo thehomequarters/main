@@ -5,7 +5,6 @@ import {
   ScrollView,
   FlatList,
   Pressable,
-  Alert,
   TextInput,
   KeyboardAvoidingView,
   Platform,
@@ -30,8 +29,10 @@ import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { PostCard } from "@/components/PostCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { useToast } from "@/components/Toast";
 import { pickPostImage, uploadPostImage } from "@/lib/storage";
 import type { Post, PostTopic, Group, GroupMember, Comment } from "@/lib/database.types";
 
@@ -56,6 +57,7 @@ const FILTER_OPTIONS: { key: PostTopic | null; label: string }[] = [
 export default function ConnectTab() {
   const { user, profile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<ConnectTabView>("noticeboard");
   const [topicFilter, setTopicFilter] = useState<PostTopic | null>(null);
 
@@ -170,10 +172,11 @@ export default function ConnectTab() {
       setNewPostContent("");
       setNewPostTopic("general");
       setPostImageUri(null);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowCompose(false);
       await fetchPosts();
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Failed to post. Please try again.", "error");
     } finally {
       setPosting(false);
     }
@@ -250,13 +253,14 @@ export default function ConnectTab() {
       ]);
       setNewComment("");
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Failed to post comment.", "error");
     } finally {
       setSubmittingComment(false);
     }
   };
 
   const handleLikePost = async (post: Post) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       await updateDoc(doc(db, "posts", post.id), {
         likes: increment(1),
@@ -275,6 +279,7 @@ export default function ConnectTab() {
   const handleJoinGroup = async (group: Group) => {
     if (!user?.uid) return;
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (myGroupIds.has(group.id)) {
       // Leave group
       const membershipQuery = query(
@@ -343,10 +348,11 @@ export default function ConnectTab() {
       setNewGroupName("");
       setNewGroupDesc("");
       setNewGroupIcon("people-outline");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setShowCreateGroup(false);
       await fetchGroups();
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Failed to create group. Please try again.", "error");
     } finally {
       setCreatingGroup(false);
     }

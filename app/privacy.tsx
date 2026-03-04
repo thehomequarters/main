@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   Switch,
-  Alert,
   StyleSheet,
   Platform,
 } from "react-native";
@@ -13,12 +12,14 @@ import { useRouter } from "expo-router";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function PrivacyScreen() {
   const router = useRouter();
   const { user, profile, refreshProfile } = useAuth();
+  const { toast } = useToast();
 
   const [hideCity, setHideCity] = useState(profile?.hide_city ?? false);
   const [hideIndustry, setHideIndustry] = useState(profile?.hide_industry ?? false);
@@ -36,7 +37,7 @@ export default function PrivacyScreen() {
       await updateDoc(doc(db, "profiles", user.uid), patch);
       await refreshProfile();
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Failed to save privacy settings.", "error");
     } finally {
       setSaving(false);
     }
