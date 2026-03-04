@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./index.css";
 import { AuthProvider, useAuth } from "./auth";
+import { ToastProvider } from "./components/Toast";
 import Login from "./pages/Login";
 import Layout from "./Layout";
 import Dashboard from "./pages/Dashboard";
@@ -43,10 +44,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
+        <ToastProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/*" element={<ProtectedRoutes />} />
         </Routes>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

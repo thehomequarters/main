@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from "react";
 import {
   collection,
-  getDocs,
+  onSnapshot,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
-  query,
-  where,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import ConfirmModal from "../components/ConfirmModal";
+import { useToast } from "../components/Toast";
 
 interface Venue {
   id: string;
@@ -60,20 +59,25 @@ const EMPTY_VENUE = {
   address: "",
   phone: "",
   menu_url: "",
-  // Images: primary + up to 2 carousel extras + logo
   image_url: "",
   image_url_2: "",
   image_url_3: "",
   logo_url: "",
-  // Tags: comma-separated string, split on save
   tags: "",
+  latitude: "",
+  longitude: "",
 };
 
 export default function Venues() {
+  const { toast } = useToast();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [stories, setStories] = useState<VenueStory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean; title: string; message: string; onConfirm: () => void;
+  }>({ open: false, title: "", message: "", onConfirm: () => {} });
+  const closeConfirm = () => setConfirmState((s) => ({ ...s, open: false }));
   const [showForm, setShowForm] = useState(false);
   const [editingVenue, setEditingVenue] = useState<Venue | null>(null);
   const [form, setForm] = useState(EMPTY_VENUE);
@@ -95,33 +99,23 @@ export default function Venues() {
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    let venuesReady = false, dealsReady = false, storiesReady = false;
+    const checkDone = () => { if (venuesReady && dealsReady && storiesReady) setLoading(false); };
 
-  const fetchData = async () => {
-    try {
-      const [venuesSnap, dealsSnap, storiesSnap] = await Promise.all([
-        getDocs(collection(db, "venues")),
-        getDocs(collection(db, "deals")),
-        getDocs(collection(db, "venue_stories")),
-      ]);
-      setVenues(
-        venuesSnap.docs
-          .map((d) => ({ id: d.id, ...d.data() }) as Venue)
-          .sort((a, b) => a.name.localeCompare(b.name))
-      );
-      setDeals(dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
-      setStories(
-        storiesSnap.docs
-          .map((d) => ({ id: d.id, ...d.data() }) as VenueStory)
-          .sort((a, b) => a.order - b.order)
-      );
-    } catch (e) {
-      console.error("Failed to load venues:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const u1 = onSnapshot(collection(db, "venues"), (snap) => {
+      setVenues(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Venue).sort((a, b) => a.name.localeCompare(b.name)));
+      venuesReady = true; checkDone();
+    });
+    const u2 = onSnapshot(collection(db, "deals"), (snap) => {
+      setDeals(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
+      dealsReady = true; checkDone();
+    });
+    const u3 = onSnapshot(collection(db, "venue_stories"), (snap) => {
+      setStories(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as VenueStory).sort((a, b) => a.order - b.order));
+      storiesReady = true; checkDone();
+    });
+    return () => { u1(); u2(); u3(); };
+  }, []);
 
   const buildImageUrls = (f: typeof form): string[] => {
     return [f.image_url, f.image_url_2, f.image_url_3]
@@ -153,8 +147,8 @@ export default function Venues() {
         image_urls: imageUrls.length > 0 ? imageUrls : null,
         logo_url: form.logo_url.trim() || null,
         tags: tagList.length > 0 ? tagList : null,
-        latitude: 0,
-        longitude: 0,
+        latitude: form.latitude.trim() ? parseFloat(form.latitude) : 0,
+        longitude: form.longitude.trim() ? parseFloat(form.longitude) : 0,
         is_active: true,
       };
 
@@ -170,30 +164,43 @@ export default function Venues() {
       setShowForm(false);
       setEditingVenue(null);
       setForm(EMPTY_VENUE);
-      await fetchData();
+      toast(editingVenue ? "Venue updated" : "Venue created");
     } catch (e) {
       console.error("Failed to save venue:", e);
+      toast("Failed to save venue", "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleToggleActive = async (venue: Venue) => {
-    await updateDoc(doc(db, "venues", venue.id), { is_active: !venue.is_active });
-    setVenues((prev) =>
-      prev.map((v) => (v.id === venue.id ? { ...v, is_active: !v.is_active } : v))
-    );
+    try {
+      await updateDoc(doc(db, "venues", venue.id), { is_active: !venue.is_active });
+      toast(venue.is_active ? "Venue disabled" : "Venue enabled");
+    } catch {
+      toast("Failed to update", "error");
+    }
   };
 
-  const handleDeleteVenue = async (venue: Venue) => {
-    if (!confirm(`Delete "${venue.name}" and all its deals and stories? This cannot be undone.`))
-      return;
-    const venueDealIds = deals.filter((d) => d.venue_id === venue.id);
-    for (const deal of venueDealIds) await deleteDoc(doc(db, "deals", deal.id));
-    const venueStories = stories.filter((s) => s.venue_id === venue.id);
-    for (const story of venueStories) await deleteDoc(doc(db, "venue_stories", story.id));
-    await deleteDoc(doc(db, "venues", venue.id));
-    await fetchData();
+  const handleDeleteVenue = (venue: Venue) => {
+    setConfirmState({
+      open: true,
+      title: "Delete venue",
+      message: `Delete "${venue.name}" and all its deals and stories? This cannot be undone.`,
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          const venueDealIds = deals.filter((d) => d.venue_id === venue.id);
+          for (const deal of venueDealIds) await deleteDoc(doc(db, "deals", deal.id));
+          const venueStories = stories.filter((s) => s.venue_id === venue.id);
+          for (const story of venueStories) await deleteDoc(doc(db, "venue_stories", story.id));
+          await deleteDoc(doc(db, "venues", venue.id));
+          toast("Venue deleted");
+        } catch {
+          toast("Failed to delete venue", "error");
+        }
+      },
+    });
   };
 
   const handleAddDeal = async (venueId: string) => {
@@ -210,18 +217,30 @@ export default function Venues() {
       });
       setShowDealForm(null);
       setDealForm({ title: "", description: "", terms: "" });
-      await fetchData();
+      toast("Deal added");
     } catch (e) {
       console.error("Failed to add deal:", e);
+      toast("Failed to add deal", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteDeal = async (dealId: string) => {
-    if (!confirm("Delete this deal?")) return;
-    await deleteDoc(doc(db, "deals", dealId));
-    await fetchData();
+  const handleDeleteDeal = (dealId: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete deal",
+      message: "Remove this deal? This cannot be undone.",
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await deleteDoc(doc(db, "deals", dealId));
+          toast("Deal removed");
+        } catch {
+          toast("Failed to remove deal", "error");
+        }
+      },
+    });
   };
 
   const handleAddStory = async (venueId: string) => {
@@ -242,18 +261,30 @@ export default function Venues() {
       });
       setShowStoryForm(null);
       setStoryForm({ media_url: "", media_type: "image", caption: "", order: 0 });
-      await fetchData();
+      toast("Story added");
     } catch (e) {
       console.error("Failed to add story:", e);
+      toast("Failed to add story", "error");
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteStory = async (storyId: string) => {
-    if (!confirm("Delete this story?")) return;
-    await deleteDoc(doc(db, "venue_stories", storyId));
-    await fetchData();
+  const handleDeleteStory = (storyId: string) => {
+    setConfirmState({
+      open: true,
+      title: "Delete story",
+      message: "Remove this story?",
+      onConfirm: async () => {
+        closeConfirm();
+        try {
+          await deleteDoc(doc(db, "venue_stories", storyId));
+          toast("Story removed");
+        } catch {
+          toast("Failed to remove story", "error");
+        }
+      },
+    });
   };
 
   const openEdit = (venue: Venue) => {
@@ -273,6 +304,8 @@ export default function Venues() {
       image_url_3: urls[2] ?? "",
       logo_url: venue.logo_url ?? "",
       tags: (venue.tags ?? []).join(", "),
+      latitude: (venue as any).latitude ? String((venue as any).latitude) : "",
+      longitude: (venue as any).longitude ? String((venue as any).longitude) : "",
     });
     setShowForm(true);
   };
@@ -291,6 +324,16 @@ export default function Venues() {
   }
 
   return (
+    <>
+    <ConfirmModal
+      open={confirmState.open}
+      title={confirmState.title}
+      message={confirmState.message}
+      confirmLabel="Delete"
+      danger
+      onConfirm={confirmState.onConfirm}
+      onCancel={closeConfirm}
+    />
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -364,6 +407,31 @@ export default function Venues() {
                 placeholder="Phone (optional)"
                 className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
               />
+
+              {/* Lat / Long */}
+              <div>
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Coordinates (latitude, longitude)
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="number"
+                    step="any"
+                    value={form.latitude}
+                    onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                    placeholder="Latitude e.g. -17.8292"
+                    className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                  />
+                  <input
+                    type="number"
+                    step="any"
+                    value={form.longitude}
+                    onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                    placeholder="Longitude e.g. 31.0522"
+                    className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                  />
+                </div>
+              </div>
 
               {/* Cuisine / vibe tags */}
               <div>
@@ -707,5 +775,6 @@ export default function Venues() {
         })}
       </div>
     </div>
+    </>
   );
 }
