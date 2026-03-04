@@ -451,6 +451,7 @@ export default function ConnectTab() {
           </Text>
         </Pressable>
         </View>
+      </View>
 
       {/* Tab switcher */}
       <View
