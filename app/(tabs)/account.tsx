@@ -508,7 +508,7 @@ export default function AccountTab() {
         </View>
       </View>
 
-      {/* Sign Out */}
+      {/* Sign Out / Delete */}
       <View style={{ marginTop: 20 }}>
         <View
           style={{
@@ -522,6 +522,13 @@ export default function AccountTab() {
             icon="log-out-outline"
             label="Sign Out"
             onPress={handleSignOut}
+            danger
+          />
+          <MenuItem
+            icon="trash-outline"
+            label="Delete Account"
+            subtitle="Permanently delete your account and data"
+            onPress={() => router.push("/delete-account" as any)}
             danger
           />
         </View>
