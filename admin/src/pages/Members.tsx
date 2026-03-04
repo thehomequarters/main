@@ -188,7 +188,10 @@ export default function Members() {
           if (selected?.id === member.id) setSelected(null);
           toast("Account deleted");
         } catch (e: any) {
-          toast("Failed to delete: " + (e.message ?? "Unknown error"), "error");
+          const safeMsg = e?.code === "functions/not-found"
+            ? "User not found — may already be deleted."
+            : "Failed to delete account. Check logs.";
+          toast(safeMsg, "error");
         }
       },
     });

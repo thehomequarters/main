@@ -10,6 +10,7 @@ import {
 import { db } from "../firebase";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/Toast";
+import { isValidImageUrl } from "../utils/validateImageUrl";
 
 interface Venue {
   id: string;
@@ -465,12 +466,17 @@ export default function Venues() {
                   Carousel Images (up to 3)
                 </label>
                 <div className="space-y-2">
-                  <input
-                    value={form.image_url}
-                    onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                    placeholder="Image 1 URL (primary)"
-                    className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
-                  />
+                  <div>
+                    <input
+                      value={form.image_url}
+                      onChange={(e) => setForm({ ...form, image_url: e.target.value })}
+                      placeholder="Image 1 URL (primary, https://…)"
+                      className={`w-full bg-black border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50 ${form.image_url && !isValidImageUrl(form.image_url) ? "border-red-500/50" : "border-dark-border"}`}
+                    />
+                    {form.image_url && !isValidImageUrl(form.image_url) && (
+                      <p className="text-red-400 text-xs mt-1">Must be a valid https:// image URL</p>
+                    )}
+                  </div>
                   <input
                     value={form.image_url_2}
                     onChange={(e) => setForm({ ...form, image_url_2: e.target.value })}

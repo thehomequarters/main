@@ -13,6 +13,7 @@ import {
 import { db } from "../firebase";
 import ConfirmModal from "../components/ConfirmModal";
 import { useToast } from "../components/Toast";
+import { isValidImageUrl } from "../utils/validateImageUrl";
 
 interface HQEvent {
   id: string;
@@ -337,7 +338,12 @@ export default function Events() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: Number(e.target.value) })} placeholder="Capacity" className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50" />
-                  <input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="Image URL" className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50" />
+                  <div>
+                  <input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="Image URL (https://…)" className={`w-full bg-black border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50 ${form.image_url && !isValidImageUrl(form.image_url) ? "border-red-500/50" : "border-dark-border"}`} />
+                  {form.image_url && !isValidImageUrl(form.image_url) && (
+                    <p className="text-red-400 text-xs mt-1">Must be a valid https:// image URL</p>
+                  )}
+                </div>
                 </div>
                 <input value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })} placeholder="Ticketing URL (optional)" className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50" />
               </div>

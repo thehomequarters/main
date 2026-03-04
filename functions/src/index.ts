@@ -13,31 +13,68 @@ initializeApp();
 // ─────────────────────────────────────────────
 // deleteAuthUser
 // Callable from the admin dashboard.
-// Deletes a Firebase Auth user and marks their profile as deleted.
-// Requires the caller to exist in /admins/{uid}.
+// Deletes a Firebase Auth user and cascades to remove their profile,
+// posts, bookings, and unused invites. Requires caller in /admins.
 // ─────────────────────────────────────────────
 export const deleteAuthUser = onCall(async (request) => {
   if (!request.auth) {
     throw new HttpsError("unauthenticated", "Must be authenticated.");
   }
 
-  const adminDoc = await getFirestore()
-    .doc(`admins/${request.auth.uid}`)
-    .get();
+  // Verify caller is an admin
+  const db = getFirestore();
+  const adminDoc = await db.doc(`admins/${request.auth.uid}`).get();
   if (!adminDoc.exists) {
     throw new HttpsError("permission-denied", "Admin access required.");
   }
 
   const uid = request.data?.uid as string | undefined;
-  if (!uid) {
+  if (!uid || typeof uid !== "string") {
     throw new HttpsError("invalid-argument", "uid is required.");
   }
+
+  // Basic UID format validation
+  if (!/^[a-zA-Z0-9]{20,128}$/.test(uid)) {
+    throw new HttpsError("invalid-argument", "Invalid uid format.");
+  }
+
+  // Prevent admins from deleting themselves
+  if (uid === request.auth.uid) {
+    throw new HttpsError("failed-precondition", "Cannot delete your own account.");
+  }
+
+  // Cascade: collect all data to remove
+  const [postsSnap, bookingsSnap, invitesSnap] = await Promise.all([
+    db.collection("posts").where("author_id", "==", uid).get(),
+    db.collection("bookings").where("user_id", "==", uid).get(),
+    db.collection("invites").where("created_by", "==", uid).get(),
+  ]);
+
+  const unusedInvites = invitesSnap.docs.filter((d) => !d.data().used);
+
+  // Batch delete (Firestore batch limit is 500 writes)
+  const batch = db.batch();
+  postsSnap.docs.forEach((d) => batch.delete(d.ref));
+  bookingsSnap.docs.forEach((d) => batch.delete(d.ref));
+  unusedInvites.forEach((d) => batch.delete(d.ref));
+  batch.delete(db.doc(`profiles/${uid}`));
+  await batch.commit();
 
   // Delete the Firebase Auth account
   await getAuth().deleteUser(uid);
 
-  // Remove the Firestore profile document
-  await getFirestore().doc(`profiles/${uid}`).delete();
+  // Write an audit log entry
+  await db.collection("admin_audit_logs").add({
+    action: "delete_user",
+    target_uid: uid,
+    performed_by: request.auth.uid,
+    performed_at: new Date().toISOString(),
+    cascade: {
+      posts_deleted: postsSnap.size,
+      bookings_deleted: bookingsSnap.size,
+      invites_deleted: unusedInvites.length,
+    },
+  });
 
   return { success: true };
 });
