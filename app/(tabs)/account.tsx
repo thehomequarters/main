@@ -377,7 +377,7 @@ export default function AccountTab() {
             subtitle={
               profile?.membership_status === "active"
                 ? profile?.membership_tier === "platinum_card"
-                  ? "Platinum · £15/mo — includes eSIM"
+                  ? "Platinum · £15/mo — Zim venues & eSIM"
                   : "Gold · £5/mo — diaspora deals"
                 : "Choose a plan to activate"
             }

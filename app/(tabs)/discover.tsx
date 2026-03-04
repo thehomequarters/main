@@ -274,27 +274,50 @@ export default function DiscoverTab() {
           paddingTop: 66,
           paddingHorizontal: 20,
           paddingBottom: 8,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
-        <Text
+        <View>
+          <Text
+            style={{
+              color: colors.dark,
+              fontSize: 30,
+              fontWeight: "700",
+              letterSpacing: 0.3,
+            }}
+          >
+            Discover
+          </Text>
+          <Text
+            style={{
+              color: colors.stone,
+              fontSize: 14,
+              marginTop: 4,
+            }}
+          >
+            Find and connect with fellow members
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(tabs)/account" as any)}
           style={{
-            color: colors.dark,
-            fontSize: 30,
-            fontWeight: "700",
-            letterSpacing: 0.3,
-          }}
-        >
-          Discover
-        </Text>
-        <Text
-          style={{
-            color: colors.stone,
-            fontSize: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.sand,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
             marginTop: 4,
           }}
         >
-          Find and connect with fellow members
-        </Text>
+          <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
+            {(myProfile?.first_name?.[0] ?? "")}{(myProfile?.last_name?.[0] ?? "")}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Stats row */}

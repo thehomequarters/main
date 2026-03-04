@@ -34,10 +34,10 @@ const GOLD_FEATURES = [
 
 const PLATINUM_FEATURES = [
   { icon: "checkmark-circle-outline" as const, text: "Everything in Gold", dim: true },
-  { icon: "phone-portrait-outline" as const, text: "Telecel Zimbabwe eSIM via Airalo" },
-  { icon: "airplane-outline" as const, text: "Local data rates when you land in Zim" },
-  { icon: "wifi-outline" as const, text: "No roaming charges — activate before you fly" },
-  { icon: "flash-outline" as const, text: "Priority support & exclusive Zimbabwe perks" },
+  { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants in Zim" },
+  { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
+  { icon: "sparkles-outline" as const, text: "Curated experiences — events, stays & more" },
+  { icon: "phone-portrait-outline" as const, text: "Telecel Zimbabwe eSIM — arrive connected" },
 ];
 
 // Gold card colour tokens — deep warm amber background for legibility
@@ -208,9 +208,9 @@ export default function BillingScreen() {
           </View>
 
           <Text style={[styles.tierDesc, { color: "rgba(255,255,255,0.58)" }]}>
-            For members who travel back to Zimbabwe. Includes everything in Gold
-            plus a Telecel Zimbabwe eSIM through Airalo — install before you fly,
-            connect the moment you land.
+            For members heading back to Zimbabwe. Unlock member discounts at the
+            best restaurants, bars, and experiences in Harare and beyond — plus
+            a Telecel eSIM so you land connected.
           </Text>
 
           <View style={styles.featureList}>
@@ -232,8 +232,8 @@ export default function BillingScreen() {
           </View>
 
           <View style={styles.esimPill}>
-            <Ionicons name="phone-portrait-outline" size={13} color="rgba(255,255,255,0.5)" />
-            <Text style={styles.esimPillText}>Telecel Zimbabwe · 4G LTE · Local rates</Text>
+            <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.5)" />
+            <Text style={styles.esimPillText}>Harare · Bulawayo · Victoria Falls</Text>
           </View>
 
           {selected === "platinum" && (

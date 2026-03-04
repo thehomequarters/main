@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
-  Dimensions,
   Linking,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -25,12 +24,10 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
+import * as Haptics from "expo-haptics";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Profile, Connection } from "@/lib/database.types";
-
-const { width: W } = Dimensions.get("window");
-const HERO_H = 340;
 
 export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -45,13 +42,11 @@ export default function MemberProfileScreen() {
 
   useEffect(() => {
     if (!id) return;
-
     const load = async () => {
       const snap = await getDoc(doc(db, "profiles", id));
       if (snap.exists()) {
         setMember({ id: snap.id, ...snap.data() } as Profile);
       }
-
       if (user?.uid) {
         const q = query(
           collection(db, "connections"),
@@ -65,12 +60,12 @@ export default function MemberProfileScreen() {
       }
       setLoading(false);
     };
-
     load();
   }, [id, user?.uid]);
 
   const handleConnect = async () => {
     if (!user?.uid || !member) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setActionLoading(true);
     try {
       if (connection) {
@@ -91,7 +86,7 @@ export default function MemberProfileScreen() {
           created_at: new Date().toISOString(),
         });
       }
-    } catch (e: any) {
+    } catch {
       toast("Something went wrong. Please try again.", "error");
     } finally {
       setActionLoading(false);
@@ -100,6 +95,7 @@ export default function MemberProfileScreen() {
 
   const handleMessage = async () => {
     if (!user?.uid || !myProfile || !member) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActionLoading(true);
     try {
       const convQuery = query(
@@ -110,17 +106,12 @@ export default function MemberProfileScreen() {
       const existing = convSnap.docs.find((d) =>
         (d.data().participants as string[]).includes(member.id)
       );
-
       if (existing) {
         router.push(`/messages/${existing.id}`);
         return;
       }
-
-      const myInitials =
-        (myProfile.first_name?.[0] ?? "") + (myProfile.last_name?.[0] ?? "");
-      const theirInitials =
-        (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
-
+      const myInitials = (myProfile.first_name?.[0] ?? "") + (myProfile.last_name?.[0] ?? "");
+      const theirInitials = (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
       const ref = await addDoc(collection(db, "conversations"), {
         participants: [user.uid, member.id],
         participant_names: {
@@ -136,9 +127,8 @@ export default function MemberProfileScreen() {
         last_sender_id: "",
         created_at: new Date().toISOString(),
       });
-
       router.push(`/messages/${ref.id}`);
-    } catch (e: any) {
+    } catch {
       toast("Something went wrong. Please try again.", "error");
     } finally {
       setActionLoading(false);
@@ -148,7 +138,7 @@ export default function MemberProfileScreen() {
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color={colors.stone} size="large" />
+        <ActivityIndicator color={colors.stone} />
       </View>
     );
   }
@@ -156,323 +146,333 @@ export default function MemberProfileScreen() {
   if (!member) {
     return (
       <View style={styles.loader}>
-        <Text style={{ color: colors.grey }}>Member not found.</Text>
+        <Text style={{ color: colors.stone, fontSize: 14 }}>Member not found.</Text>
       </View>
     );
   }
 
-  const initials =
-    (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
+  const initials = (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
   const isConnected = connection?.status === "accepted";
   const isPending = connection?.status === "pending";
-
-  const safeTop = Platform.OS === "ios" ? 58 : 42;
+  const isSelf = user?.uid === member.id;
 
   return (
-    <ScrollView style={styles.root} contentContainerStyle={styles.content}>
-
-      {/* ── Full-bleed hero ── */}
-      <View style={{ width: W, height: HERO_H }}>
-        {member.avatar_url ? (
-          <Image
-            source={{ uri: member.avatar_url }}
-            style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "#111" }]} />
-        )}
-
-        {/* Bottom gradient fade */}
-        <View style={styles.heroGradient} />
-
-        {/* Back button */}
-        <Pressable
-          onPress={() => router.back()}
-          style={[styles.backBtn, { top: safeTop }]}
-        >
-          <Ionicons name="chevron-back" size={20} color={colors.white} />
+    <View style={styles.root}>
+      {/* Nav */}
+      <View style={styles.nav}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="arrow-back" size={20} color={colors.dark} />
         </Pressable>
+        <View style={{ width: 36 }} />
+      </View>
 
-        {/* Name + title over the hero */}
-        <View style={styles.heroText}>
-          <Text style={styles.heroName}>
-            {member.first_name} {member.last_name}
-          </Text>
-          {member.title ? (
-            <Text style={styles.heroTitle}>{member.title}</Text>
-          ) : null}
-          <View style={styles.metaRow}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        {/* Avatar */}
+        <View style={styles.avatarWrap}>
+          {member.avatar_url ? (
+            <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, styles.avatarFallback]}>
+              <Text style={styles.avatarInitials}>{initials.toUpperCase()}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Name & title */}
+        <Text style={styles.name}>{member.first_name} {member.last_name}</Text>
+        {member.title ? (
+          <Text style={styles.title}>{member.title}</Text>
+        ) : null}
+
+        {/* Meta chips — location + industry */}
+        {(member.city || member.industry) ? (
+          <View style={styles.chips}>
             {member.city ? (
-              <View style={styles.metaItem}>
-                <Ionicons name="location-outline" size={12} color="rgba(255,255,255,0.6)" />
-                <Text style={styles.metaText}>{member.city}</Text>
+              <View style={styles.chip}>
+                <Ionicons name="location-outline" size={12} color={colors.stone} />
+                <Text style={styles.chipText}>{member.city}</Text>
               </View>
             ) : null}
             {member.industry ? (
-              <View style={styles.metaItem}>
+              <View style={styles.chip}>
                 <Ionicons name="briefcase-outline" size={12} color={colors.stone} />
-                <Text style={[styles.metaText, { color: colors.stone }]}>
+                <Text style={styles.chipText}>
                   {member.industry.charAt(0).toUpperCase() + member.industry.slice(1)}
                 </Text>
               </View>
             ) : null}
           </View>
-        </View>
-      </View>
+        ) : null}
 
-      {/* ── Action buttons ── */}
-      {user?.uid !== member.id && (
-        <View style={styles.actions}>
-          <Pressable
-            onPress={handleConnect}
-            disabled={actionLoading}
-            style={[
-              styles.actionBtn,
-              isConnected
-                ? styles.actionBtnConnected
-                : isPending
-                ? styles.actionBtnPending
-                : styles.actionBtnDefault,
-            ]}
-          >
-            <Ionicons
-              name={
-                isConnected
-                  ? "checkmark-circle"
-                  : isPending
-                  ? "time-outline"
-                  : "person-add-outline"
-              }
-              size={16}
-              color={
-                isConnected ? "#4CAF50" : isPending ? colors.grey : colors.stone
-              }
-            />
-            <Text
+        {/* Action buttons */}
+        {!isSelf && (
+          <View style={styles.actions}>
+            <Pressable
+              onPress={handleConnect}
+              disabled={actionLoading}
               style={[
-                styles.actionBtnText,
-                {
-                  color: isConnected
-                    ? "#4CAF50"
-                    : isPending
-                    ? colors.grey
-                    : colors.stone,
-                },
+                styles.actionBtn,
+                isConnected
+                  ? styles.connectedBtn
+                  : isPending
+                  ? styles.pendingBtn
+                  : styles.connectBtn,
               ]}
             >
-              {isConnected ? "Connected" : isPending ? "Pending" : "Connect"}
-            </Text>
-          </Pressable>
-
-          {isConnected && (
-            <Pressable
-              onPress={handleMessage}
-              disabled={actionLoading}
-              style={[styles.actionBtn, styles.actionBtnMsg]}
-            >
-              <Ionicons name="chatbubble-outline" size={16} color={colors.black} />
-              <Text style={[styles.actionBtnText, { color: colors.black }]}>
-                Message
+              <Ionicons
+                name={isConnected ? "checkmark-circle" : isPending ? "time-outline" : "person-add-outline"}
+                size={16}
+                color={isConnected ? colors.green : isPending ? colors.stone : colors.white}
+              />
+              <Text
+                style={[
+                  styles.actionBtnText,
+                  { color: isConnected ? colors.green : isPending ? colors.stone : colors.white },
+                ]}
+              >
+                {isConnected ? "Connected" : isPending ? "Pending" : "Connect"}
               </Text>
             </Pressable>
-          )}
-        </View>
-      )}
 
-      {/* ── Bio ── */}
-      {member.bio ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.bio}>{member.bio}</Text>
-        </View>
-      ) : null}
-
-      {/* ── Interests ── */}
-      {member.interests && member.interests.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Interests</Text>
-          <View style={styles.tags}>
-            {member.interests.map((interest) => (
-              <View key={interest} style={styles.tag}>
-                <Text style={styles.tagText}>{interest}</Text>
-              </View>
-            ))}
+            {isConnected && (
+              <Pressable
+                onPress={handleMessage}
+                disabled={actionLoading}
+                style={[styles.actionBtn, styles.messageBtn]}
+              >
+                <Ionicons name="chatbubble-outline" size={16} color={colors.dark} />
+                <Text style={[styles.actionBtnText, { color: colors.dark }]}>Message</Text>
+              </Pressable>
+            )}
           </View>
-        </View>
-      )}
+        )}
 
-      {/* ── Social links ── */}
-      {(member.instagram_handle || member.linkedin_handle) && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Find me online</Text>
-          {member.instagram_handle ? (
-            <Pressable
-              onPress={() =>
-                Linking.openURL(`https://instagram.com/${member.instagram_handle}`)
-              }
-              style={styles.socialRow}
-            >
-              <View style={[styles.socialIconWrap, { backgroundColor: "rgba(225,48,108,0.12)" }]}>
-                <Ionicons name="logo-instagram" size={18} color="#E1306C" />
-              </View>
-              <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
-              <Ionicons name="chevron-forward" size={14} color={colors.grey} style={{ marginLeft: "auto" }} />
-            </Pressable>
-          ) : null}
-          {member.linkedin_handle ? (
-            <Pressable
-              onPress={() => {
-                const url = member.linkedin_handle!.startsWith("http")
-                  ? member.linkedin_handle!
-                  : `https://linkedin.com/in/${member.linkedin_handle}`;
-                Linking.openURL(url);
-              }}
-              style={styles.socialRow}
-            >
-              <View style={[styles.socialIconWrap, { backgroundColor: "rgba(0,119,181,0.12)" }]}>
-                <Ionicons name="logo-linkedin" size={18} color="#0077B5" />
-              </View>
-              <Text style={styles.socialHandle}>
-                {member.linkedin_handle!.startsWith("http")
-                  ? (member.linkedin_handle!
-                      .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "")
-                      .replace(/\/$/, "") || "LinkedIn Profile")
-                  : member.linkedin_handle}
-              </Text>
-              <Ionicons name="chevron-forward" size={14} color={colors.grey} style={{ marginLeft: "auto" }} />
-            </Pressable>
-          ) : null}
-        </View>
-      )}
+        {/* Bio */}
+        {member.bio ? (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>ABOUT</Text>
+            <Text style={styles.bio}>{member.bio}</Text>
+          </View>
+        ) : null}
 
-      {/* ── Member code ── */}
-      <View style={styles.codeRow}>
-        <Text style={styles.codeLabel}>MEMBER CODE</Text>
+        {/* Interests */}
+        {member.interests && member.interests.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>INTERESTS</Text>
+            <View style={styles.tags}>
+              {member.interests.map((interest) => (
+                <View key={interest} style={styles.tag}>
+                  <Text style={styles.tagText}>{interest}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Social */}
+        {(member.instagram_handle || member.linkedin_handle) && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>FIND ME ONLINE</Text>
+            {member.instagram_handle ? (
+              <Pressable
+                onPress={() => Linking.openURL(`https://instagram.com/${member.instagram_handle}`)}
+                style={styles.socialRow}
+              >
+                <View style={[styles.socialIcon, { backgroundColor: "rgba(225,48,108,0.1)" }]}>
+                  <Ionicons name="logo-instagram" size={17} color="#E1306C" />
+                </View>
+                <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.stone} style={{ marginLeft: "auto" }} />
+              </Pressable>
+            ) : null}
+            {member.linkedin_handle ? (
+              <Pressable
+                onPress={() => {
+                  const url = member.linkedin_handle!.startsWith("http")
+                    ? member.linkedin_handle!
+                    : `https://linkedin.com/in/${member.linkedin_handle}`;
+                  Linking.openURL(url);
+                }}
+                style={[styles.socialRow, { borderBottomWidth: 0 }]}
+              >
+                <View style={[styles.socialIcon, { backgroundColor: "rgba(0,119,181,0.1)" }]}>
+                  <Ionicons name="logo-linkedin" size={17} color="#0077B5" />
+                </View>
+                <Text style={styles.socialHandle}>
+                  {member.linkedin_handle!.startsWith("http")
+                    ? (member.linkedin_handle!.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "").replace(/\/$/, "") || "LinkedIn Profile")
+                    : member.linkedin_handle}
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.stone} style={{ marginLeft: "auto" }} />
+              </Pressable>
+            ) : null}
+          </View>
+        )}
+
+        {/* Member code */}
         <Text style={styles.code}>{member.member_code}</Text>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.black,
-  },
-  content: {
-    paddingBottom: 60,
+    backgroundColor: colors.bg,
   },
   loader: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: colors.bg,
     justifyContent: "center",
     alignItems: "center",
+  },
+  nav: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingTop: Platform.OS === "ios" ? 60 : 44,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
   },
   backBtn: {
-    position: "absolute",
-    left: 20,
-    zIndex: 10,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.sand,
     justifyContent: "center",
     alignItems: "center",
   },
-  heroGradient: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 120,
-    backgroundColor: "rgba(0,0,0,0.70)",
+  scroll: {
+    paddingHorizontal: 20,
+    paddingBottom: 48,
+    alignItems: "center",
   },
-  heroText: {
-    position: "absolute",
-    bottom: 24,
-    left: 22,
-    right: 22,
+
+  // Avatar
+  avatarWrap: {
+    marginTop: 12,
+    marginBottom: 20,
   },
-  heroName: {
-    color: colors.white,
-    fontSize: 30,
+  avatar: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
+    borderColor: colors.border,
+  },
+  avatarFallback: {
+    backgroundColor: colors.sand,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarInitials: {
+    color: colors.dark,
+    fontSize: 32,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+
+  // Name
+  name: {
+    color: colors.dark,
+    fontSize: 26,
     fontWeight: "800",
     letterSpacing: -0.3,
-    marginBottom: 4,
+    textAlign: "center",
+    marginBottom: 6,
   },
-  heroTitle: {
-    color: "rgba(255,255,255,0.65)",
+  title: {
+    color: colors.stone,
     fontSize: 14,
     fontWeight: "500",
-    marginBottom: 10,
+    textAlign: "center",
+    marginBottom: 14,
   },
-  metaRow: {
+
+  // Chips
+  chips: {
     flexDirection: "row",
-    gap: 14,
+    gap: 8,
+    marginBottom: 24,
+    flexWrap: "wrap",
+    justifyContent: "center",
   },
-  metaItem: {
+  chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 5,
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  metaText: {
-    color: "rgba(255,255,255,0.55)",
-    fontSize: 13,
+  chipText: {
+    color: colors.stone,
+    fontSize: 12,
     fontWeight: "500",
   },
+
+  // Action buttons
   actions: {
     flexDirection: "row",
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    gap: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.darkBorder,
+    gap: 10,
+    marginBottom: 28,
+    width: "100%",
   },
   actionBtn: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    borderRadius: 12,
+    gap: 7,
+    borderRadius: 100,
     paddingVertical: 13,
     borderWidth: 1,
   },
-  actionBtnDefault: {
-    backgroundColor: "rgba(201,168,76,0.08)",
-    borderColor: "rgba(201,168,76,0.25)",
+  connectBtn: {
+    backgroundColor: colors.dark,
+    borderColor: colors.dark,
   },
-  actionBtnConnected: {
+  connectedBtn: {
     backgroundColor: "rgba(76,175,80,0.08)",
     borderColor: "rgba(76,175,80,0.25)",
   },
-  actionBtnPending: {
-    backgroundColor: "rgba(160,160,160,0.06)",
-    borderColor: "rgba(160,160,160,0.2)",
+  pendingBtn: {
+    backgroundColor: colors.white,
+    borderColor: colors.border,
   },
-  actionBtnMsg: {
-    backgroundColor: colors.stone,
-    borderColor: colors.stone,
+  messageBtn: {
+    backgroundColor: colors.white,
+    borderColor: colors.border,
   },
   actionBtnText: {
     fontSize: 14,
     fontWeight: "700",
   },
-  section: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.darkBorder,
+
+  // Cards
+  card: {
+    width: "100%",
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 18,
+    marginBottom: 12,
   },
-  sectionTitle: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "600",
+  cardLabel: {
+    color: colors.stone,
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.5,
     marginBottom: 12,
   },
   bio: {
-    color: "rgba(160,160,160,0.85)",
+    color: colors.dark,
     fontSize: 14,
     lineHeight: 22,
   },
@@ -482,15 +482,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: "rgba(160,160,160,0.08)",
+    backgroundColor: colors.sand,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "rgba(160,160,160,0.15)",
   },
   tagText: {
-    color: colors.grey,
+    color: colors.stone,
     fontSize: 13,
     fontWeight: "500",
   },
@@ -500,35 +498,28 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.04)",
+    borderBottomColor: colors.border,
   },
-  socialIconWrap: {
-    width: 36,
-    height: 36,
+  socialIcon: {
+    width: 34,
+    height: 34,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   socialHandle: {
-    color: colors.white,
+    color: colors.dark,
     fontSize: 14,
     fontWeight: "500",
   },
-  codeRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  codeLabel: {
-    color: "rgba(160,160,160,0.35)",
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
+
+  // Member code
   code: {
-    color: "rgba(160,160,160,0.35)",
-    fontSize: 13,
+    color: colors.stone,
+    fontSize: 11,
     letterSpacing: 3,
+    fontWeight: "500",
+    marginTop: 12,
+    opacity: 0.5,
   },
 });

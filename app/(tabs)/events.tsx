@@ -39,7 +39,7 @@ const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
 ];
 
 export default function EventsTab() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [events, setEvents] = useState<HQEvent[]>([]);
@@ -221,27 +221,50 @@ export default function EventsTab() {
           paddingTop: 66,
           paddingHorizontal: 20,
           paddingBottom: 20,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
-        <Text
+        <View>
+          <Text
+            style={{
+              color: colors.dark,
+              fontSize: 30,
+              fontWeight: "800",
+              letterSpacing: 0.3,
+            }}
+          >
+            Events
+          </Text>
+          <Text
+            style={{
+              color: colors.stone,
+              fontSize: 14,
+              marginTop: 4,
+            }}
+          >
+            Discover what's on
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(tabs)/account" as any)}
           style={{
-            color: colors.dark,
-            fontSize: 30,
-            fontWeight: "800",
-            letterSpacing: 0.3,
-          }}
-        >
-          Events
-        </Text>
-        <Text
-          style={{
-            color: colors.stone,
-            fontSize: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.sand,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
             marginTop: 4,
           }}
         >
-          Discover what's happening in Harare
-        </Text>
+          <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
+            {(profile?.first_name?.[0] ?? "")}{(profile?.last_name?.[0] ?? "")}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Category filters */}

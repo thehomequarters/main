@@ -417,6 +417,7 @@ export default function ConnectTab() {
           </Text>
         </View>
 
+        <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
         <Pressable
           onPress={() => router.push("/messages")}
           style={{
@@ -428,12 +429,28 @@ export default function ConnectTab() {
             borderColor: colors.border,
             justifyContent: "center",
             alignItems: "center",
-            marginTop: 4,
           }}
         >
           <Ionicons name="chatbubble-outline" size={18} color={colors.dark} />
         </Pressable>
-      </View>
+        <Pressable
+          onPress={() => router.push("/(tabs)/account" as any)}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.sand,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
+            {(profile?.first_name?.[0] ?? "")}{(profile?.last_name?.[0] ?? "")}
+          </Text>
+        </Pressable>
+        </View>
 
       {/* Tab switcher */}
       <View
