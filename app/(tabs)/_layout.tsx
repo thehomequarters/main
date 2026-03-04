@@ -57,17 +57,29 @@ function TabIcon({
     );
   }
 
-  // Unfocused: icon + label stacked vertically
+  // Unfocused: white pill with icon + label
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", marginTop: 4, position: "relative", gap: 3 }}>
-      <Ionicons name={name} size={20} color={colors.stone} />
-      <Text style={{ color: colors.stone, fontSize: 10, fontWeight: "500" }}>{label}</Text>
+    <View style={{ position: "relative", marginTop: 4 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          backgroundColor: "rgba(255,255,255,0.92)",
+          borderRadius: 24,
+          paddingHorizontal: 13,
+          paddingVertical: 8,
+          gap: 5,
+        }}
+      >
+        <Ionicons name={name} size={17} color={colors.stone} />
+        <Text style={{ color: colors.stone, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+      </View>
       {!!badge && (
         <View
           style={{
             position: "absolute",
             top: -3,
-            right: -6,
+            right: -4,
             width: 8,
             height: 8,
             borderRadius: 4,
@@ -110,6 +122,10 @@ export default function TabLayout() {
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.white,
         tabBarInactiveTintColor: "#5C5C5E",
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
+        },
       }}
     >
       <Tabs.Screen
