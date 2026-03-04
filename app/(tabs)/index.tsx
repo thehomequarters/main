@@ -197,84 +197,56 @@ export default function HomeTab() {
           <Pressable
             onPress={() => router.push("/(tabs)/account" as any)}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               backgroundColor: colors.sand,
-              borderWidth: 1,
-              borderColor: colors.border,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
-            <Text style={{ color: colors.dark, fontSize: 14, fontWeight: "700" }}>
+            <Text style={{ color: colors.dark, fontSize: 12, fontFamily: fonts.semibold, letterSpacing: 0.5 }}>
               {(profile?.first_name?.[0] ?? "")}
               {(profile?.last_name?.[0] ?? "")}
             </Text>
           </Pressable>
 
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Pressable
-              onPress={() => setSearchVisible(true)}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 21,
-                backgroundColor: colors.white,
-                justifyContent: "center",
-                alignItems: "center",
-                shadowColor: colors.dark,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.08,
-                shadowRadius: 6,
-                elevation: 3,
-              }}
-            >
-              <Ionicons name="search-outline" size={20} color={colors.dark} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 20 }}>
+            <Pressable onPress={() => setSearchVisible(true)} hitSlop={10}>
+              <Ionicons name="search-outline" size={22} color={colors.dark} />
             </Pressable>
-            <Pressable
-              onPress={() => router.push("/notifications")}
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 21,
-                backgroundColor: colors.white,
-                justifyContent: "center",
-                alignItems: "center",
-                shadowColor: colors.dark,
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.08,
-                shadowRadius: 6,
-                elevation: 3,
-              }}
-            >
-              <Ionicons name="notifications-outline" size={20} color={colors.dark} />
+            <Pressable onPress={() => router.push("/notifications")} hitSlop={10}>
+              <Ionicons name="notifications-outline" size={22} color={colors.dark} />
             </Pressable>
           </View>
         </View>
 
         {/* Greeting */}
-        <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 20 }}>
+        <View style={{ paddingHorizontal: 20, marginTop: 24, marginBottom: 24 }}>
           <Text
             style={{
               color: colors.ink,
-              fontSize: 32,
+              fontSize: 38,
               fontFamily: fonts.display,
-              lineHeight: 38,
+              lineHeight: 44,
             }}
           >
-            {getGreetingPrefix()}{profile?.first_name ? `, ${profile.first_name}` : ""}
+            {getGreetingPrefix()}{profile?.first_name ? (
+              <Text style={{ fontFamily: fonts.displayItalic }}>
+                {`, ${profile.first_name}`}
+              </Text>
+            ) : ""}
           </Text>
         </View>
 
         {/* Grace period banner */}
         <GraceBanner />
 
-        {/* Category pills */}
+        {/* Category tabs — text only, editorial */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 4, marginBottom: 28, marginTop: 4 }}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 0, marginBottom: 32, marginTop: 0 }}
         >
           {CATEGORY_PILLS.map((cat) => {
             const isActive = activeCategory === cat.key;
@@ -289,25 +261,19 @@ export default function HomeTab() {
                   }
                 }}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 6,
-                  paddingHorizontal: 16,
+                  paddingHorizontal: 14,
                   paddingVertical: 10,
-                  borderBottomWidth: isActive ? 2 : 0,
-                  borderBottomColor: colors.gold,
+                  borderBottomWidth: 1,
+                  borderBottomColor: isActive ? colors.ink : "transparent",
+                  marginRight: 4,
                 }}
               >
-                <Ionicons
-                  name={cat.icon}
-                  size={15}
-                  color={isActive ? colors.ink : colors.stone}
-                />
                 <Text
                   style={{
                     color: isActive ? colors.ink : colors.stone,
-                    fontSize: 14,
-                    fontFamily: isActive ? fonts.semibold : fonts.medium,
+                    fontSize: 13,
+                    fontFamily: isActive ? fonts.semibold : fonts.body,
+                    letterSpacing: isActive ? 0.3 : 0,
                   }}
                 >
                   {cat.label}

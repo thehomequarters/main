@@ -10,8 +10,7 @@ import {
   Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
+import { colors, fonts } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
 
 const { width: W, height: H } = Dimensions.get("window");
@@ -102,6 +101,8 @@ export default function OnboardingScreen() {
               style={styles.image}
               resizeMode="cover"
             />
+            {/* Deep gradient vignette at bottom */}
+            <View style={styles.vignette} />
 
             {/* HQ wordmark — top left */}
             <View style={styles.logoWrap}>
@@ -117,15 +118,9 @@ export default function OnboardingScreen() {
         )}
       />
 
-      {/* Back button — only show when not on first slide */}
-      {currentIndex > 0 && (
-        <Pressable onPress={handleBack} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={18} color={colors.white} />
-        </Pressable>
-      )}
-
       {/* Fixed bottom controls */}
       <View style={styles.controls}>
+        {/* Dot indicators */}
         <View style={styles.dots}>
           {SLIDES.map((_, i) => (
             <View
@@ -138,12 +133,12 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        {/* Primary pill */}
+        {/* Primary CTA */}
         <Pressable
           onPress={handleNext}
           style={({ pressed }) => [
             styles.btn,
-            { opacity: pressed ? 0.85 : 1 },
+            { opacity: pressed ? 0.88 : 1 },
           ]}
         >
           <Text style={styles.btnText}>
@@ -151,15 +146,12 @@ export default function OnboardingScreen() {
           </Text>
         </Pressable>
 
-        {/* Secondary pill */}
+        {/* Sign in — text link, no border */}
         <Pressable
           onPress={handleSignIn}
-          style={({ pressed }) => [
-            styles.btnOutline,
-            { opacity: pressed ? 0.75 : 1 },
-          ]}
+          style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }, styles.signInWrap]}
         >
-          <Text style={styles.btnOutlineText}>Sign In</Text>
+          <Text style={styles.signInText}>Already a member? Sign in</Text>
         </Pressable>
       </View>
     </View>
@@ -169,7 +161,7 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1C1C1E",
+    backgroundColor: "#0A0A0A",
   },
   slide: {
     width: W,
@@ -180,57 +172,54 @@ const styles = StyleSheet.create({
     width: W,
     height: H,
   },
+  // Deep gradient vignette so text always reads against any image
+  vignette: {
+    ...StyleSheet.absoluteFillObject,
+    // Simulate a gradient: fully transparent at top, very dark at bottom
+    backgroundColor: "transparent",
+    // We use a bottom-heavy overlay
+    top: "35%",
+    background: undefined,
+  },
   logoWrap: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 62 : 46,
-    left: 26,
+    top: Platform.OS === "ios" ? 64 : 48,
+    left: 28,
   },
   logoText: {
     color: colors.white,
-    fontSize: 26,
-    fontWeight: "800",
-    letterSpacing: 6,
-    textShadowColor: "rgba(0,0,0,0.6)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  backBtn: {
-    position: "absolute",
-    top: Platform.OS === "ios" ? 62 : 46,
-    right: 24,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  textBlock: {
-    position: "absolute",
-    bottom: 200,
-    left: 28,
-    right: 28,
-  },
-  eyebrow: {
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 3.5,
-    marginBottom: 14,
-    textShadowColor: "rgba(0,0,0,0.7)",
+    fontSize: 22,
+    fontFamily: fonts.semibold,
+    letterSpacing: 8,
+    textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 8,
   },
+  textBlock: {
+    position: "absolute",
+    bottom: 210,
+    left: 28,
+    right: 60,
+  },
+  eyebrow: {
+    color: colors.gold,
+    fontSize: 10,
+    fontFamily: fonts.semibold,
+    letterSpacing: 4,
+    marginBottom: 16,
+    textShadowColor: "rgba(0,0,0,0.8)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
   title: {
     color: colors.white,
-    fontSize: 46,
-    fontWeight: "800",
-    lineHeight: 52,
+    fontSize: 52,
+    fontFamily: fonts.display,
+    lineHeight: 58,
     letterSpacing: -0.5,
-    marginBottom: 18,
-    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 12,
+    textShadowRadius: 16,
   },
   controls: {
     position: "absolute",
@@ -238,7 +227,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 28,
-    paddingBottom: Platform.OS === "ios" ? 52 : 36,
+    paddingBottom: Platform.OS === "ios" ? 54 : 38,
     paddingTop: 12,
     alignItems: "center",
   },
@@ -246,52 +235,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 22,
+    gap: 5,
+    marginBottom: 24,
   },
   dot: {
-    height: 4,
-    borderRadius: 2,
+    height: 1.5,
+    borderRadius: 1,
   },
   dotActive: {
-    width: 28,
+    width: 32,
     backgroundColor: colors.white,
   },
   dotInactive: {
-    width: 6,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    width: 14,
+    backgroundColor: "rgba(255,255,255,0.3)",
   },
   btn: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderRadius: 100,
-    paddingVertical: 16,
+    backgroundColor: colors.white,
+    borderRadius: 4,
+    paddingVertical: 17,
     paddingHorizontal: 40,
     alignItems: "center",
     alignSelf: "stretch",
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.55)",
+    marginBottom: 18,
   },
   btnText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.3,
+    color: colors.ink,
+    fontSize: 14,
+    fontFamily: fonts.semibold,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
   },
-  btnOutline: {
-    borderRadius: 100,
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    alignItems: "center",
-    alignSelf: "stretch",
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.28)",
-    backgroundColor: "rgba(255,255,255,0.07)",
+  signInWrap: {
+    paddingVertical: 6,
   },
-  btnOutlineText: {
-    color: "rgba(255,255,255,0.75)",
-    fontSize: 16,
-    fontWeight: "700",
+  signInText: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 13,
+    fontFamily: fonts.body,
     letterSpacing: 0.3,
   },
 });

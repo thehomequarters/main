@@ -47,13 +47,16 @@ export function EventCard({
 
   const cardStyle = {
     width: cardWidth,
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: "hidden" as const,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
     marginRight: isCompact ? 16 : 0,
     marginBottom: isCompact ? 0 : 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
   };
 
   const inner = (
@@ -77,60 +80,60 @@ export function EventCard({
           }}
         />
 
-        {/* Date badge — dark bg, white text, top-left */}
+        {/* Date badge — frosted, top-left */}
         <View
           style={{
             position: "absolute",
-            top: 12,
-            left: 12,
-            backgroundColor: colors.dark,
-            borderRadius: 10,
+            top: 14,
+            left: 14,
+            backgroundColor: "rgba(10,10,10,0.72)",
+            borderRadius: 6,
             paddingHorizontal: 10,
-            paddingVertical: 6,
+            paddingVertical: 7,
             alignItems: "center",
-            minWidth: 48,
+            minWidth: 46,
           }}
         >
           <Text
             style={{
               color: colors.white,
-              fontSize: isCompact ? 22 : 26,
+              fontSize: isCompact ? 20 : 24,
               fontFamily: fonts.display,
-              lineHeight: isCompact ? 24 : 28,
+              lineHeight: isCompact ? 22 : 26,
             }}
           >
             {day}
           </Text>
           <Text
             style={{
-              color: "rgba(255,255,255,0.7)",
-              fontSize: 9,
+              color: "rgba(255,255,255,0.6)",
+              fontSize: 8,
               fontFamily: fonts.semibold,
-              letterSpacing: 1,
+              letterSpacing: 1.5,
             }}
           >
             {month}
           </Text>
         </View>
 
-        {/* Category badge — sand bg, dark text, top-right */}
+        {/* Category badge — top-right, text only on frosted */}
         <View
           style={{
             position: "absolute",
-            top: 12,
-            right: 12,
-            backgroundColor: colors.sand,
-            borderRadius: 6,
+            top: 14,
+            right: 14,
+            backgroundColor: "rgba(10,10,10,0.5)",
+            borderRadius: 4,
             paddingHorizontal: 8,
             paddingVertical: 4,
           }}
         >
           <Text
             style={{
-              color: colors.dark,
-              fontSize: 9,
-              fontWeight: "700",
-              letterSpacing: 1.5,
+              color: "rgba(255,255,255,0.85)",
+              fontSize: 8,
+              fontFamily: fonts.semibold,
+              letterSpacing: 2,
               textTransform: "uppercase",
             }}
           >
@@ -210,23 +213,22 @@ export function EventCard({
             <Pressable
               onPress={onBook}
               style={{
-                backgroundColor: isBooked ? "rgba(46, 125, 50, 0.12)" : "transparent",
-                borderWidth: 1,
-                borderColor: isBooked ? "rgba(46, 125, 50, 0.3)" : colors.gold,
-                borderRadius: 8,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
+                backgroundColor: isBooked ? "transparent" : colors.ink,
+                borderRadius: 4,
+                paddingHorizontal: 18,
+                paddingVertical: 9,
               }}
             >
               <Text
                 style={{
-                  color: isBooked ? colors.green : colors.gold,
-                  fontSize: 12,
+                  color: isBooked ? colors.stone : colors.white,
+                  fontSize: 11,
                   fontFamily: fonts.semibold,
-                  letterSpacing: 0.5,
+                  letterSpacing: 1.2,
+                  textTransform: "uppercase",
                 }}
               >
-                {isBooked ? "Booked" : "Book"}
+                {isBooked ? "Attending" : "Reserve"}
               </Text>
             </Pressable>
           </View>

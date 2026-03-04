@@ -47,8 +47,8 @@ export function VenueCard({
 
   const imgSource = imageUrl || PLACEHOLDER_IMAGES[category] || PLACEHOLDER_IMAGES.restaurant;
   const allTags = tags ?? [];
-  const visibleTags = allTags.slice(0, 1);
-  const extraTags = allTags.length > 1 ? allTags.length - 1 : 0;
+  const visibleTags = allTags.slice(0, 2);
+  const extraTags = allTags.length > 2 ? allTags.length - 2 : 0;
 
   const handleLike = async () => {
     if (!user?.uid || !venueId) return;
@@ -82,13 +82,16 @@ export function VenueCard({
       onPress={onPress}
       style={{
         width: cardWidth,
-        borderRadius: 16,
+        borderRadius: 12,
         overflow: "hidden",
         backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.border,
         marginRight: isFeatured ? 16 : 0,
-        marginBottom: isFeatured ? 0 : 16,
+        marginBottom: isFeatured ? 0 : 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.07,
+        shadowRadius: 12,
+        elevation: 3,
       }}
     >
       {/* Image section */}
@@ -99,17 +102,29 @@ export function VenueCard({
           resizeMode="cover"
         />
 
+        {/* Subtle bottom fade */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 60,
+            backgroundColor: "rgba(0,0,0,0.15)",
+          }}
+        />
+
         {/* Like button — top right */}
         <Pressable
           onPress={(e) => { e.stopPropagation?.(); handleLike(); }}
           style={{
             position: "absolute",
-            top: 10,
-            right: 10,
-            width: 28,
-            height: 28,
-            borderRadius: 14,
-            backgroundColor: "rgba(255,255,255,0.92)",
+            top: 12,
+            right: 12,
+            width: 30,
+            height: 30,
+            borderRadius: 15,
+            backgroundColor: "rgba(255,255,255,0.85)",
             justifyContent: "center",
             alignItems: "center",
           }}
@@ -120,76 +135,75 @@ export function VenueCard({
             color={liked ? colors.red : colors.dark}
           />
         </Pressable>
+
+        {/* Category label — bottom left, on image */}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 10,
+            left: 14,
+          }}
+        >
+          <Text
+            style={{
+              color: "rgba(255,255,255,0.85)",
+              fontSize: 9,
+              fontFamily: fonts.semibold,
+              letterSpacing: 2,
+              textTransform: "uppercase",
+            }}
+          >
+            {category}
+          </Text>
+        </View>
       </View>
 
       {/* Info strip */}
-      <View style={{ paddingHorizontal: 14, paddingTop: 11, paddingBottom: 12 }}>
+      <View style={{ paddingHorizontal: 16, paddingTop: 13, paddingBottom: 14 }}>
         {/* Venue name */}
         <Text
           style={{
             color: colors.ink,
             fontSize: isFeatured ? 16 : 18,
             fontFamily: fonts.display,
-            marginBottom: visibleTags.length > 0 || dealHeadline ? 7 : 0,
+            marginBottom: visibleTags.length > 0 || dealHeadline ? 8 : 0,
+            lineHeight: isFeatured ? 20 : 22,
           }}
           numberOfLines={1}
         >
           {name}
         </Text>
 
-        {/* Tags row — max 1 tag + overflow indicator */}
-        {visibleTags.length > 0 && (
-          <View style={{ flexDirection: "row", gap: 6, marginBottom: dealHeadline ? 6 : 0 }}>
-            {visibleTags.map((tag) => (
-              <View
-                key={tag}
-                style={{
-                  backgroundColor: colors.sand,
-                  borderRadius: 20,
-                  paddingHorizontal: 9,
-                  paddingVertical: 3,
-                }}
-              >
-                <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.medium }}>
-                  {tag}
-                </Text>
-              </View>
-            ))}
-            {extraTags > 0 && (
-              <View
-                style={{
-                  backgroundColor: colors.sand,
-                  borderRadius: 20,
-                  paddingHorizontal: 9,
-                  paddingVertical: 3,
-                }}
-              >
-                <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.medium }}>
-                  +{extraTags}
-                </Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Deal pill — gold border style */}
-        {dealHeadline && (
-          <View style={{ flexDirection: "row" }}>
-            <View
+        {/* Tags + deal row */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          {visibleTags.map((tag) => (
+            <Text
+              key={tag}
               style={{
-                borderRadius: 20,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderWidth: 1,
-                borderColor: colors.gold,
+                color: colors.stone,
+                fontSize: 11,
+                fontFamily: fonts.body,
               }}
             >
-              <Text style={{ color: colors.gold, fontSize: 11, fontFamily: fonts.semibold }} numberOfLines={1}>
-                {dealHeadline}
-              </Text>
-            </View>
-          </View>
-        )}
+              {tag}
+            </Text>
+          ))}
+          {visibleTags.length > 0 && dealHeadline && (
+            <Text style={{ color: colors.border, fontSize: 11 }}>·</Text>
+          )}
+          {dealHeadline && (
+            <Text
+              style={{
+                color: colors.gold,
+                fontSize: 11,
+                fontFamily: fonts.medium,
+              }}
+              numberOfLines={1}
+            >
+              {dealHeadline}
+            </Text>
+          )}
+        </View>
       </View>
     </Pressable>
   );

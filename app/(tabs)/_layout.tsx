@@ -18,71 +18,33 @@ function TabIcon({
   label: string;
   badge?: number;
 }) {
-  if (focused) {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: colors.ink,
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-          borderRadius: 24,
-          gap: 5,
-          marginTop: 4,
-        }}
-      >
-        <Ionicons name={name} size={17} color={colors.white} />
-        <Text style={{ color: colors.white, fontSize: 12, fontFamily: fonts.semibold }}>
-          {label}
-        </Text>
-        {!!badge && (
-          <View
-            style={{
-              backgroundColor: colors.red,
-              borderRadius: 7,
-              minWidth: 14,
-              height: 14,
-              justifyContent: "center",
-              alignItems: "center",
-              paddingHorizontal: 3,
-            }}
-          >
-            <Text style={{ color: colors.white, fontSize: 8, fontFamily: fonts.bold }}>
-              {badge}
-            </Text>
-          </View>
-        )}
-      </View>
-    );
-  }
-
-  // Unfocused: borderless ghost — icon + label only
   return (
-    <View style={{ position: "relative", marginTop: 4 }}>
-      <View
+    <View style={{ alignItems: "center", marginTop: 2, position: "relative" }}>
+      <Ionicons
+        name={name}
+        size={22}
+        color={focused ? colors.ink : colors.stone}
+      />
+      <Text
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          backgroundColor: "transparent",
-          borderRadius: 24,
-          paddingHorizontal: 13,
-          paddingVertical: 7,
-          gap: 5,
+          color: focused ? colors.ink : colors.stone,
+          fontSize: 10,
+          fontFamily: focused ? fonts.semibold : fonts.body,
+          marginTop: 3,
+          letterSpacing: 0.2,
         }}
       >
-        <Ionicons name={name} size={17} color={colors.stone} />
-        <Text style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.medium }}>{label}</Text>
-      </View>
+        {label}
+      </Text>
       {!!badge && (
         <View
           style={{
             position: "absolute",
-            top: -3,
-            right: -4,
-            width: 8,
-            height: 8,
-            borderRadius: 4,
+            top: -2,
+            right: -8,
+            width: 7,
+            height: 7,
+            borderRadius: 3.5,
             backgroundColor: colors.red,
           }}
         />
@@ -110,15 +72,15 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "rgba(242,235,224,0.94)",
-          borderTopWidth: 1,
-          borderTopColor: "rgba(28,28,30,0.08)",
+          backgroundColor: "rgba(242,235,224,0.96)",
+          borderTopWidth: 0.5,
+          borderTopColor: "rgba(28,28,30,0.1)",
           position: "absolute",
           elevation: 0,
           shadowOpacity: 0,
-          height: Platform.OS === "ios" ? 90 : 72,
+          height: Platform.OS === "ios" ? 88 : 70,
           paddingBottom: Platform.OS === "ios" ? 24 : 10,
-          paddingTop: 6,
+          paddingTop: 8,
         },
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.white,
