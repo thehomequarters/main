@@ -147,7 +147,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="account"
         options={{
-          tabBarButton: () => null,
+          href: null,
         }}
       />
     </Tabs>
