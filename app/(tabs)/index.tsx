@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import type { Venue, Deal, HQEvent } from "@/lib/database.types";
 import { MembershipCard } from "@/components/MembershipCard";
 import { VenueCard } from "@/components/VenueCard";
@@ -42,6 +42,13 @@ const CATEGORY_PILLS = [
   { key: "events",  label: "Events",  icon: "calendar-outline" as const },
   { key: "members", label: "Members", icon: "people-outline" as const },
 ];
+
+function getGreetingPrefix(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function HomeTab() {
   const { user, profile } = useAuth();
@@ -246,18 +253,17 @@ export default function HomeTab() {
           </View>
         </View>
 
-        {/* Heading */}
-        <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 16 }}>
+        {/* Greeting */}
+        <View style={{ paddingHorizontal: 20, marginTop: 20, marginBottom: 20 }}>
           <Text
             style={{
-              color: colors.dark,
-              fontSize: 34,
-              fontWeight: "800",
-              lineHeight: 40,
-              letterSpacing: -0.5,
+              color: colors.ink,
+              fontSize: 32,
+              fontFamily: fonts.display,
+              lineHeight: 38,
             }}
           >
-            {"Discover Your\nCity, Members &\nMore"}
+            {getGreetingPrefix()}{profile?.first_name ? `, ${profile.first_name}` : ""}
           </Text>
         </View>
 
@@ -268,7 +274,7 @@ export default function HomeTab() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 10, marginBottom: 28, marginTop: 8 }}
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 4, marginBottom: 28, marginTop: 4 }}
         >
           {CATEGORY_PILLS.map((cat) => {
             const isActive = activeCategory === cat.key;
@@ -288,22 +294,20 @@ export default function HomeTab() {
                   gap: 6,
                   paddingHorizontal: 16,
                   paddingVertical: 10,
-                  borderRadius: 24,
-                  backgroundColor: isActive ? colors.dark : colors.white,
-                  borderWidth: isActive ? 0 : 1,
-                  borderColor: colors.border,
+                  borderBottomWidth: isActive ? 2 : 0,
+                  borderBottomColor: colors.gold,
                 }}
               >
                 <Ionicons
                   name={cat.icon}
                   size={15}
-                  color={isActive ? colors.white : colors.dark}
+                  color={isActive ? colors.ink : colors.stone}
                 />
                 <Text
                   style={{
-                    color: isActive ? colors.white : colors.dark,
+                    color: isActive ? colors.ink : colors.stone,
                     fontSize: 14,
-                    fontWeight: "600",
+                    fontFamily: isActive ? fonts.semibold : fonts.medium,
                   }}
                 >
                   {cat.label}
@@ -357,10 +361,11 @@ export default function HomeTab() {
             <View style={{ paddingHorizontal: 20 }}>
               <Text
                 style={{
-                  color: colors.dark,
-                  fontSize: 20,
-                  fontWeight: "700",
-                  letterSpacing: 0.3,
+                  color: colors.stone,
+                  fontSize: 10,
+                  fontFamily: fonts.semibold,
+                  textTransform: "uppercase",
+                  letterSpacing: 2.5,
                   marginBottom: 16,
                 }}
               >

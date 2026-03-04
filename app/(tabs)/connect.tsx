@@ -26,7 +26,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
@@ -398,10 +398,9 @@ export default function ConnectTab() {
         <View style={{ flex: 1 }}>
           <Text
             style={{
-              color: colors.dark,
-              fontSize: 30,
-              fontWeight: "700",
-              letterSpacing: 0.3,
+              color: colors.ink,
+              fontSize: 34,
+              fontFamily: fonts.display,
             }}
           >
             Connect
@@ -410,6 +409,7 @@ export default function ConnectTab() {
             style={{
               color: colors.stone,
               fontSize: 14,
+              fontFamily: fonts.body,
               marginTop: 4,
             }}
           >

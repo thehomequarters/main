@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -282,10 +282,9 @@ export default function DiscoverTab() {
         <View>
           <Text
             style={{
-              color: colors.dark,
-              fontSize: 30,
-              fontWeight: "700",
-              letterSpacing: 0.3,
+              color: colors.ink,
+              fontSize: 34,
+              fontFamily: fonts.display,
             }}
           >
             Discover
@@ -294,6 +293,7 @@ export default function DiscoverTab() {
             style={{
               color: colors.stone,
               fontSize: 14,
+              fontFamily: fonts.body,
               marginTop: 4,
             }}
           >
@@ -342,16 +342,18 @@ export default function DiscoverTab() {
           }}
         >
           <Text
-            style={{ color: colors.dark, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
             {members.length}
           </Text>
           <Text
             style={{
               color: colors.stone,
-              fontSize: 11,
+              fontSize: 10,
               marginTop: 2,
-              fontWeight: "500",
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
             }}
           >
             Members
@@ -369,16 +371,18 @@ export default function DiscoverTab() {
           }}
         >
           <Text
-            style={{ color: colors.dark, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
             {industryCount || "—"}
           </Text>
           <Text
             style={{
               color: colors.stone,
-              fontSize: 11,
+              fontSize: 10,
               marginTop: 2,
-              fontWeight: "500",
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
             }}
           >
             Industries
@@ -396,16 +400,18 @@ export default function DiscoverTab() {
           }}
         >
           <Text
-            style={{ color: colors.dark, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
             {cityCount || "—"}
           </Text>
           <Text
             style={{
               color: colors.stone,
-              fontSize: 11,
+              fontSize: 10,
               marginTop: 2,
-              fontWeight: "500",
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
             }}
           >
             {cityCount === 1 ? "City" : "Cities"}
@@ -727,14 +733,14 @@ export default function DiscoverTab() {
                   style={{
                     color: colors.dark,
                     fontSize: 15,
-                    fontWeight: "600",
+                    fontFamily: fonts.semibold,
                     marginBottom: 2,
                   }}
                 >
                   {member.first_name} {member.last_name}
                 </Text>
                 <Text
-                  style={{ color: colors.stone, fontSize: 12, marginBottom: 6 }}
+                  style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body, marginBottom: 6 }}
                   numberOfLines={1}
                 >
                   {member.title || "HQ Member"}
@@ -762,7 +768,7 @@ export default function DiscoverTab() {
                         size={12}
                         color={colors.stone}
                       />
-                      <Text style={{ color: colors.stone, fontSize: 11 }}>
+                      <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.body }}>
                         {member.city}
                       </Text>
                     </View>
@@ -778,7 +784,7 @@ export default function DiscoverTab() {
                         style={{
                           color: colors.stone,
                           fontSize: 11,
-                          fontWeight: "500",
+                          fontFamily: fonts.medium,
                           textTransform: "capitalize",
                         }}
                       >
@@ -788,12 +794,12 @@ export default function DiscoverTab() {
                   )}
                 </View>
 
-                {/* Interests */}
+                {/* Interests — max 2 */}
                 {member.interests && member.interests.length > 0 && (
                   <View
                     style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}
                   >
-                    {member.interests.slice(0, 3).map((interest) => (
+                    {member.interests.slice(0, 2).map((interest) => (
                       <View
                         key={interest}
                         style={{
@@ -807,7 +813,7 @@ export default function DiscoverTab() {
                           style={{
                             color: colors.stone,
                             fontSize: 10,
-                            fontWeight: "500",
+                            fontFamily: fonts.medium,
                           }}
                         >
                           {interest}

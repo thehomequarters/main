@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { EventCard } from "@/components/EventCard";
@@ -229,10 +229,9 @@ export default function EventsTab() {
         <View>
           <Text
             style={{
-              color: colors.dark,
-              fontSize: 30,
-              fontWeight: "800",
-              letterSpacing: 0.3,
+              color: colors.ink,
+              fontSize: 34,
+              fontFamily: fonts.display,
             }}
           >
             Events
@@ -241,6 +240,7 @@ export default function EventsTab() {
             style={{
               color: colors.stone,
               fontSize: 14,
+              fontFamily: fonts.body,
               marginTop: 4,
             }}
           >
@@ -273,7 +273,7 @@ export default function EventsTab() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 20,
-          gap: 8,
+          gap: 4,
           marginBottom: 28,
         }}
       >
@@ -284,19 +284,17 @@ export default function EventsTab() {
               key={cat.label}
               onPress={() => setSelectedCategory(cat.key)}
               style={{
-                paddingHorizontal: 16,
-                paddingVertical: 9,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: isSelected ? colors.dark : colors.border,
-                backgroundColor: isSelected ? colors.dark : colors.white,
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                borderBottomWidth: isSelected ? 2 : 0,
+                borderBottomColor: colors.gold,
               }}
             >
               <Text
                 style={{
-                  color: isSelected ? colors.white : colors.dark,
+                  color: isSelected ? colors.ink : colors.stone,
                   fontSize: 13,
-                  fontWeight: "600",
+                  fontFamily: isSelected ? fonts.semibold : fonts.medium,
                 }}
               >
                 {cat.label}
@@ -310,32 +308,17 @@ export default function EventsTab() {
       {thisWeek.length > 0 && (
         <View style={{ marginBottom: 32 }}>
           <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-            <View
+            <Text
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
+                color: colors.stone,
+                fontSize: 10,
+                fontFamily: fonts.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 2.5,
               }}
             >
-              <View
-                style={{
-                  width: 4,
-                  height: 20,
-                  borderRadius: 2,
-                  backgroundColor: colors.dark,
-                }}
-              />
-              <Text
-                style={{
-                  color: colors.dark,
-                  fontSize: 20,
-                  fontWeight: "700",
-                  letterSpacing: 0.3,
-                }}
-              >
-                This Week
-              </Text>
-            </View>
+              This Week
+            </Text>
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
@@ -358,32 +341,17 @@ export default function EventsTab() {
       {thisMonth.length > 0 && (
         <View style={{ marginBottom: 16 }}>
           <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-            <View
+            <Text
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
+                color: colors.stone,
+                fontSize: 10,
+                fontFamily: fonts.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 2.5,
               }}
             >
-              <View
-                style={{
-                  width: 4,
-                  height: 20,
-                  borderRadius: 2,
-                  backgroundColor: colors.dark,
-                }}
-              />
-              <Text
-                style={{
-                  color: colors.dark,
-                  fontSize: 20,
-                  fontWeight: "700",
-                  letterSpacing: 0.3,
-                }}
-              >
-                Later This Month
-              </Text>
-            </View>
+              Later This Month
+            </Text>
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>

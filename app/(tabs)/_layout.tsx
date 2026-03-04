@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text, Platform } from "react-native";
 import { useAuth } from "@/lib/auth";
@@ -24,7 +24,7 @@ function TabIcon({
         style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: colors.dark,
+          backgroundColor: colors.ink,
           paddingHorizontal: 14,
           paddingVertical: 8,
           borderRadius: 24,
@@ -33,7 +33,7 @@ function TabIcon({
         }}
       >
         <Ionicons name={name} size={17} color={colors.white} />
-        <Text style={{ color: colors.white, fontSize: 12, fontWeight: "700" }}>
+        <Text style={{ color: colors.white, fontSize: 12, fontFamily: fonts.semibold }}>
           {label}
         </Text>
         {!!badge && (
@@ -48,7 +48,7 @@ function TabIcon({
               paddingHorizontal: 3,
             }}
           >
-            <Text style={{ color: colors.white, fontSize: 8, fontWeight: "800" }}>
+            <Text style={{ color: colors.white, fontSize: 8, fontFamily: fonts.bold }}>
               {badge}
             </Text>
           </View>
@@ -57,7 +57,7 @@ function TabIcon({
     );
   }
 
-  // Unfocused: clear ghost pill with border
+  // Unfocused: borderless ghost — icon + label only
   return (
     <View style={{ position: "relative", marginTop: 4 }}>
       <View
@@ -66,15 +66,13 @@ function TabIcon({
           alignItems: "center",
           backgroundColor: "transparent",
           borderRadius: 24,
-          borderWidth: 1.5,
-          borderColor: "rgba(28,28,30,0.18)",
           paddingHorizontal: 13,
           paddingVertical: 7,
           gap: 5,
         }}
       >
-        <Ionicons name={name} size={17} color={colors.dark} />
-        <Text style={{ color: colors.dark, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+        <Ionicons name={name} size={17} color={colors.stone} />
+        <Text style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.medium }}>{label}</Text>
       </View>
       {!!badge && (
         <View

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, Pressable, Dimensions } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { HQEvent } from "@/lib/database.types";
 
@@ -94,9 +94,9 @@ export function EventCard({
           <Text
             style={{
               color: colors.white,
-              fontSize: 18,
-              fontWeight: "800",
-              lineHeight: 20,
+              fontSize: isCompact ? 22 : 26,
+              fontFamily: fonts.display,
+              lineHeight: isCompact ? 24 : 28,
             }}
           >
             {day}
@@ -105,7 +105,7 @@ export function EventCard({
             style={{
               color: "rgba(255,255,255,0.7)",
               fontSize: 9,
-              fontWeight: "600",
+              fontFamily: fonts.semibold,
               letterSpacing: 1,
             }}
           >
@@ -143,9 +143,9 @@ export function EventCard({
       <View style={{ padding: 16 }}>
         <Text
           style={{
-            color: colors.dark,
-            fontSize: isCompact ? 16 : 18,
-            fontWeight: "700",
+            color: colors.ink,
+            fontSize: isCompact ? 16 : 20,
+            fontFamily: fonts.display,
             marginBottom: 6,
           }}
           numberOfLines={isCompact ? 1 : 2}
@@ -192,32 +192,17 @@ export function EventCard({
           >
             {/* Attendees */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name="people-outline"
-                  size={14}
-                  color={colors.stone}
-                />
-                <Text
-                  style={{
-                    color: colors.stone,
-                    fontSize: 12,
-                    marginLeft: 4,
-                  }}
-                >
-                  {attendees} going
-                </Text>
-              </View>
-              <Text style={{ color: colors.border, fontSize: 12 }}>
-                ·
-              </Text>
+              <Ionicons name="people-outline" size={13} color={colors.stone} />
               <Text
                 style={{
-                  color: spotsLeft < 10 ? colors.red : colors.stone,
-                  fontSize: 12,
+                  color: colors.stone,
+                  fontSize: 11,
+                  fontFamily: fonts.body,
                 }}
               >
-                {spotsLeft} spots left
+                {attendees} going · {spotsLeft < 10 ? (
+                  <Text style={{ color: colors.red }}>{spotsLeft} left</Text>
+                ) : `${spotsLeft} left`}
               </Text>
             </View>
 
@@ -225,13 +210,9 @@ export function EventCard({
             <Pressable
               onPress={onBook}
               style={{
-                backgroundColor: isBooked
-                  ? "rgba(46, 125, 50, 0.12)"
-                  : colors.dark,
-                borderWidth: isBooked ? 1 : 0,
-                borderColor: isBooked
-                  ? "rgba(46, 125, 50, 0.3)"
-                  : "transparent",
+                backgroundColor: isBooked ? "rgba(46, 125, 50, 0.12)" : "transparent",
+                borderWidth: 1,
+                borderColor: isBooked ? "rgba(46, 125, 50, 0.3)" : colors.gold,
                 borderRadius: 8,
                 paddingHorizontal: 16,
                 paddingVertical: 8,
@@ -239,9 +220,9 @@ export function EventCard({
             >
               <Text
                 style={{
-                  color: isBooked ? colors.green : colors.white,
+                  color: isBooked ? colors.green : colors.gold,
                   fontSize: 12,
-                  fontWeight: "700",
+                  fontFamily: fonts.semibold,
                   letterSpacing: 0.5,
                 }}
               >

@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, {
   Defs,
@@ -253,15 +253,15 @@ export function MembershipCard({
         <View>
           {tierLabel && (
             <Text style={{
-              color: PEARL_DIM, fontSize: 7, fontWeight: "700",
+              color: PEARL_DIM, fontSize: 7, fontFamily: fonts.bold,
               letterSpacing: 3, textTransform: "uppercase", marginBottom: 4,
             }}>
               {tierLabel}
             </Text>
           )}
           <Text style={{
-            color: "#ffffff", fontSize: 15, fontWeight: "700",
-            letterSpacing: 2.5, textTransform: "uppercase", marginBottom: isGrace ? 4 : 8,
+            color: "#ffffff", fontSize: 20, fontFamily: fonts.display,
+            letterSpacing: 1, marginBottom: isGrace ? 4 : 8,
             textShadowColor: "rgba(255,255,255,0.2)",
             textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6,
           }} numberOfLines={1}>
@@ -269,14 +269,14 @@ export function MembershipCard({
           </Text>
           {isGrace && graceExpiryLabel && (
             <Text style={{
-              color: AMBER_DIM, fontSize: 8, fontWeight: "500",
+              color: AMBER_DIM, fontSize: 8, fontFamily: fonts.body,
               letterSpacing: 1, marginBottom: 8,
             }}>
               {graceExpiryLabel}
             </Text>
           )}
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-            <Text style={{ color: "rgba(196,189,181,0.65)", fontSize: 11, letterSpacing: 3.5, fontWeight: "400" }}>
+            <Text style={{ color: "rgba(196,189,181,0.65)", fontSize: 11, letterSpacing: 3, fontFamily: fonts.body }}>
               {memberCode}
             </Text>
             <View style={{
@@ -285,17 +285,17 @@ export function MembershipCard({
                 : isGrace
                 ? "rgba(245,166,35,0.18)"
                 : "rgba(196,189,181,0.15)",
-              paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4,
+              paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4,
               borderWidth: 0.5,
               borderColor: isActive
                 ? "rgba(76,175,80,0.45)"
                 : isGrace
                 ? "rgba(245,166,35,0.45)"
-                : "rgba(196,189,181,0.35)",
+                : "rgba(196,189,181,0.30)",
             }}>
               <Text style={{
                 color: isActive ? colors.green : isGrace ? AMBER : PEARL,
-                fontSize: 8, fontWeight: "700", letterSpacing: 2, textTransform: "uppercase",
+                fontSize: 7, fontFamily: fonts.bold, letterSpacing: 2, textTransform: "uppercase",
               }}>{isGrace ? "GRACE PERIOD" : status}</Text>
             </View>
           </View>

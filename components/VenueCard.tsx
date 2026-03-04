@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, Image, Pressable, Dimensions } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -43,10 +43,12 @@ export function VenueCard({
   const screenWidth = Dimensions.get("window").width;
   const isFeatured = variant === "featured";
   const cardWidth = isFeatured ? screenWidth * 0.72 : screenWidth - 40;
-  const imageHeight = isFeatured ? 170 : 190;
+  const imageHeight = isFeatured ? 220 : 250;
 
   const imgSource = imageUrl || PLACEHOLDER_IMAGES[category] || PLACEHOLDER_IMAGES.restaurant;
-  const visibleTags = tags?.slice(0, 2) ?? [];
+  const allTags = tags ?? [];
+  const visibleTags = allTags.slice(0, 1);
+  const extraTags = allTags.length > 1 ? allTags.length - 1 : 0;
 
   const handleLike = async () => {
     if (!user?.uid || !venueId) return;
@@ -89,37 +91,13 @@ export function VenueCard({
         marginBottom: isFeatured ? 0 : 16,
       }}
     >
-      {/* Image section — no overlays */}
+      {/* Image section */}
       <View style={{ height: imageHeight, position: "relative" }}>
         <Image
           source={{ uri: imgSource }}
           style={{ width: "100%", height: "100%" }}
           resizeMode="cover"
         />
-
-        {/* Category pill — top left */}
-        <View
-          style={{
-            position: "absolute",
-            top: 10,
-            left: 10,
-            backgroundColor: "rgba(255,255,255,0.92)",
-            borderRadius: 20,
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-          }}
-        >
-          <Text
-            style={{
-              color: colors.dark,
-              fontSize: 11,
-              fontWeight: "600",
-              textTransform: "capitalize",
-            }}
-          >
-            {category}
-          </Text>
-        </View>
 
         {/* Like button — top right */}
         <Pressable
@@ -128,9 +106,9 @@ export function VenueCard({
             position: "absolute",
             top: 10,
             right: 10,
-            width: 34,
-            height: 34,
-            borderRadius: 17,
+            width: 28,
+            height: 28,
+            borderRadius: 14,
             backgroundColor: "rgba(255,255,255,0.92)",
             justifyContent: "center",
             alignItems: "center",
@@ -138,7 +116,7 @@ export function VenueCard({
         >
           <Ionicons
             name={liked ? "heart" : "heart-outline"}
-            size={16}
+            size={14}
             color={liked ? colors.red : colors.dark}
           />
         </Pressable>
@@ -149,9 +127,9 @@ export function VenueCard({
         {/* Venue name */}
         <Text
           style={{
-            color: colors.dark,
-            fontSize: 15,
-            fontWeight: "700",
+            color: colors.ink,
+            fontSize: isFeatured ? 16 : 18,
+            fontFamily: fonts.display,
             marginBottom: visibleTags.length > 0 || dealHeadline ? 7 : 0,
           }}
           numberOfLines={1}
@@ -159,9 +137,9 @@ export function VenueCard({
           {name}
         </Text>
 
-        {/* Tags row */}
+        {/* Tags row — max 1 tag + overflow indicator */}
         {visibleTags.length > 0 && (
-          <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", marginBottom: dealHeadline ? 6 : 0 }}>
+          <View style={{ flexDirection: "row", gap: 6, marginBottom: dealHeadline ? 6 : 0 }}>
             {visibleTags.map((tag) => (
               <View
                 key={tag}
@@ -170,30 +148,43 @@ export function VenueCard({
                   borderRadius: 20,
                   paddingHorizontal: 9,
                   paddingVertical: 3,
-                  borderWidth: 1,
-                  borderColor: colors.border,
                 }}
               >
-                <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "500" }}>
+                <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.medium }}>
                   {tag}
                 </Text>
               </View>
             ))}
+            {extraTags > 0 && (
+              <View
+                style={{
+                  backgroundColor: colors.sand,
+                  borderRadius: 20,
+                  paddingHorizontal: 9,
+                  paddingVertical: 3,
+                }}
+              >
+                <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.medium }}>
+                  +{extraTags}
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
-        {/* Deal pill — own row */}
+        {/* Deal pill — gold border style */}
         {dealHeadline && (
           <View style={{ flexDirection: "row" }}>
             <View
               style={{
-                backgroundColor: colors.dark,
                 borderRadius: 20,
                 paddingHorizontal: 10,
                 paddingVertical: 4,
+                borderWidth: 1,
+                borderColor: colors.gold,
               }}
             >
-              <Text style={{ color: colors.white, fontSize: 11, fontWeight: "600" }} numberOfLines={1}>
+              <Text style={{ color: colors.gold, fontSize: 11, fontFamily: fonts.semibold }} numberOfLines={1}>
                 {dealHeadline}
               </Text>
             </View>

@@ -11,7 +11,7 @@ import {
 
 import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
@@ -71,7 +71,7 @@ function MenuItem({
           style={{
             color: danger ? colors.red : colors.dark,
             fontSize: 15,
-            fontWeight: "500",
+            fontFamily: fonts.medium,
           }}
         >
           {label}
@@ -81,6 +81,7 @@ function MenuItem({
             style={{
               color: colors.stone,
               fontSize: 12,
+              fontFamily: fonts.body,
               marginTop: 1,
             }}
           >
@@ -204,9 +205,9 @@ export default function AccountTab() {
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: colors.dark,
-                fontSize: 22,
-                fontWeight: "700",
+                color: colors.ink,
+                fontSize: 28,
+                fontFamily: fonts.display,
               }}
             >
               {profile?.first_name} {profile?.last_name}
@@ -215,8 +216,9 @@ export default function AccountTab() {
               style={{
                 color: colors.stone,
                 fontSize: 12,
+                fontFamily: fonts.body,
                 letterSpacing: 2,
-                marginTop: 2,
+                marginTop: 4,
               }}
             >
               {profile?.member_code}
@@ -226,13 +228,20 @@ export default function AccountTab() {
                 alignSelf: "flex-start",
                 backgroundColor:
                   profile?.membership_status === "active"
-                    ? "rgba(76, 175, 80, 0.12)"
+                    ? "rgba(76, 175, 80, 0.10)"
                     : isGrace
-                    ? "rgba(245, 166, 35, 0.12)"
+                    ? "rgba(245, 166, 35, 0.10)"
                     : colors.sand,
-                paddingHorizontal: 10,
+                paddingHorizontal: 8,
                 paddingVertical: 3,
                 borderRadius: 4,
+                borderWidth: 0.5,
+                borderColor:
+                  profile?.membership_status === "active"
+                    ? "rgba(76, 175, 80, 0.35)"
+                    : isGrace
+                    ? "rgba(245, 166, 35, 0.35)"
+                    : colors.border,
                 marginTop: 6,
               }}
             >
@@ -244,8 +253,8 @@ export default function AccountTab() {
                       : isGrace
                       ? "#F5A623"
                       : colors.stone,
-                  fontSize: 9,
-                  fontWeight: "700",
+                  fontSize: 8,
+                  fontFamily: fonts.bold,
                   letterSpacing: 2,
                   textTransform: "uppercase",
                 }}
@@ -256,58 +265,41 @@ export default function AccountTab() {
           </View>
         </View>
 
-        {/* Action buttons */}
+        {/* Text-only action links */}
         <View
           style={{
             flexDirection: "row",
-            gap: 12,
-            marginTop: 20,
+            alignItems: "center",
+            gap: 6,
+            marginTop: 16,
+            paddingLeft: 90,
           }}
         >
-          <Pressable
-            onPress={() => router.push("/profile")}
-            style={{
-              flex: 1,
-              backgroundColor: colors.white,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.border,
-              paddingVertical: 12,
-              alignItems: "center",
-            }}
-          >
+          <Pressable onPress={() => router.push("/profile")}>
             <Text
               style={{
-                color: colors.dark,
+                color: colors.stone,
                 fontSize: 13,
-                fontWeight: "600",
+                fontFamily: fonts.medium,
               }}
             >
-              Edit Profile
+              Edit profile
             </Text>
           </Pressable>
+          <Text style={{ color: colors.border, fontSize: 13 }}>·</Text>
           <Pressable
             onPress={handleShareProfile}
             accessibilityLabel="Share your profile"
             accessibilityRole="button"
-            style={{
-              flex: 1,
-              backgroundColor: colors.sand,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.border,
-              paddingVertical: 12,
-              alignItems: "center",
-            }}
           >
             <Text
               style={{
-                color: colors.dark,
+                color: colors.gold,
                 fontSize: 13,
-                fontWeight: "600",
+                fontFamily: fonts.medium,
               }}
             >
-              Share Profile
+              Share
             </Text>
           </Pressable>
         </View>
@@ -332,9 +324,9 @@ export default function AccountTab() {
         <Text
           style={{
             color: colors.stone,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
+            fontSize: 10,
+            fontFamily: fonts.semibold,
+            letterSpacing: 2.5,
             textTransform: "uppercase",
             paddingHorizontal: 20,
             marginBottom: 8,
@@ -391,9 +383,9 @@ export default function AccountTab() {
         <Text
           style={{
             color: colors.stone,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
+            fontSize: 10,
+            fontFamily: fonts.semibold,
+            letterSpacing: 2.5,
             textTransform: "uppercase",
             paddingHorizontal: 20,
             marginBottom: 8,
@@ -451,9 +443,9 @@ export default function AccountTab() {
         <Text
           style={{
             color: colors.stone,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
+            fontSize: 10,
+            fontFamily: fonts.semibold,
+            letterSpacing: 2.5,
             textTransform: "uppercase",
             paddingHorizontal: 20,
             marginBottom: 8,

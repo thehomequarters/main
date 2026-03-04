@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, Image } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Post, PostTopic } from "@/lib/database.types";
 
@@ -82,7 +82,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
             style={{
               color: colors.dark,
               fontSize: 14,
-              fontWeight: "600",
+              fontFamily: fonts.semibold,
             }}
           >
             {post.author_name}
@@ -91,6 +91,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
             style={{
               color: colors.stone,
               fontSize: 11,
+              fontFamily: fonts.body,
             }}
             numberOfLines={1}
           >
@@ -102,6 +103,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
           style={{
             color: colors.stone,
             fontSize: 11,
+            fontFamily: fonts.body,
             opacity: 0.7,
           }}
         >
@@ -113,7 +115,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
       <View
         style={{
           alignSelf: "flex-start",
-          backgroundColor: `${topicColor}15`,
+          backgroundColor: `${topicColor}1A`,
           borderRadius: 6,
           paddingHorizontal: 8,
           paddingVertical: 3,
@@ -123,9 +125,9 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
         <Text
           style={{
             color: topicColor,
-            fontSize: 10,
-            fontWeight: "700",
-            letterSpacing: 1,
+            fontSize: 9,
+            fontFamily: fonts.bold,
+            letterSpacing: 2,
             textTransform: "uppercase",
           }}
         >
@@ -152,7 +154,8 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
         style={{
           color: colors.dark,
           fontSize: 14,
-          lineHeight: 21,
+          fontFamily: fonts.body,
+          lineHeight: 22,
           marginBottom: 16,
         }}
       >
@@ -175,7 +178,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
           style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
         >
           <Ionicons name="heart-outline" size={18} color={colors.stone} />
-          <Text style={{ color: colors.stone, fontSize: 12 }}>
+          <Text style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body }}>
             {post.likes}
           </Text>
         </Pressable>
@@ -188,7 +191,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
             size={16}
             color={colors.stone}
           />
-          <Text style={{ color: colors.stone, fontSize: 12 }}>
+          <Text style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body }}>
             {post.comments}
           </Text>
         </Pressable>
