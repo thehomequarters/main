@@ -138,6 +138,7 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
+        {/* Primary pill */}
         <Pressable
           onPress={handleNext}
           style={({ pressed }) => [
@@ -150,11 +151,15 @@ export default function OnboardingScreen() {
           </Text>
         </Pressable>
 
-        <Pressable onPress={handleSignIn} style={styles.signinRow}>
-          <Text style={styles.signinText}>
-            Already a member?{" "}
-            <Text style={styles.signinLink}>Sign in</Text>
-          </Text>
+        {/* Secondary pill */}
+        <Pressable
+          onPress={handleSignIn}
+          style={({ pressed }) => [
+            styles.btnOutline,
+            { opacity: pressed ? 0.75 : 1 },
+          ]}
+        >
+          <Text style={styles.btnOutlineText}>Sign In</Text>
         </Pressable>
       </View>
     </View>
@@ -262,7 +267,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 40,
     alignItems: "center",
-    marginBottom: 16,
+    alignSelf: "stretch",
+    marginBottom: 12,
   },
   btnText: {
     color: "#1C1C1E",
@@ -270,16 +276,19 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.3,
   },
-  signinRow: {
+  btnOutline: {
+    borderRadius: 100,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
     alignItems: "center",
-    paddingVertical: 6,
+    alignSelf: "stretch",
+    borderWidth: 1.5,
+    borderColor: "rgba(255,255,255,0.35)",
   },
-  signinText: {
-    color: "rgba(255,255,255,0.45)",
-    fontSize: 14,
-  },
-  signinLink: {
-    color: "rgba(255,255,255,0.8)",
-    fontWeight: "600",
+  btnOutlineText: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
 });
