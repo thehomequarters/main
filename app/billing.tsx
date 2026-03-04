@@ -78,7 +78,10 @@ export default function BillingScreen() {
     : currentTier === "committee_member" ? "Committee"
     : "Gold";
 
+  const isPaymentReady = !PAYMENT_URLS[selected].includes("placeholder");
+
   const handleContinue = async () => {
+    if (!isPaymentReady) return;
     try { await Linking.openURL(PAYMENT_URLS[selected]); } catch { /* dev */ }
   };
 
@@ -255,7 +258,7 @@ export default function BillingScreen() {
           <View style={styles.managePill}>
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
-        ) : (
+        ) : isPaymentReady ? (
           <Pressable
             onPress={handleContinue}
             style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
@@ -266,6 +269,12 @@ export default function BillingScreen() {
             </Text>
             <Ionicons name="arrow-forward" size={16} color={colors.white} />
           </Pressable>
+        ) : (
+          <View style={[styles.managePill, { backgroundColor: "rgba(245,166,35,0.08)", borderColor: "rgba(245,166,35,0.2)" }]}>
+            <Text style={[styles.managePillText, { color: "#F5A623" }]}>
+              Payments coming soon · Contact us to activate
+            </Text>
+          </View>
         )}
         <Text style={styles.footerNote}>
           Questions?{" "}

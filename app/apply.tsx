@@ -16,6 +16,7 @@ import { auth, db } from "@/lib/firebase";
 import * as Haptics from "expo-haptics";
 import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 
 /** Generate a random code like HQ-XXXX-XXXX */
 function genCode(prefix: string) {
@@ -39,6 +40,8 @@ export default function ApplyScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleVerifyCode = async () => {
@@ -77,6 +80,14 @@ export default function ApplyScreen() {
     }
     if (password.length < 6) {
       toast("Password must be at least 6 characters.", "error");
+      return;
+    }
+    if (!ageConfirmed) {
+      toast("You must confirm you are 21 or older to join HomeQuarters.", "error");
+      return;
+    }
+    if (!termsAccepted) {
+      toast("Please accept the Terms of Service and Privacy Policy to continue.", "error");
       return;
     }
     setSubmitting(true);
@@ -278,6 +289,54 @@ export default function ApplyScreen() {
               style={styles.input}
             />
 
+            {/* Age confirmation */}
+            <Pressable
+              onPress={() => setAgeConfirmed(!ageConfirmed)}
+              style={styles.checkRow}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: ageConfirmed }}
+            >
+              <View style={[styles.checkbox, ageConfirmed && styles.checkboxChecked]}>
+                {ageConfirmed && (
+                  <Ionicons name="checkmark" size={14} color={colors.white} />
+                )}
+              </View>
+              <Text style={styles.checkLabel}>
+                I confirm I am 21 years of age or older.
+              </Text>
+            </Pressable>
+
+            {/* Terms + Privacy acceptance */}
+            <Pressable
+              onPress={() => setTermsAccepted(!termsAccepted)}
+              style={[styles.checkRow, { marginBottom: 24 }]}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: termsAccepted }}
+            >
+              <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+                {termsAccepted && (
+                  <Ionicons name="checkmark" size={14} color={colors.white} />
+                )}
+              </View>
+              <Text style={styles.checkLabel}>
+                I agree to the{" "}
+                <Text
+                  style={styles.checkLink}
+                  onPress={() => router.push("/terms" as any)}
+                >
+                  Terms of Service
+                </Text>
+                {" "}and{" "}
+                <Text
+                  style={styles.checkLink}
+                  onPress={() => router.push("/policy" as any)}
+                >
+                  Privacy Policy
+                </Text>
+                .
+              </Text>
+            </Pressable>
+
             <Pressable
               onPress={handleSubmit}
               disabled={submitting}
@@ -458,5 +517,38 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontStyle: "italic",
     opacity: 0.6,
+  },
+  checkRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    marginBottom: 12,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 1,
+    flexShrink: 0,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.dark,
+    borderColor: colors.dark,
+  },
+  checkLabel: {
+    flex: 1,
+    color: colors.stone,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  checkLink: {
+    color: colors.dark,
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });

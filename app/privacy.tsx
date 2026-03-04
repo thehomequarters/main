@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { router as globalRouter } from "expo-router";
 
 export default function PrivacyScreen() {
   const router = useRouter();
@@ -158,11 +159,32 @@ export default function PrivacyScreen() {
         </Pressable>
       </View>
 
-      {/* Privacy policy link */}
+      {/* Policy links */}
       <Text style={styles.policyNote}>
-        Changes are saved automatically. For questions about how your data is
-        stored and used, review our full privacy policy below.
+        Changes are saved automatically.
       </Text>
+
+      <View style={styles.policyLinkRow}>
+        <Pressable
+          onPress={() => globalRouter.push("/policy" as any)}
+          style={styles.policyLinkBtn}
+          accessibilityRole="button"
+        >
+          <Ionicons name="document-text-outline" size={16} color={colors.stone} />
+          <Text style={styles.policyLinkText}>Privacy Policy</Text>
+          <Ionicons name="chevron-forward" size={14} color="rgba(160,160,160,0.4)" />
+        </Pressable>
+        <View style={styles.policyLinkDivider} />
+        <Pressable
+          onPress={() => globalRouter.push("/terms" as any)}
+          style={styles.policyLinkBtn}
+          accessibilityRole="button"
+        >
+          <Ionicons name="reader-outline" size={16} color={colors.stone} />
+          <Text style={styles.policyLinkText}>Terms of Service</Text>
+          <Ionicons name="chevron-forward" size={14} color="rgba(160,160,160,0.4)" />
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -356,5 +378,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     paddingHorizontal: 20,
     textAlign: "center",
+    marginBottom: 16,
+  },
+  policyLinkRow: {
+    marginHorizontal: 20,
+    backgroundColor: colors.dark,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
+    overflow: "hidden",
+  },
+  policyLinkBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  policyLinkDivider: {
+    height: 1,
+    backgroundColor: colors.darkBorder,
+    marginLeft: 44,
+  },
+  policyLinkText: {
+    flex: 1,
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

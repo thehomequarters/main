@@ -482,6 +482,18 @@ export default function AccountTab() {
             onPress={() => router.push("/privacy")}
           />
           <MenuItem
+            icon="document-text-outline"
+            label="Privacy Policy"
+            subtitle="How we collect and use your data"
+            onPress={() => router.push("/policy" as any)}
+          />
+          <MenuItem
+            icon="reader-outline"
+            label="Terms of Service"
+            subtitle="Membership terms and conditions"
+            onPress={() => router.push("/terms" as any)}
+          />
+          <MenuItem
             icon="shield-checkmark-outline"
             label="House Rules"
             subtitle="Review the house rules"

@@ -87,7 +87,7 @@ export default function HelpScreen() {
       {/* Contact options */}
       <View style={{ paddingHorizontal: 20, marginTop: 20, gap: 12 }}>
         <Pressable
-          onPress={() => Linking.openURL("mailto:hello@homequarters.app")}
+          onPress={() => Linking.openURL("mailto:hello@homequarters.co.uk")}
           accessibilityLabel="Email support"
           accessibilityRole="button"
           style={{
@@ -124,7 +124,7 @@ export default function HelpScreen() {
               Email Us
             </Text>
             <Text style={{ color: colors.grey, fontSize: 12, marginTop: 1 }}>
-              hello@homequarters.app
+              hello@homequarters.co.uk
             </Text>
           </View>
           <Ionicons
