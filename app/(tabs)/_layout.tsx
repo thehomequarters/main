@@ -57,22 +57,24 @@ function TabIcon({
     );
   }
 
-  // Unfocused: white pill with icon + label
+  // Unfocused: clear ghost pill with border
   return (
     <View style={{ position: "relative", marginTop: 4 }}>
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
-          backgroundColor: "rgba(255,255,255,0.92)",
+          backgroundColor: "transparent",
           borderRadius: 24,
+          borderWidth: 1.5,
+          borderColor: "rgba(28,28,30,0.18)",
           paddingHorizontal: 13,
-          paddingVertical: 8,
+          paddingVertical: 7,
           gap: 5,
         }}
       >
-        <Ionicons name={name} size={17} color={colors.stone} />
-        <Text style={{ color: colors.stone, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+        <Ionicons name={name} size={17} color={colors.dark} />
+        <Text style={{ color: colors.dark, fontSize: 12, fontWeight: "600" }}>{label}</Text>
       </View>
       {!!badge && (
         <View
@@ -110,8 +112,9 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "transparent",
-          borderTopWidth: 0,
+          backgroundColor: "rgba(242,235,224,0.94)",
+          borderTopWidth: 1,
+          borderTopColor: "rgba(28,28,30,0.08)",
           position: "absolute",
           elevation: 0,
           shadowOpacity: 0,
@@ -121,7 +124,7 @@ export default function TabLayout() {
         },
         tabBarShowLabel: false,
         tabBarActiveTintColor: colors.white,
-        tabBarInactiveTintColor: "#5C5C5E",
+        tabBarInactiveTintColor: colors.dark,
         tabBarItemStyle: {
           justifyContent: "center",
           alignItems: "center",

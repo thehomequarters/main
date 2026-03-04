@@ -126,7 +126,7 @@ export default function BillingScreen() {
                 <Text style={styles.walletSub}>Save your membership pass to Wallet</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.stone} />
+            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.55)" />
           </Pressable>
         )}
 
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
   walletSub: {
-    color: "rgba(255,255,255,0.45)",
+    color: "rgba(255,255,255,0.72)",
     fontSize: 12,
     marginTop: 1,
   },
