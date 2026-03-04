@@ -371,10 +371,16 @@ export default function AccountTab() {
             onPress={() => router.push("/nominate")}
           />
           <MenuItem
-            icon="qr-code-outline"
-            label="QR Code"
-            subtitle={isGrace ? "Activate to unlock QR redemption" : "Show your membership QR"}
-            onPress={() => router.push(isGrace ? "/activate" : "/qr")}
+            icon="card-outline"
+            label="Billing & Plan"
+            subtitle={
+              profile?.membership_status === "active"
+                ? profile?.membership_tier === "platinum_card"
+                  ? "Platinum · £15/mo — includes eSIM"
+                  : "Gold · £5/mo — diaspora deals"
+                : "Choose a plan to activate"
+            }
+            onPress={() => router.push("/billing" as any)}
           />
         </View>
       </View>
