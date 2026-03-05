@@ -12,7 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 const { width: W, height: H } = Dimensions.get("window");
@@ -56,21 +56,22 @@ export default function OnboardingScreen() {
         const snap = await getDocs(
           query(
             collection(db, "onboarding_slides"),
-            where("is_active", "==", true),
             orderBy("order", "asc")
           )
         );
         if (!snap.empty) {
-          const remote = snap.docs.map((d) => {
-            const data = d.data();
-            return {
-              id: d.id,
-              image: { uri: data.image_url as string },
-              eyebrow: (data.eyebrow as string) ?? "",
-              title: (data.title as string) ?? "",
-            };
-          });
-          setSlides(remote);
+          const remote = snap.docs
+            .filter((d) => d.data().is_active === true)
+            .map((d) => {
+              const data = d.data();
+              return {
+                id: d.id,
+                image: { uri: data.image_url as string },
+                eyebrow: (data.eyebrow as string) ?? "",
+                title: ((data.title as string) ?? "").replace(/\\n/g, "\n"),
+              };
+            });
+          if (remote.length > 0) setSlides(remote);
         }
       } catch {
         // Network error — keep default slides
@@ -289,6 +290,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "stretch",
     marginBottom: 18,
+    overflow: "hidden",
   },
   btnText: {
     color: colors.ink,
