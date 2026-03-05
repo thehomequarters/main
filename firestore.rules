@@ -46,10 +46,11 @@ service cloud.firestore {
     match /invites/{inviteId} {
       // Anyone can get a specific invite by code to validate it (needed before auth)
       allow get: if true;
-      // Only admins can list all invites
-      allow list: if isAdmin();
-      // Only admins can create or delete invites
-      allow create, delete: if isAdmin();
+      // Admins can list all; active members can list their own sent invites
+      allow list: if isAdmin() || isActiveMember();
+      // Admins OR active members can create invites (member nominations)
+      allow create: if isAdmin() || (isActiveMember() && request.resource.data.created_by == request.auth.uid);
+      allow delete: if isAdmin();
       // Admins or the newly authenticated user can mark an invite as used
       allow update: if isAdmin() || (isAuth() && !resource.data.used);
     }
@@ -87,20 +88,20 @@ service cloud.firestore {
       allow read: if isAuth();
       allow create: if isActiveMember() &&
         request.resource.data.author_id == request.auth.uid;
-      allow update: if isAuth();
-      allow delete: if isAuth() &&
-        resource.data.author_id == request.auth.uid || isAdmin();
+      // Only the post author (for likes/comments count) or an admin (hide/moderate) can update
+      allow update: if (isAuth() && resource.data.author_id == request.auth.uid) || isAdmin();
+      // Author or admin can delete
+      allow delete: if (isAuth() && resource.data.author_id == request.auth.uid) || isAdmin();
     }
 
     // ──── Comments ────
     match /comments/{commentId} {
-      // Any authenticated user can read comments
       allow read: if isAuth();
-      // Active members can create comments, must set their own author_id
       allow create: if isActiveMember() &&
         request.resource.data.author_id == request.auth.uid;
-      // No editing or deleting comments from the client
-      allow update, delete: if false;
+      allow update: if false;
+      // Author or admin can delete; explicit parentheses for operator precedence
+      allow delete: if (isAuth() && resource.data.author_id == request.auth.uid) || isAdmin();
     }
 
     // ──── Connections ────
@@ -121,9 +122,11 @@ service cloud.firestore {
     // ──── Groups ────
     match /groups/{groupId} {
       allow read: if isAuth();
-      allow update: if isAuth();
-      allow create: if isAuth();
-      allow delete: if isAdmin();
+      // Creator must set themselves as creator_id; only creator or admin can update
+      allow create: if isActiveMember() &&
+        request.resource.data.creator_id == request.auth.uid;
+      allow update: if (isAuth() && resource.data.creator_id == request.auth.uid) || isAdmin();
+      allow delete: if (isAuth() && resource.data.creator_id == request.auth.uid) || isAdmin();
     }
 
     // ──── Group Members ────
@@ -135,14 +138,12 @@ service cloud.firestore {
         resource.data.member_id == request.auth.uid;
     }
 
-    // ──── Comments ────
-    match /comments/{commentId} {
+    // ──── Group Messages ────
+    match /group_messages/{messageId} {
       allow read: if isAuth();
       allow create: if isActiveMember() &&
         request.resource.data.author_id == request.auth.uid;
-      allow delete: if isAuth() &&
-        resource.data.author_id == request.auth.uid || isAdmin();
-      allow update: if false;
+      allow update, delete: if false;
     }
 
     // ──── Redemptions ────

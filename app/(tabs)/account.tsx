@@ -8,11 +8,15 @@ import {
   Share,
   Image,
 } from "react-native";
+
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
+import * as Haptics from "expo-haptics";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { MembershipCard } from "@/components/MembershipCard";
+import { GraceBanner } from "@/components/GraceBanner";
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -40,7 +44,7 @@ function MenuItem({
         paddingVertical: 16,
         paddingHorizontal: 20,
         borderBottomWidth: 1,
-        borderBottomColor: colors.darkBorder,
+        borderBottomColor: colors.border,
       }}
     >
       <View
@@ -50,7 +54,7 @@ function MenuItem({
           borderRadius: 10,
           backgroundColor: danger
             ? "rgba(229, 57, 53, 0.1)"
-            : "rgba(160, 160, 160, 0.08)",
+            : colors.sand,
           justifyContent: "center",
           alignItems: "center",
           marginRight: 14,
@@ -59,15 +63,15 @@ function MenuItem({
         <Ionicons
           name={icon}
           size={18}
-          color={danger ? colors.red : colors.grey}
+          color={danger ? colors.red : colors.stone}
         />
       </View>
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            color: danger ? colors.red : colors.white,
+            color: danger ? colors.red : colors.dark,
             fontSize: 15,
-            fontWeight: "500",
+            fontFamily: fonts.medium,
           }}
         >
           {label}
@@ -75,8 +79,9 @@ function MenuItem({
         {subtitle && (
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 12,
+              fontFamily: fonts.body,
               marginTop: 1,
             }}
           >
@@ -90,21 +95,23 @@ function MenuItem({
             width: 8,
             height: 8,
             borderRadius: 4,
-            backgroundColor: colors.gold,
+            backgroundColor: colors.stone,
             marginRight: 8,
           }}
         />
       )}
       {!danger && (
-        <Ionicons name="chevron-forward" size={16} color={colors.darkBorder} />
+        <Ionicons name="chevron-forward" size={16} color={colors.border} />
       )}
     </Pressable>
   );
 }
 
 export default function AccountTab() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
+  const isGrace = profile?.membership_status === "accepted";
 
   const initials =
     (profile?.first_name?.[0] ?? "") + (profile?.last_name?.[0] ?? "");
@@ -134,7 +141,7 @@ export default function AccountTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       {/* Header */}
@@ -165,7 +172,7 @@ export default function AccountTab() {
                   height: 72,
                   borderRadius: 36,
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.border,
                 }}
               />
             ) : (
@@ -174,16 +181,16 @@ export default function AccountTab() {
                   width: 72,
                   height: 72,
                   borderRadius: 36,
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  backgroundColor: colors.sand,
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.border,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.dark,
                     fontSize: 26,
                     fontWeight: "700",
                     letterSpacing: 1,
@@ -198,19 +205,20 @@ export default function AccountTab() {
           <View style={{ flex: 1 }}>
             <Text
               style={{
-                color: colors.white,
-                fontSize: 22,
-                fontWeight: "700",
+                color: colors.ink,
+                fontSize: 28,
+                fontFamily: fonts.display,
               }}
             >
               {profile?.first_name} {profile?.last_name}
             </Text>
             <Text
               style={{
-                color: colors.grey,
+                color: colors.stone,
                 fontSize: 12,
+                fontFamily: fonts.body,
                 letterSpacing: 2,
-                marginTop: 2,
+                marginTop: 4,
               }}
             >
               {profile?.member_code}
@@ -220,11 +228,20 @@ export default function AccountTab() {
                 alignSelf: "flex-start",
                 backgroundColor:
                   profile?.membership_status === "active"
-                    ? "rgba(76, 175, 80, 0.15)"
-                    : "rgba(201, 168, 76, 0.15)",
-                paddingHorizontal: 10,
+                    ? "rgba(76, 175, 80, 0.10)"
+                    : isGrace
+                    ? "rgba(245, 166, 35, 0.10)"
+                    : colors.sand,
+                paddingHorizontal: 8,
                 paddingVertical: 3,
                 borderRadius: 4,
+                borderWidth: 0.5,
+                borderColor:
+                  profile?.membership_status === "active"
+                    ? "rgba(76, 175, 80, 0.35)"
+                    : isGrace
+                    ? "rgba(245, 166, 35, 0.35)"
+                    : colors.border,
                 marginTop: 6,
               }}
             >
@@ -233,75 +250,63 @@ export default function AccountTab() {
                   color:
                     profile?.membership_status === "active"
                       ? colors.green
-                      : colors.gold,
-                  fontSize: 9,
-                  fontWeight: "700",
+                      : isGrace
+                      ? "#F5A623"
+                      : colors.stone,
+                  fontSize: 8,
+                  fontFamily: fonts.bold,
                   letterSpacing: 2,
                   textTransform: "uppercase",
                 }}
               >
-                {profile?.membership_status}
+                {isGrace ? "GRACE PERIOD" : profile?.membership_status}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Action buttons */}
+        {/* Text-only action links */}
         <View
           style={{
             flexDirection: "row",
-            gap: 12,
-            marginTop: 20,
+            alignItems: "center",
+            gap: 6,
+            marginTop: 16,
+            paddingLeft: 90,
           }}
         >
-          <Pressable
-            onPress={() => router.push("/profile")}
-            style={{
-              flex: 1,
-              backgroundColor: colors.dark,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              paddingVertical: 12,
-              alignItems: "center",
-            }}
-          >
+          <Pressable onPress={() => router.push("/profile")}>
             <Text
               style={{
-                color: colors.white,
+                color: colors.stone,
                 fontSize: 13,
-                fontWeight: "600",
+                fontFamily: fonts.medium,
               }}
             >
-              Edit Profile
+              Edit profile
             </Text>
           </Pressable>
+          <Text style={{ color: colors.border, fontSize: 13 }}>·</Text>
           <Pressable
             onPress={handleShareProfile}
             accessibilityLabel="Share your profile"
             accessibilityRole="button"
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(201, 168, 76, 0.1)",
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: "rgba(201, 168, 76, 0.25)",
-              paddingVertical: 12,
-              alignItems: "center",
-            }}
           >
             <Text
               style={{
                 color: colors.gold,
                 fontSize: 13,
-                fontWeight: "600",
+                fontFamily: fonts.medium,
               }}
             >
-              Share Profile
+              Share
             </Text>
           </Pressable>
         </View>
       </View>
+
+      {/* Grace period banner */}
+      <GraceBanner />
 
       {/* Membership Card */}
       <View style={{ paddingHorizontal: 20, marginBottom: 28 }}>
@@ -310,6 +315,7 @@ export default function AccountTab() {
           lastName={profile?.last_name ?? ""}
           memberCode={profile?.member_code ?? ""}
           status={profile?.membership_status ?? "pending"}
+          acceptedAt={profile?.accepted_at}
         />
       </View>
 
@@ -317,10 +323,10 @@ export default function AccountTab() {
       <View style={{ marginBottom: 8 }}>
         <Text
           style={{
-            color: colors.grey,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
+            color: colors.stone,
+            fontSize: 10,
+            fontFamily: fonts.semibold,
+            letterSpacing: 2.5,
             textTransform: "uppercase",
             paddingHorizontal: 20,
             marginBottom: 8,
@@ -330,40 +336,44 @@ export default function AccountTab() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
             icon="card-outline"
             label="Membership Details"
             subtitle="View your membership information"
-            onPress={() =>
-              Alert.alert(
-                "Membership Details",
-                `Member: ${profile?.first_name} ${profile?.last_name}\nCode: ${profile?.member_code}\nStatus: ${profile?.membership_status?.toUpperCase()}\nEmail: ${profile?.email}`,
-                [{ text: "OK" }]
-              )
-            }
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toast(`${profile?.member_code} · ${profile?.membership_status?.toUpperCase()}`, "info");
+            }}
           />
           <MenuItem
-            icon="people-outline"
-            label="Guest Invitations"
-            subtitle="Invite guests to venues"
-            onPress={() =>
-              Alert.alert(
-                "Guest Invitations",
-                "Guest invitations are coming soon. You'll be able to invite friends to join you at partner venues."
-              )
-            }
+            icon="person-circle-outline"
+            label="View My Profile"
+            subtitle="See how other members see you"
+            onPress={() => router.push(`/member/${user?.uid}` as any)}
           />
           <MenuItem
-            icon="qr-code-outline"
-            label="QR Code"
-            subtitle="Show your membership QR"
-            onPress={() => router.push("/qr")}
+            icon="star-outline"
+            label="Nominate a Member"
+            subtitle="Extend an invitation to someone you know"
+            onPress={() => router.push("/nominate")}
+          />
+          <MenuItem
+            icon="card-outline"
+            label="Billing & Plan"
+            subtitle={
+              profile?.membership_status === "active"
+                ? profile?.membership_tier === "platinum_card"
+                  ? "Platinum · £15/mo — Zim venues & eSIM"
+                  : "Gold · £5/mo — diaspora deals"
+                : "Choose a plan to activate"
+            }
+            onPress={() => router.push("/billing" as any)}
           />
         </View>
       </View>
@@ -372,10 +382,10 @@ export default function AccountTab() {
       <View style={{ marginBottom: 8, marginTop: 20 }}>
         <Text
           style={{
-            color: colors.grey,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
+            color: colors.stone,
+            fontSize: 10,
+            fontFamily: fonts.semibold,
+            letterSpacing: 2.5,
             textTransform: "uppercase",
             paddingHorizontal: 20,
             marginBottom: 8,
@@ -385,10 +395,10 @@ export default function AccountTab() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
@@ -414,12 +424,16 @@ export default function AccountTab() {
             icon="heart-outline"
             label="Saved Venues"
             subtitle="Your favourite spots"
-            onPress={() =>
-              Alert.alert(
-                "Saved Venues",
-                "Saved venues are coming soon. You'll be able to favourite your go-to spots for quick access."
-              )
-            }
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              toast("Saved venues coming soon — favourite your go-to spots.", "info");
+            }}
+          />
+          <MenuItem
+            icon="airplane-outline"
+            label="eSIM & Travel"
+            subtitle={isGrace ? "Activate to unlock eSIM perks" : "Get connected in Zimbabwe with Airalo"}
+            onPress={() => router.push(isGrace ? "/activate" : ("/esim-intro" as any))}
           />
         </View>
       </View>
@@ -428,10 +442,10 @@ export default function AccountTab() {
       <View style={{ marginBottom: 8, marginTop: 20 }}>
         <Text
           style={{
-            color: colors.grey,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
+            color: colors.stone,
+            fontSize: 10,
+            fontFamily: fonts.semibold,
+            letterSpacing: 2.5,
             textTransform: "uppercase",
             paddingHorizontal: 20,
             marginBottom: 8,
@@ -441,22 +455,17 @@ export default function AccountTab() {
         </Text>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
             icon="notifications-outline"
             label="Notifications"
-            subtitle="Manage notification preferences"
-            onPress={() =>
-              Alert.alert(
-                "Notifications",
-                "Push notifications are coming soon. You'll be able to customise which alerts you receive."
-              )
-            }
+            subtitle="Connection requests, messages, and updates"
+            onPress={() => router.push("/notifications")}
           />
           <MenuItem
             icon="lock-closed-outline"
@@ -465,10 +474,22 @@ export default function AccountTab() {
             onPress={() => router.push("/privacy")}
           />
           <MenuItem
+            icon="document-text-outline"
+            label="Privacy Policy"
+            subtitle="How we collect and use your data"
+            onPress={() => router.push("/policy" as any)}
+          />
+          <MenuItem
+            icon="reader-outline"
+            label="Terms of Service"
+            subtitle="Membership terms and conditions"
+            onPress={() => router.push("/terms" as any)}
+          />
+          <MenuItem
             icon="shield-checkmark-outline"
             label="House Rules"
             subtitle="Review the house rules"
-            onPress={() => router.push("/house-rules")}
+            onPress={() => router.push("/house-rules-intro" as any)}
           />
           <MenuItem
             icon="help-circle-outline"
@@ -479,14 +500,14 @@ export default function AccountTab() {
         </View>
       </View>
 
-      {/* Sign Out */}
+      {/* Sign Out / Delete */}
       <View style={{ marginTop: 20 }}>
         <View
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderTopWidth: 1,
             borderBottomWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
           }}
         >
           <MenuItem
@@ -495,13 +516,20 @@ export default function AccountTab() {
             onPress={handleSignOut}
             danger
           />
+          <MenuItem
+            icon="trash-outline"
+            label="Delete Account"
+            subtitle="Permanently delete your account and data"
+            onPress={() => router.push("/delete-account" as any)}
+            danger
+          />
         </View>
       </View>
 
       {/* App version */}
       <Text
         style={{
-          color: colors.darkBorder,
+          color: colors.border,
           fontSize: 11,
           textAlign: "center",
           marginTop: 24,

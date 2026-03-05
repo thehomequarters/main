@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "scheme": "homequarters",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -14,7 +14,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.homequarters.app"
+      "bundleIdentifier": "com.homequarters.app",
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": []
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "HomeQuarters uses your camera to update your profile photo.",
+        "NSPhotoLibraryUsageDescription": "HomeQuarters accesses your photo library so you can set a profile photo."
+      }
     },
     "android": {
       "adaptiveIcon": {

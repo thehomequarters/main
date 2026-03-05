@@ -7,29 +7,62 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import * as Haptics from "expo-haptics";
 import { auth } from "@/lib/firebase";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetVisible, setResetVisible] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handlePasswordReset = async () => {
+    const addr = resetEmail.trim().toLowerCase();
+    if (!addr) {
+      toast("Please enter your email address.", "error");
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, addr);
+      setResetSent(true);
+    } catch {
+      // Show success even on error to avoid email enumeration
+      setResetSent(true);
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const closeReset = () => {
+    setResetVisible(false);
+    setResetEmail("");
+    setResetSent(false);
+  };
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert("Required", "Please enter your email address.");
+      toast("Please enter your email address.", "error");
       return;
     }
     if (!password) {
-      Alert.alert("Required", "Please enter your password.");
+      toast("Please enter your password.", "error");
       return;
     }
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
       await signInWithEmailAndPassword(
@@ -45,7 +78,8 @@ export default function LoginScreen() {
           : error.code === "auth/user-not-found"
             ? "No account found with this email."
             : error.message || "Something went wrong.";
-      Alert.alert("Error", msg);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      toast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -53,7 +87,7 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -68,7 +102,7 @@ export default function LoginScreen() {
         {/* HQ Logo */}
         <Text
           style={{
-            color: colors.gold,
+            color: colors.dark,
             fontSize: 40,
             fontWeight: "700",
             letterSpacing: 8,
@@ -81,7 +115,7 @@ export default function LoginScreen() {
 
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: 24,
             fontWeight: "700",
             textAlign: "center",
@@ -93,7 +127,7 @@ export default function LoginScreen() {
 
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 15,
             textAlign: "center",
             lineHeight: 22,
@@ -106,48 +140,57 @@ export default function LoginScreen() {
         <View style={{ gap: 16 }}>
           <TextInput
             placeholder="Email address"
-            placeholderTextColor={colors.grey}
+            placeholderTextColor={colors.stone}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
             style={{
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               borderRadius: 10,
               paddingHorizontal: 16,
               paddingVertical: 16,
-              color: colors.white,
+              color: colors.dark,
               fontSize: 15,
             }}
           />
 
           <TextInput
             placeholder="Password"
-            placeholderTextColor={colors.grey}
+            placeholderTextColor={colors.stone}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             style={{
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               borderRadius: 10,
               paddingHorizontal: 16,
               paddingVertical: 16,
-              color: colors.white,
+              color: colors.dark,
               fontSize: 15,
             }}
           />
         </View>
 
         <Pressable
+          onPress={() => { setResetEmail(email); setResetVisible(true); }}
+          style={{ alignSelf: "flex-end", marginTop: 10 }}
+        >
+          <Text style={{ color: colors.stone, fontSize: 13 }}>
+            Forgot password?
+          </Text>
+        </Pressable>
+
+        <Pressable
           onPress={handleLogin}
           disabled={loading}
           style={{
-            backgroundColor: colors.gold,
+            backgroundColor: colors.dark,
             borderRadius: 10,
             paddingVertical: 16,
             marginTop: 24,
@@ -156,7 +199,7 @@ export default function LoginScreen() {
         >
           <Text
             style={{
-              color: colors.black,
+              color: colors.white,
               fontSize: 16,
               fontWeight: "700",
               textAlign: "center",
@@ -170,16 +213,150 @@ export default function LoginScreen() {
         <Pressable onPress={() => router.back()} style={{ marginTop: 24 }}>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 13,
               textAlign: "center",
             }}
           >
             Don't have an account?{" "}
-            <Text style={{ color: colors.gold }}>Apply</Text>
+            <Text style={{ color: colors.dark, fontWeight: "600" }}>Apply</Text>
           </Text>
         </Pressable>
       </ScrollView>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={resetVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeReset}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }}
+          onPress={closeReset}
+        />
+        <View
+          style={{
+            backgroundColor: colors.white,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            borderTopWidth: 1,
+            borderColor: colors.border,
+            padding: 28,
+            paddingBottom: Platform.OS === "ios" ? 52 : 32,
+          }}
+        >
+          {resetSent ? (
+            <>
+              <Text
+                style={{
+                  color: colors.dark,
+                  fontSize: 20,
+                  fontWeight: "700",
+                  marginBottom: 10,
+                }}
+              >
+                Check your inbox
+              </Text>
+              <Text
+                style={{
+                  color: colors.stone,
+                  fontSize: 14,
+                  lineHeight: 21,
+                  marginBottom: 24,
+                }}
+              >
+                If an account exists for that email, we've sent a password reset
+                link. Check your spam folder if you don't see it.
+              </Text>
+              <Pressable
+                onPress={closeReset}
+                style={{
+                  backgroundColor: colors.dark,
+                  borderRadius: 12,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ color: colors.white, fontWeight: "700", fontSize: 15 }}
+                >
+                  Done
+                </Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Text
+                style={{
+                  color: colors.dark,
+                  fontSize: 20,
+                  fontWeight: "700",
+                  marginBottom: 6,
+                }}
+              >
+                Reset Password
+              </Text>
+              <Text
+                style={{
+                  color: colors.stone,
+                  fontSize: 14,
+                  lineHeight: 21,
+                  marginBottom: 20,
+                }}
+              >
+                Enter your email address and we'll send you a link to reset your
+                password.
+              </Text>
+              <TextInput
+                placeholder="Email address"
+                placeholderTextColor={colors.stone}
+                value={resetEmail}
+                onChangeText={setResetEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                style={{
+                  backgroundColor: colors.bg,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  borderRadius: 10,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  color: colors.dark,
+                  fontSize: 15,
+                  marginBottom: 16,
+                }}
+              />
+              <Pressable
+                onPress={handlePasswordReset}
+                disabled={resetLoading}
+                style={{
+                  backgroundColor: colors.dark,
+                  borderRadius: 12,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                  opacity: resetLoading ? 0.6 : 1,
+                }}
+              >
+                {resetLoading ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text
+                    style={{
+                      color: colors.white,
+                      fontWeight: "700",
+                      fontSize: 15,
+                    }}
+                  >
+                    Send Reset Link
+                  </Text>
+                )}
+              </Pressable>
+            </>
+          )}
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

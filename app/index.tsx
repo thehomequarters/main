@@ -11,12 +11,13 @@ export default function Index() {
   useEffect(() => {
     if (loading) return;
 
+    // Unauthenticated users always see the onboarding splash
     if (!user) {
-      router.replace("/apply");
+      router.replace("/onboarding");
       return;
     }
 
-    if (profile?.membership_status === "active") {
+    if (profile?.membership_status === "active" || profile?.membership_status === "accepted") {
       router.replace("/(tabs)");
     } else if (profile?.membership_status === "pending") {
       router.replace("/pending");
@@ -29,12 +30,12 @@ export default function Index() {
     <View
       style={{
         flex: 1,
-        backgroundColor: colors.black,
+        backgroundColor: colors.bg,
         justifyContent: "center",
         alignItems: "center",
       }}
     >
-      <ActivityIndicator color={colors.gold} size="large" />
+      <ActivityIndicator color={colors.stone} size="large" />
     </View>
   );
 }

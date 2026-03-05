@@ -20,10 +20,13 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { EventCard } from "@/components/EventCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { useToast } from "@/components/Toast";
+import { useRouter } from "expo-router";
 import type { HQEvent, Booking, EventCategory } from "@/lib/database.types";
 
 const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
@@ -36,7 +39,9 @@ const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
 ];
 
 export default function EventsTab() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
   const [events, setEvents] = useState<HQEvent[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingCounts, setBookingCounts] = useState<Record<string, number>>(
@@ -127,7 +132,8 @@ export default function EventsTab() {
     // Check capacity
     const currentCount = bookingCounts[event.id] || 0;
     if (currentCount >= event.capacity) {
-      Alert.alert("Full", "This event has reached capacity.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      toast("This event has reached capacity.", "error");
       return;
     }
 
@@ -145,7 +151,8 @@ export default function EventsTab() {
               created_at: new Date().toISOString(),
             });
             await fetchEvents();
-            Alert.alert("Confirmed", "You're on the list!");
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            toast("You're on the list!", "success");
           },
         },
       ]
@@ -173,7 +180,7 @@ export default function EventsTab() {
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.black,
+          backgroundColor: colors.bg,
           paddingTop: 80,
           paddingHorizontal: 20,
         }}
@@ -198,13 +205,13 @@ export default function EventsTab() {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 30 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -214,27 +221,50 @@ export default function EventsTab() {
           paddingTop: 66,
           paddingHorizontal: 20,
           paddingBottom: 20,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
-        <Text
+        <View>
+          <Text
+            style={{
+              color: colors.ink,
+              fontSize: 34,
+              fontFamily: fonts.display,
+            }}
+          >
+            Events
+          </Text>
+          <Text
+            style={{
+              color: colors.stone,
+              fontSize: 14,
+              fontFamily: fonts.body,
+              marginTop: 4,
+            }}
+          >
+            Discover what's on
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(tabs)/account" as any)}
           style={{
-            color: colors.white,
-            fontSize: 30,
-            fontWeight: "700",
-            letterSpacing: 0.3,
-          }}
-        >
-          Events
-        </Text>
-        <Text
-          style={{
-            color: colors.grey,
-            fontSize: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.sand,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
             marginTop: 4,
           }}
         >
-          Discover what's happening in Harare
-        </Text>
+          <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
+            {(profile?.first_name?.[0] ?? "")}{(profile?.last_name?.[0] ?? "")}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Category filters */}
@@ -243,7 +273,7 @@ export default function EventsTab() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 20,
-          gap: 8,
+          gap: 4,
           marginBottom: 28,
         }}
       >
@@ -254,23 +284,17 @@ export default function EventsTab() {
               key={cat.label}
               onPress={() => setSelectedCategory(cat.key)}
               style={{
-                paddingHorizontal: 16,
-                paddingVertical: 9,
-                borderRadius: 20,
-                borderWidth: 1,
-                borderColor: isSelected
-                  ? colors.gold
-                  : "rgba(160, 160, 160, 0.25)",
-                backgroundColor: isSelected
-                  ? "rgba(201, 168, 76, 0.12)"
-                  : "transparent",
+                paddingHorizontal: 14,
+                paddingVertical: 10,
+                borderBottomWidth: isSelected ? 2 : 0,
+                borderBottomColor: colors.gold,
               }}
             >
               <Text
                 style={{
-                  color: isSelected ? colors.gold : colors.grey,
+                  color: isSelected ? colors.ink : colors.stone,
                   fontSize: 13,
-                  fontWeight: "600",
+                  fontFamily: isSelected ? fonts.semibold : fonts.medium,
                 }}
               >
                 {cat.label}
@@ -284,32 +308,17 @@ export default function EventsTab() {
       {thisWeek.length > 0 && (
         <View style={{ marginBottom: 32 }}>
           <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-            <View
+            <Text
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
+                color: colors.stone,
+                fontSize: 10,
+                fontFamily: fonts.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 2.5,
               }}
             >
-              <View
-                style={{
-                  width: 4,
-                  height: 20,
-                  borderRadius: 2,
-                  backgroundColor: colors.gold,
-                }}
-              />
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: 20,
-                  fontWeight: "700",
-                  letterSpacing: 0.3,
-                }}
-              >
-                This Week
-              </Text>
-            </View>
+              This Week
+            </Text>
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
@@ -320,6 +329,7 @@ export default function EventsTab() {
                 variant="full"
                 attendees={bookingCounts[event.id] || 0}
                 isBooked={isEventBooked(event.id)}
+                onPress={() => router.push(`/event/${event.id}` as any)}
                 onBook={() => handleBook(event)}
               />
             ))}
@@ -331,32 +341,17 @@ export default function EventsTab() {
       {thisMonth.length > 0 && (
         <View style={{ marginBottom: 16 }}>
           <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
-            <View
+            <Text
               style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 8,
+                color: colors.stone,
+                fontSize: 10,
+                fontFamily: fonts.semibold,
+                textTransform: "uppercase",
+                letterSpacing: 2.5,
               }}
             >
-              <View
-                style={{
-                  width: 4,
-                  height: 20,
-                  borderRadius: 2,
-                  backgroundColor: colors.grey,
-                }}
-              />
-              <Text
-                style={{
-                  color: colors.white,
-                  fontSize: 20,
-                  fontWeight: "700",
-                  letterSpacing: 0.3,
-                }}
-              >
-                Later This Month
-              </Text>
-            </View>
+              Later This Month
+            </Text>
           </View>
 
           <View style={{ paddingHorizontal: 20 }}>
@@ -367,6 +362,7 @@ export default function EventsTab() {
                 variant="full"
                 attendees={bookingCounts[event.id] || 0}
                 isBooked={isEventBooked(event.id)}
+                onPress={() => router.push(`/event/${event.id}` as any)}
                 onBook={() => handleBook(event)}
               />
             ))}
@@ -386,11 +382,11 @@ export default function EventsTab() {
           <Ionicons
             name="calendar-outline"
             size={48}
-            color={colors.darkBorder}
+            color={colors.border}
           />
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 15,
               textAlign: "center",
               marginTop: 16,

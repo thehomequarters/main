@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, Pressable, Dimensions } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { HQEvent } from "@/lib/database.types";
 
@@ -45,20 +45,22 @@ export function EventCard({
   const { day, month, weekday } = formatDate(event.date);
   const spotsLeft = event.capacity - attendees;
 
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        width: cardWidth,
-        borderRadius: 16,
-        overflow: "hidden",
-        backgroundColor: colors.dark,
-        borderWidth: 1,
-        borderColor: colors.darkBorder,
-        marginRight: isCompact ? 16 : 0,
-        marginBottom: isCompact ? 0 : 20,
-      }}
-    >
+  const cardStyle = {
+    width: cardWidth,
+    borderRadius: 12,
+    overflow: "hidden" as const,
+    backgroundColor: colors.white,
+    marginRight: isCompact ? 16 : 0,
+    marginBottom: isCompact ? 0 : 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.07,
+    shadowRadius: 12,
+    elevation: 3,
+  };
+
+  const inner = (
+    <>
       {/* Image */}
       <View style={{ height: isCompact ? 140 : 180, position: "relative" }}>
         <Image
@@ -74,64 +76,64 @@ export function EventCard({
             left: 0,
             right: 0,
             height: "50%",
-            backgroundColor: "rgba(0,0,0,0.5)",
+            backgroundColor: "rgba(0,0,0,0.35)",
           }}
         />
 
-        {/* Date badge */}
+        {/* Date badge — frosted, top-left */}
         <View
           style={{
             position: "absolute",
-            top: 12,
-            left: 12,
-            backgroundColor: "rgba(0,0,0,0.75)",
-            borderRadius: 10,
+            top: 14,
+            left: 14,
+            backgroundColor: "rgba(10,10,10,0.72)",
+            borderRadius: 6,
             paddingHorizontal: 10,
-            paddingVertical: 6,
+            paddingVertical: 7,
             alignItems: "center",
-            minWidth: 48,
+            minWidth: 46,
           }}
         >
           <Text
             style={{
-              color: colors.gold,
-              fontSize: 18,
-              fontWeight: "800",
-              lineHeight: 20,
+              color: colors.white,
+              fontSize: isCompact ? 20 : 24,
+              fontFamily: fonts.display,
+              lineHeight: isCompact ? 22 : 26,
             }}
           >
             {day}
           </Text>
           <Text
             style={{
-              color: colors.grey,
-              fontSize: 9,
-              fontWeight: "600",
-              letterSpacing: 1,
+              color: "rgba(255,255,255,0.6)",
+              fontSize: 8,
+              fontFamily: fonts.semibold,
+              letterSpacing: 1.5,
             }}
           >
             {month}
           </Text>
         </View>
 
-        {/* Category badge */}
+        {/* Category badge — top-right, text only on frosted */}
         <View
           style={{
             position: "absolute",
-            top: 12,
-            right: 12,
-            backgroundColor: "rgba(201, 168, 76, 0.2)",
-            borderRadius: 6,
+            top: 14,
+            right: 14,
+            backgroundColor: "rgba(10,10,10,0.5)",
+            borderRadius: 4,
             paddingHorizontal: 8,
             paddingVertical: 4,
           }}
         >
           <Text
             style={{
-              color: colors.gold,
-              fontSize: 9,
-              fontWeight: "700",
-              letterSpacing: 1.5,
+              color: "rgba(255,255,255,0.85)",
+              fontSize: 8,
+              fontFamily: fonts.semibold,
+              letterSpacing: 2,
               textTransform: "uppercase",
             }}
           >
@@ -144,9 +146,9 @@ export function EventCard({
       <View style={{ padding: 16 }}>
         <Text
           style={{
-            color: colors.white,
-            fontSize: isCompact ? 16 : 18,
-            fontWeight: "700",
+            color: colors.ink,
+            fontSize: isCompact ? 16 : 20,
+            fontFamily: fonts.display,
             marginBottom: 6,
           }}
           numberOfLines={isCompact ? 1 : 2}
@@ -167,15 +169,15 @@ export function EventCard({
             <Ionicons
               name="location-outline"
               size={13}
-              color={colors.grey}
+              color={colors.stone}
             />
-            <Text style={{ color: colors.grey, fontSize: 12 }}>
+            <Text style={{ color: colors.stone, fontSize: 12 }}>
               {event.venue}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-            <Ionicons name="time-outline" size={13} color={colors.grey} />
-            <Text style={{ color: colors.grey, fontSize: 12 }}>
+            <Ionicons name="time-outline" size={13} color={colors.stone} />
+            <Text style={{ color: colors.stone, fontSize: 12 }}>
               {weekday} {formatTime(event.time)}
             </Text>
           </View>
@@ -193,32 +195,17 @@ export function EventCard({
           >
             {/* Attendees */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name="people-outline"
-                  size={14}
-                  color={colors.grey}
-                />
-                <Text
-                  style={{
-                    color: colors.grey,
-                    fontSize: 12,
-                    marginLeft: 4,
-                  }}
-                >
-                  {attendees} going
-                </Text>
-              </View>
-              <Text style={{ color: colors.darkBorder, fontSize: 12 }}>
-                ·
-              </Text>
+              <Ionicons name="people-outline" size={13} color={colors.stone} />
               <Text
                 style={{
-                  color: spotsLeft < 10 ? colors.red : colors.grey,
-                  fontSize: 12,
+                  color: colors.stone,
+                  fontSize: 11,
+                  fontFamily: fonts.body,
                 }}
               >
-                {spotsLeft} spots left
+                {attendees} going · {spotsLeft < 10 ? (
+                  <Text style={{ color: colors.red }}>{spotsLeft} left</Text>
+                ) : `${spotsLeft} left`}
               </Text>
             </View>
 
@@ -226,32 +213,41 @@ export function EventCard({
             <Pressable
               onPress={onBook}
               style={{
-                backgroundColor: isBooked
-                  ? "rgba(76, 175, 80, 0.15)"
-                  : "rgba(201, 168, 76, 0.15)",
-                borderWidth: 1,
-                borderColor: isBooked
-                  ? "rgba(76, 175, 80, 0.3)"
-                  : "rgba(201, 168, 76, 0.3)",
-                borderRadius: 8,
-                paddingHorizontal: 16,
-                paddingVertical: 8,
+                backgroundColor: isBooked ? "transparent" : colors.ink,
+                borderRadius: 4,
+                paddingHorizontal: 18,
+                paddingVertical: 9,
               }}
             >
               <Text
                 style={{
-                  color: isBooked ? colors.green : colors.gold,
-                  fontSize: 12,
-                  fontWeight: "700",
-                  letterSpacing: 0.5,
+                  color: isBooked ? colors.stone : colors.white,
+                  fontSize: 11,
+                  fontFamily: fonts.semibold,
+                  letterSpacing: 1.2,
+                  textTransform: "uppercase",
                 }}
               >
-                {isBooked ? "Booked" : "Book"}
+                {isBooked ? "Attending" : "Reserve"}
               </Text>
             </Pressable>
           </View>
         )}
       </View>
-    </Pressable>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={cardStyle}>
+        {inner}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={cardStyle}>
+      {inner}
+    </View>
   );
 }
