@@ -79,7 +79,7 @@ export default function OnboardingScreen() {
   }, []);
 
   const handleNext = () => {
-    if (currentIndex < SLIDES.length - 1) {
+    if (currentIndex < slides.length - 1) {
       flatRef.current?.scrollToIndex({
         index: currentIndex + 1,
         animated: true,
