@@ -12,6 +12,7 @@ import Venues from "./pages/Venues";
 import Events from "./pages/Events";
 import Posts from "./pages/Posts";
 import Invites from "./pages/Invites";
+import Onboarding from "./pages/Onboarding";
 
 function ProtectedRoutes() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -60,6 +61,7 @@ function ProtectedRoutes() {
         <Route path="/events" element={<Events />} />
         <Route path="/posts" element={<Posts />} />
         <Route path="/invites" element={<Invites />} />
+        <Route path="/onboarding" element={<Onboarding />} />
       </Routes>
     </Layout>
   );

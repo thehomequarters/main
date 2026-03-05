@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,10 +12,12 @@ import {
 import { useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
+import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const { width: W, height: H } = Dimensions.get("window");
 
-const SLIDES = [
+const DEFAULT_SLIDES = [
   {
     id: "1",
     image: {
@@ -46,6 +48,35 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "onboarding_slides"),
+            where("is_active", "==", true),
+            orderBy("order", "asc")
+          )
+        );
+        if (!snap.empty) {
+          const remote = snap.docs.map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              image: { uri: data.image_url as string },
+              eyebrow: (data.eyebrow as string) ?? "",
+              title: (data.title as string) ?? "",
+            };
+          });
+          setSlides(remote);
+        }
+      } catch {
+        // Network error — keep default slides
+      }
+    })();
+  }, []);
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -77,7 +108,7 @@ export default function OnboardingScreen() {
     }
   }).current;
 
-  const isLast = currentIndex === SLIDES.length - 1;
+  const isLast = currentIndex === slides.length - 1;
 
   return (
     <View style={styles.container}>
@@ -85,7 +116,7 @@ export default function OnboardingScreen() {
 
       <FlatList
         ref={flatRef}
-        data={SLIDES}
+        data={slides}
         keyExtractor={(item) => item.id}
         horizontal
         pagingEnabled
@@ -122,7 +153,7 @@ export default function OnboardingScreen() {
       <View style={styles.controls}>
         {/* Dot indicators */}
         <View style={styles.dots}>
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <View
               key={i}
               style={[
