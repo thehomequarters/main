@@ -103,18 +103,30 @@ export default function Venues() {
     let venuesReady = false, dealsReady = false, storiesReady = false;
     const checkDone = () => { if (venuesReady && dealsReady && storiesReady) setLoading(false); };
 
-    const u1 = onSnapshot(collection(db, "venues"), (snap) => {
-      setVenues(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Venue).sort((a, b) => a.name.localeCompare(b.name)));
-      venuesReady = true; checkDone();
-    });
-    const u2 = onSnapshot(collection(db, "deals"), (snap) => {
-      setDeals(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
-      dealsReady = true; checkDone();
-    });
-    const u3 = onSnapshot(collection(db, "venue_stories"), (snap) => {
-      setStories(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as VenueStory).sort((a, b) => a.order - b.order));
-      storiesReady = true; checkDone();
-    });
+    const u1 = onSnapshot(
+      collection(db, "venues"),
+      (snap) => {
+        setVenues(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Venue).sort((a, b) => a.name.localeCompare(b.name)));
+        venuesReady = true; checkDone();
+      },
+      (err) => { console.error("venues snapshot error:", err); venuesReady = true; checkDone(); }
+    );
+    const u2 = onSnapshot(
+      collection(db, "deals"),
+      (snap) => {
+        setDeals(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
+        dealsReady = true; checkDone();
+      },
+      (err) => { console.error("deals snapshot error:", err); dealsReady = true; checkDone(); }
+    );
+    const u3 = onSnapshot(
+      collection(db, "venue_stories"),
+      (snap) => {
+        setStories(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as VenueStory).sort((a, b) => a.order - b.order));
+        storiesReady = true; checkDone();
+      },
+      (err) => { console.error("venue_stories snapshot error:", err); storiesReady = true; checkDone(); }
+    );
     return () => { u1(); u2(); u3(); };
   }, []);
 

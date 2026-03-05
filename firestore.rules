@@ -67,6 +67,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ──── Venue Stories ────
+    match /venue_stories/{storyId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ──── Onboarding Slides ────
+    match /onboarding_slides/{slideId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
     // ──── Events ────
     match /events/{eventId} {
       allow read: if isAuth();

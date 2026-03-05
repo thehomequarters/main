@@ -43,13 +43,20 @@ export default function Onboarding() {
   const closeConfirm = () => setConfirmState((s) => ({ ...s, open: false }));
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "onboarding_slides"), (snap) => {
-      const data = snap.docs
-        .map((d) => ({ id: d.id, ...d.data() }) as OnboardingSlide)
-        .sort((a, b) => a.order - b.order);
-      setSlides(data);
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      collection(db, "onboarding_slides"),
+      (snap) => {
+        const data = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }) as OnboardingSlide)
+          .sort((a, b) => a.order - b.order);
+        setSlides(data);
+        setLoading(false);
+      },
+      (err) => {
+        console.error("onboarding_slides snapshot error:", err);
+        setLoading(false);
+      }
+    );
     return unsub;
   }, []);
 
