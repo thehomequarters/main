@@ -42,8 +42,8 @@ if (fs.existsSync(MM_PATH)) {
   // (a previous version of this script only emitted @interface declarations).
   const needsStubs =
     !mm.includes("RNSBottomTabsScreenComponentView_defined") ||
-    (mm.includes("RNSBottomTabsScreenComponentView_defined") &&
-      !mm.includes("@implementation RNSBottomTabsHostComponentView"));
+    !mm.includes("@implementation RNSBottomTabsHostComponentView") ||
+    !mm.includes("@implementation RNSTabBarController");
 
   if (needsStubs) {
     // Remove any old (incomplete) stubs so we can replace them cleanly
@@ -72,6 +72,11 @@ if (fs.existsSync(MM_PATH)) {
 @implementation RNSBottomTabsHostComponentView
 @end
 #endif
+
+// RNSTabBarController stub — the @interface is declared in the .h stub,
+// but the linker needs an @implementation to emit the class symbol.
+@implementation RNSTabBarController
+@end
 
 // Category declarations so the compiler accepts screenIds / screenId access;
 // guarded at runtime with respondsToSelector: below.
