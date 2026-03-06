@@ -37,8 +37,20 @@ const H_PATH = path.join(
 if (fs.existsSync(MM_PATH)) {
   let mm = fs.readFileSync(MM_PATH, "utf8");
 
-  // 1. Insert compatibility stubs after the last RNScreens import if not already present
-  if (!mm.includes("RNSBottomTabsScreenComponentView_defined")) {
+  // 1. Insert compatibility stubs after the last RNScreens import if not already present.
+  // Also re-patch if the old stubs are present but lack @implementation blocks
+  // (a previous version of this script only emitted @interface declarations).
+  const needsStubs =
+    !mm.includes("RNSBottomTabsScreenComponentView_defined") ||
+    (mm.includes("RNSBottomTabsScreenComponentView_defined") &&
+      !mm.includes("@implementation RNSBottomTabsHostComponentView"));
+
+  if (needsStubs) {
+    // Remove any old (incomplete) stubs so we can replace them cleanly
+    mm = mm.replace(
+      /\/\/ Compatibility stubs[\s\S]*?@interface RNSScreenView[\s\S]*?@end\n\n/,
+      ""
+    );
     const stubs = `
 // Compatibility stubs for react-native-screens versions that lack bottom-tabs
 // and per-screen ID APIs (e.g. react-native-screens < 4.x).
