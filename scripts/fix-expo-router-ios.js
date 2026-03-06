@@ -104,44 +104,63 @@ if (fs.existsSync(MM_PATH)) {
 }
 
 // ─── Patch the .h file ────────────────────────────────────────────────────────
+//
+// We NEVER import from RNScreens here. Even though the headers exist,
+// importing them in an ObjC-only compilation unit pulls in C++ standard
+// library headers (<cstdint>, <memory>) that the compiler can't find in
+// that context. Instead we always use lightweight forward stubs.
 
 if (fs.existsSync(H_PATH)) {
   let h = fs.readFileSync(H_PATH, "utf8");
 
-  // Wrap RNSDismissibleModalProtocol import with availability guard
+  // Replace the direct RNSDismissibleModalProtocol import (any variant) with a stub
   if (
     h.includes('#import <RNScreens/RNSDismissibleModalProtocol.h>') &&
-    !h.includes("__has_include(<RNScreens/RNSDismissibleModalProtocol.h>)")
+    !h.includes("RNSDismissibleModalProtocol_stub")
   ) {
+    // Replace any existing conditional block or bare import with a pure stub
     h = h.replace(
-      '#import <RNScreens/RNSDismissibleModalProtocol.h>',
-      `#if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
-#import <RNScreens/RNSDismissibleModalProtocol.h>
-#else
+      /#if __has_include\(<RNScreens\/RNSDismissibleModalProtocol\.h>\)[\s\S]*?#endif/,
+      `// RNSDismissibleModalProtocol_stub — importing from RNScreens pulls in C++ headers
 @protocol RNSDismissibleModalProtocol <NSObject>
 @optional
-@end
-#endif`
+@end`
     );
-    console.log("expo-router: guarded RNSDismissibleModalProtocol import");
+    // Also handle bare (unguarded) import
+    if (h.includes('#import <RNScreens/RNSDismissibleModalProtocol.h>')) {
+      h = h.replace(
+        '#import <RNScreens/RNSDismissibleModalProtocol.h>',
+        `// RNSDismissibleModalProtocol_stub — importing from RNScreens pulls in C++ headers
+@protocol RNSDismissibleModalProtocol <NSObject>
+@optional
+@end`
+      );
+    }
+    console.log("expo-router: stubbed RNSDismissibleModalProtocol in .h");
   }
 
-  // Wrap RNSTabBarController import with availability guard
+  // Replace the direct RNSTabBarController import (any variant) with a stub
   if (
     h.includes('#import <RNScreens/RNSTabBarController.h>') &&
-    !h.includes("__has_include(<RNScreens/RNSTabBarController.h>)")
+    !h.includes("RNSTabBarController_stub")
   ) {
     h = h.replace(
-      '#import <RNScreens/RNSTabBarController.h>',
-      `#if __has_include(<RNScreens/RNSTabBarController.h>)
-#import <RNScreens/RNSTabBarController.h>
-#else
+      /#if __has_include\(<RNScreens\/RNSTabBarController\.h>\)[\s\S]*?#endif/,
+      `// RNSTabBarController_stub — importing from RNScreens pulls in C++ headers
 #import <UIKit/UIKit.h>
 @interface RNSTabBarController : UITabBarController
-@end
-#endif`
+@end`
     );
-    console.log("expo-router: guarded RNSTabBarController import");
+    if (h.includes('#import <RNScreens/RNSTabBarController.h>')) {
+      h = h.replace(
+        '#import <RNScreens/RNSTabBarController.h>',
+        `// RNSTabBarController_stub — importing from RNScreens pulls in C++ headers
+#import <UIKit/UIKit.h>
+@interface RNSTabBarController : UITabBarController
+@end`
+      );
+    }
+    console.log("expo-router: stubbed RNSTabBarController in .h");
   }
 
   fs.writeFileSync(H_PATH, h, "utf8");
