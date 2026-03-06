@@ -37,8 +37,7 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
-      "react-native-maps"
+      "expo-router"
     ]
   }
 }
