@@ -10,6 +10,8 @@ import { useToast } from "../components/Toast";
 
 type MembershipTier = "gold_card" | "platinum_card" | "founding_member" | "committee_member";
 
+type SubscriptionStatus = "active" | "past_due" | "canceled" | "trialing";
+
 interface BillingProfile {
   id: string;
   first_name: string;
@@ -19,7 +21,18 @@ interface BillingProfile {
   membership_status: string;
   membership_tier: MembershipTier;
   created_at: string;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  subscription_status?: SubscriptionStatus | null;
+  current_period_end?: string | null;
 }
+
+const SUB_STATUS_BADGE: Record<SubscriptionStatus, string> = {
+  active: "bg-green-500/15 text-green-400",
+  past_due: "bg-amber-500/15 text-amber-400",
+  canceled: "bg-red-500/15 text-red-400",
+  trialing: "bg-blue-500/15 text-blue-400",
+};
 
 const TIER_PRICE: Record<MembershipTier, number | null> = {
   gold_card: 5,
@@ -423,6 +436,9 @@ export default function Billing() {
                   Joined
                 </th>
                 <th className="text-left px-5 py-3 text-gray-500 font-medium">
+                  Subscription
+                </th>
+                <th className="text-left px-5 py-3 text-gray-500 font-medium">
                   Change Tier
                 </th>
               </tr>
@@ -485,6 +501,37 @@ export default function Billing() {
                               { day: "numeric", month: "short", year: "numeric" }
                             )
                           : "—"}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {member.subscription_status ? (
+                          <div className="space-y-1">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                SUB_STATUS_BADGE[member.subscription_status] ?? "bg-gray-500/15 text-gray-400"
+                              }`}
+                            >
+                              {member.subscription_status === "past_due" ? "Past due" : member.subscription_status.charAt(0).toUpperCase() + member.subscription_status.slice(1)}
+                            </span>
+                            {member.current_period_end && (
+                              <div className="text-gray-600 text-[10px]">
+                                {member.subscription_status === "active" ? "Renews " : "Ended "}
+                                {new Date(member.current_period_end).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                              </div>
+                            )}
+                            {member.stripe_customer_id && (
+                              <a
+                                href={`https://dashboard.stripe.com/customers/${member.stripe_customer_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[#635BFF] text-[10px] hover:underline block"
+                              >
+                                View in Stripe ↗
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-600 text-xs">No subscription</span>
+                        )}
                       </td>
                       <td className="px-5 py-3.5">
                         <select

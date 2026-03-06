@@ -7,21 +7,26 @@ import {
   StyleSheet,
   Platform,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+import { httpsCallable } from "firebase/functions";
 import { useAuth } from "@/lib/auth";
+import { functions } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
-// Swap for real Stripe / payment links when ready
-const PAYMENT_URLS: Record<string, string> = {
-  gold: "https://buy.stripe.com/placeholder_gold",
-  platinum: "https://buy.stripe.com/placeholder_platinum",
+// ── Stripe Payment Link URLs ────────────────────────────────────────────────
+// Replace these with your real buy.stripe.com URLs from the Stripe dashboard.
+// We append client_reference_id (Firebase UID) and prefilled_email so the
+// webhook can match the payment back to the correct member profile.
+const STRIPE_PAYMENT_LINKS: Record<string, string> = {
+  gold: "https://buy.stripe.com/REPLACE_WITH_GOLD_LINK",
+  platinum: "https://buy.stripe.com/REPLACE_WITH_PLATINUM_LINK",
 };
 
-// Swap for real backend pkpass endpoint when ready
-// iOS opens .pkpass URLs natively and prompts "Add to Wallet"
+// ── Apple Wallet pass endpoint ──────────────────────────────────────────────
 const WALLET_PASS_BASE = "https://api.homequarters.co.uk/wallet/pass";
 
 const GOLD_FEATURES = [
@@ -40,7 +45,6 @@ const PLATINUM_FEATURES = [
   { icon: "phone-portrait-outline" as const, text: "Telecel Zimbabwe eSIM — arrive connected" },
 ];
 
-// Gold card colour tokens — deep warm amber background for legibility
 const G = {
   bg: "#1E1500",
   border: "rgba(201,168,76,0.28)",
@@ -58,6 +62,20 @@ const G = {
   check: "#C9A84C",
 };
 
+const SUB_STATUS_LABELS: Record<string, string> = {
+  active: "Active",
+  past_due: "Payment overdue",
+  canceled: "Cancelled",
+  trialing: "Trial",
+};
+
+const SUB_STATUS_COLORS: Record<string, string> = {
+  active: colors.green,
+  past_due: "#F5A623",
+  canceled: "#FF6B6B",
+  trialing: "#7B9CFF",
+};
+
 type Plan = "gold" | "platinum";
 
 export default function BillingScreen() {
@@ -67,10 +85,14 @@ export default function BillingScreen() {
   const [selected, setSelected] = useState<Plan>(
     profile?.membership_tier === "platinum_card" ? "platinum" : "gold"
   );
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   const isActive = profile?.membership_status === "active";
   const isGrace = profile?.membership_status === "accepted";
   const currentTier = profile?.membership_tier;
+  const subStatus = profile?.subscription_status;
+  const periodEnd = profile?.current_period_end;
+  const hasSubscription = !!profile?.stripe_customer_id;
 
   const currentPlanLabel =
     currentTier === "platinum_card" ? "Platinum"
@@ -78,17 +100,54 @@ export default function BillingScreen() {
     : currentTier === "committee_member" ? "Committee"
     : "Gold";
 
-  const isPaymentReady = !PAYMENT_URLS[selected].includes("placeholder");
+  const linksConfigured = !STRIPE_PAYMENT_LINKS[selected].includes("REPLACE_WITH");
+
+  // Build payment link URL with member identifiers appended
+  const buildPaymentUrl = (plan: Plan) => {
+    const base = STRIPE_PAYMENT_LINKS[plan];
+    const params = new URLSearchParams();
+    if (profile?.id) params.set("client_reference_id", profile.id);
+    if (profile?.email) params.set("prefilled_email", profile.email);
+    return `${base}?${params.toString()}`;
+  };
 
   const handleContinue = async () => {
-    if (!isPaymentReady) return;
-    try { await Linking.openURL(PAYMENT_URLS[selected]); } catch { /* dev */ }
+    if (!linksConfigured) return;
+    try {
+      await Linking.openURL(buildPaymentUrl(selected));
+    } catch {
+      /* dev/simulator */
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const getPortalUrl = httpsCallable<{ return_url: string }, { url: string }>(
+        functions,
+        "getStripePortalUrl"
+      );
+      const result = await getPortalUrl({ return_url: "https://homequarters.co.uk" });
+      await Linking.openURL(result.data.url);
+    } catch (err) {
+      console.error("Failed to open billing portal:", err);
+    } finally {
+      setLoadingPortal(false);
+    }
   };
 
   const handleAddToWallet = async () => {
     const url = `${WALLET_PASS_BASE}/${profile?.member_code}`;
-    try { await Linking.openURL(url); } catch { /* dev */ }
+    try {
+      await Linking.openURL(url);
+    } catch {
+      /* dev */
+    }
   };
+
+  const isOnSelectedPlan =
+    isActive &&
+    currentTier === (selected === "gold" ? "gold_card" : "platinum_card");
 
   return (
     <View style={styles.container}>
@@ -113,6 +172,20 @@ export default function BillingScreen() {
             ? "You've been accepted. Pick a plan to unlock your full membership."
             : "Select the plan that fits how you use HomeQuarters."}
         </Text>
+
+        {/* ── Subscription status chip (if has Stripe subscription) ── */}
+        {hasSubscription && subStatus && (
+          <View style={[styles.statusRow, { borderColor: (SUB_STATUS_COLORS[subStatus] ?? colors.stone) + "33" }]}>
+            <View style={[styles.statusDot, { backgroundColor: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]} />
+            <Text style={[styles.statusText, { color: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]}>
+              {SUB_STATUS_LABELS[subStatus] ?? subStatus}
+              {subStatus === "past_due" && " · Please update your payment method"}
+              {periodEnd && subStatus === "active" && (
+                ` · Renews ${new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+              )}
+            </Text>
+          </View>
+        )}
 
         {/* ── Apple Wallet — iOS only, active members ── */}
         {Platform.OS === "ios" && isActive && (
@@ -248,17 +321,35 @@ export default function BillingScreen() {
         </Pressable>
 
         <Text style={styles.billingNote}>
-          Billed monthly. Cancel anytime. Membership activates immediately on payment confirmation.
+          Billed monthly · Cancel anytime · Membership activates immediately on payment confirmation
         </Text>
       </ScrollView>
 
       {/* Sticky CTA */}
       <View style={styles.footer}>
-        {isActive && currentTier === (selected === "gold" ? "gold_card" : "platinum_card") ? (
+        {isOnSelectedPlan && hasSubscription ? (
+          // On this plan and has a Stripe subscription → show manage button
+          <Pressable
+            onPress={handleManageSubscription}
+            disabled={loadingPortal}
+            style={({ pressed }) => [styles.manageBtn, { opacity: pressed || loadingPortal ? 0.75 : 1 }]}
+          >
+            {loadingPortal ? (
+              <ActivityIndicator size="small" color={colors.dark} />
+            ) : (
+              <>
+                <Ionicons name="settings-outline" size={16} color={colors.dark} />
+                <Text style={styles.manageBtnText}>Manage Subscription</Text>
+              </>
+            )}
+          </Pressable>
+        ) : isOnSelectedPlan ? (
+          // On this plan but no Stripe record (founding/committee/manually set)
           <View style={styles.managePill}>
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
-        ) : isPaymentReady ? (
+        ) : linksConfigured ? (
+          // Not on this plan → show payment CTA
           <Pressable
             onPress={handleContinue}
             style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
@@ -270,12 +361,23 @@ export default function BillingScreen() {
             <Ionicons name="arrow-forward" size={16} color={colors.white} />
           </Pressable>
         ) : (
+          // Payment links not yet configured
           <View style={[styles.managePill, { backgroundColor: "rgba(245,166,35,0.08)", borderColor: "rgba(245,166,35,0.2)" }]}>
             <Text style={[styles.managePillText, { color: "#F5A623" }]}>
               Payments coming soon · Contact us to activate
             </Text>
           </View>
         )}
+
+        {/* Manage subscription link if on a different plan but has subscription */}
+        {hasSubscription && !isOnSelectedPlan && (
+          <Pressable onPress={handleManageSubscription} disabled={loadingPortal}>
+            <Text style={styles.manageLink}>
+              {loadingPortal ? "Opening…" : "Manage or cancel existing subscription"}
+            </Text>
+          </Pressable>
+        )}
+
         <Text style={styles.footerNote}>
           Questions?{" "}
           <Text
@@ -331,7 +433,31 @@ const styles = StyleSheet.create({
     color: colors.stone,
     fontSize: 14,
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+
+  // ── Subscription status chip ──
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(0,0,0,0.03)",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+    flexWrap: "wrap",
   },
 
   // ── Apple Wallet row ──
@@ -493,6 +619,22 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.2,
   },
+  manageBtn: {
+    backgroundColor: colors.sand,
+    borderRadius: 100,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  manageBtnText: {
+    color: colors.dark,
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.1,
+  },
   managePill: {
     backgroundColor: "rgba(76,175,80,0.08)",
     borderRadius: 100,
@@ -503,5 +645,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(76,175,80,0.2)",
   },
   managePillText: { color: colors.green, fontSize: 13, fontWeight: "600" },
+  manageLink: {
+    color: colors.stone,
+    fontSize: 12,
+    textAlign: "center",
+    textDecorationLine: "underline",
+  },
   footerNote: { color: colors.stone, fontSize: 12, textAlign: "center" },
 });
