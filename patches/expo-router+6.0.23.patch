@@ -1,0 +1,25 @@
+diff --git a/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.h b/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.h
+index 6bd933c..c6b68bc 100644
+--- a/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.h
++++ b/node_modules/expo-router/ios/LinkPreview/LinkPreviewNativeNavigation.h
+@@ -1,7 +1,20 @@
+ // Copyright 2015-present 650 Industries. All rights reserved.
+ 
++#if __has_include(<RNScreens/RNSDismissibleModalProtocol.h>)
+ #import <RNScreens/RNSDismissibleModalProtocol.h>
++#else
++@protocol RNSDismissibleModalProtocol <NSObject>
++@optional
++@end
++#endif
++
++#if __has_include(<RNScreens/RNSTabBarController.h>)
+ #import <RNScreens/RNSTabBarController.h>
++#else
++#import <UIKit/UIKit.h>
++@interface RNSTabBarController : UITabBarController
++@end
++#endif
+ 
+ @interface LinkPreviewNativeNavigationObjC : NSObject
+ 
