@@ -304,7 +304,7 @@ export default function BillingScreen() {
         </Pressable>
 
         <Text style={styles.billingNote}>
-          Billed monthly · Cancel anytime · Subscribe at thehomequarters.com — your membership activates automatically
+          Membership is managed at thehomequarters.com · Cancel anytime
         </Text>
       </ScrollView>
 
@@ -338,7 +338,7 @@ export default function BillingScreen() {
             style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
           >
             <Text style={styles.ctaBtnText}>
-              {isActive ? "Switch plan at " : "Subscribe at "}thehomequarters.com
+              {isActive ? "Change plan" : "Get membership"} · thehomequarters.com
             </Text>
             <Ionicons name="arrow-forward" size={16} color={colors.white} />
           </Pressable>
