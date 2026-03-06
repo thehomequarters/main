@@ -19,7 +19,7 @@ import { colors } from "@/constants/theme";
 
 // ── Membership website URL ──────────────────────────────────────────────────
 // Payments are handled on the website (App Store compliant for digital subs).
-const MEMBERSHIP_URL = "https://thehomequarters.com/membership";
+const MEMBERSHIP_URL = "https://homequarters-60838.web.app/membership";
 
 // ── Apple Wallet pass endpoint ──────────────────────────────────────────────
 const WALLET_PASS_BASE = "https://api.homequarters.co.uk/wallet/pass";
