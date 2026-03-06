@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -7,13 +7,10 @@ import {
   FlatList,
   Image,
   StyleSheet,
-  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 const { width: W, height: H } = Dimensions.get("window");
 
@@ -48,35 +45,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [slides, setSlides] = useState(DEFAULT_SLIDES);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "onboarding_slides"),
-            where("is_active", "==", true),
-            orderBy("order", "asc")
-          )
-        );
-        if (!snap.empty) {
-          const remote = snap.docs.map((d) => {
-            const data = d.data();
-            return {
-              id: d.id,
-              image: { uri: data.image_url as string },
-              eyebrow: (data.eyebrow as string) ?? "",
-              title: (data.title as string) ?? "",
-            };
-          });
-          setSlides(remote);
-        }
-      } catch {
-        // Network error — keep default slides
-      }
-    })();
-  }, []);
+  const slides = DEFAULT_SLIDES;
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
@@ -214,7 +183,7 @@ const styles = StyleSheet.create({
   },
   logoWrap: {
     position: "absolute",
-    top: Platform.OS === "ios" ? 64 : 48,
+    top: 48,
     left: 28,
   },
   logoText: {
@@ -258,7 +227,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 28,
-    paddingBottom: Platform.OS === "ios" ? 54 : 38,
+    paddingBottom: 38,
     paddingTop: 12,
     alignItems: "center",
   },
@@ -289,6 +258,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "stretch",
     marginBottom: 18,
+    overflow: "hidden",
   },
   btnText: {
     color: colors.ink,
