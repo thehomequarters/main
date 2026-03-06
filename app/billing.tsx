@@ -17,14 +17,9 @@ import { useAuth } from "@/lib/auth";
 import { functions } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
-// ── Stripe Payment Link URLs ────────────────────────────────────────────────
-// Replace these with your real buy.stripe.com URLs from the Stripe dashboard.
-// We append client_reference_id (Firebase UID) and prefilled_email so the
-// webhook can match the payment back to the correct member profile.
-const STRIPE_PAYMENT_LINKS: Record<string, string> = {
-  gold: "https://buy.stripe.com/REPLACE_WITH_GOLD_LINK",
-  platinum: "https://buy.stripe.com/REPLACE_WITH_PLATINUM_LINK",
-};
+// ── Membership website URL ──────────────────────────────────────────────────
+// Payments are handled on the website (App Store compliant for digital subs).
+const MEMBERSHIP_URL = "https://thehomequarters.com/membership";
 
 // ── Apple Wallet pass endpoint ──────────────────────────────────────────────
 const WALLET_PASS_BASE = "https://api.homequarters.co.uk/wallet/pass";
@@ -100,21 +95,9 @@ export default function BillingScreen() {
     : currentTier === "committee_member" ? "Committee"
     : "Gold";
 
-  const linksConfigured = !STRIPE_PAYMENT_LINKS[selected].includes("REPLACE_WITH");
-
-  // Build payment link URL with member identifiers appended
-  const buildPaymentUrl = (plan: Plan) => {
-    const base = STRIPE_PAYMENT_LINKS[plan];
-    const params = new URLSearchParams();
-    if (profile?.id) params.set("client_reference_id", profile.id);
-    if (profile?.email) params.set("prefilled_email", profile.email);
-    return `${base}?${params.toString()}`;
-  };
-
   const handleContinue = async () => {
-    if (!linksConfigured) return;
     try {
-      await Linking.openURL(buildPaymentUrl(selected));
+      await Linking.openURL(MEMBERSHIP_URL);
     } catch {
       /* dev/simulator */
     }
@@ -321,7 +304,7 @@ export default function BillingScreen() {
         </Pressable>
 
         <Text style={styles.billingNote}>
-          Billed monthly · Cancel anytime · Membership activates immediately on payment confirmation
+          Billed monthly · Cancel anytime · Subscribe at thehomequarters.com — your membership activates automatically
         </Text>
       </ScrollView>
 
@@ -348,25 +331,17 @@ export default function BillingScreen() {
           <View style={styles.managePill}>
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
-        ) : linksConfigured ? (
-          // Not on this plan → show payment CTA
+        ) : (
+          // Not on this plan → open website to subscribe
           <Pressable
             onPress={handleContinue}
             style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
           >
             <Text style={styles.ctaBtnText}>
-              {isActive ? "Switch to " : "Activate "}
-              {selected === "platinum" ? "Platinum · £15/mo" : "Gold · £5/mo"}
+              {isActive ? "Switch plan at " : "Subscribe at "}thehomequarters.com
             </Text>
             <Ionicons name="arrow-forward" size={16} color={colors.white} />
           </Pressable>
-        ) : (
-          // Payment links not yet configured
-          <View style={[styles.managePill, { backgroundColor: "rgba(245,166,35,0.08)", borderColor: "rgba(245,166,35,0.2)" }]}>
-            <Text style={[styles.managePillText, { color: "#F5A623" }]}>
-              Payments coming soon · Contact us to activate
-            </Text>
-          </View>
         )}
 
         {/* Manage subscription link if on a different plan but has subscription */}
