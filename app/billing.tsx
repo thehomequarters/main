@@ -37,7 +37,7 @@ const PLATINUM_FEATURES = [
   { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants in Zim" },
   { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
   { icon: "sparkles-outline" as const, text: "Curated experiences — events, stays & more" },
-  { icon: "phone-portrait-outline" as const, text: "Telecel Zimbabwe eSIM — arrive connected" },
+  { icon: "sparkles-outline" as const, text: "Priority access to curated Zimbabwe experiences" },
 ];
 
 const G = {
