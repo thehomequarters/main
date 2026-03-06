@@ -13,6 +13,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   doc,
@@ -48,7 +49,6 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapFailed, setMapFailed] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
   const screenWidth = Dimensions.get("window").width;
@@ -414,32 +414,27 @@ export default function VenueDetailScreen() {
                 marginBottom: 16,
               }}
             >
-              {/* Static map image */}
-              {!mapFailed && (
-                <Image
-                  source={{
-                    uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=15&size=600x200&markers=${venue.latitude},${venue.longitude},red-marker-m`,
-                  }}
-                  style={{ width: "100%", height: 140 }}
-                  resizeMode="cover"
-                  onError={() => setMapFailed(true)}
+              {/* Apple Maps preview */}
+              <MapView
+                style={{ width: "100%", height: 140 }}
+                provider={undefined}
+                region={{
+                  latitude: venue.latitude,
+                  longitude: venue.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+                pointerEvents="none"
+              >
+                <Marker
+                  coordinate={{ latitude: venue.latitude, longitude: venue.longitude }}
+                  title={venue.name}
                 />
-              )}
-              {mapFailed && (
-                <View
-                  style={{
-                    width: "100%",
-                    height: 100,
-                    backgroundColor: colors.sand,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  <Ionicons name="map-outline" size={28} color={colors.stone} />
-                  <Text style={{ color: colors.stone, fontSize: 12 }}>Tap for directions</Text>
-                </View>
-              )}
+              </MapView>
               {/* Address row below map */}
               <View
                 style={{
