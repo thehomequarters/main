@@ -37,7 +37,6 @@ const PLATINUM_FEATURES = [
   { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants in Zim" },
   { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
   { icon: "sparkles-outline" as const, text: "Curated experiences — events, stays & more" },
-  { icon: "sparkles-outline" as const, text: "Priority access to curated Zimbabwe experiences" },
 ];
 
 const G = {
@@ -178,14 +177,14 @@ export default function BillingScreen() {
           >
             <View style={styles.walletLeft}>
               <View style={styles.walletIconWrap}>
-                <Ionicons name="wallet" size={18} color="#FFFFFF" />
+                <Ionicons name="wallet" size={18} color={colors.dark} />
               </View>
               <View>
                 <Text style={styles.walletLabel}>Add to Apple Wallet</Text>
                 <Text style={styles.walletSub}>Save your membership pass to Wallet</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.55)" />
+            <Ionicons name="chevron-forward" size={16} color={colors.stone} />
           </Pressable>
         )}
 
@@ -288,11 +287,6 @@ export default function BillingScreen() {
                 </Text>
               </View>
             ))}
-          </View>
-
-          <View style={styles.esimPill}>
-            <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.5)" />
-            <Text style={styles.esimPillText}>Harare · Bulawayo · Victoria Falls</Text>
           </View>
 
           {selected === "platinum" && (
@@ -440,8 +434,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.dark,
+    backgroundColor: colors.white,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingVertical: 16,
     paddingHorizontal: 18,
     marginBottom: 24,
@@ -455,18 +451,18 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: colors.sand,
     justifyContent: "center",
     alignItems: "center",
   },
   walletLabel: {
-    color: "#FFFFFF",
+    color: colors.dark,
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.1,
   },
   walletSub: {
-    color: "rgba(255,255,255,0.72)",
+    color: colors.stone,
     fontSize: 12,
     marginTop: 1,
   },
