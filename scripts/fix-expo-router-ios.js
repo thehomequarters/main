@@ -48,12 +48,16 @@ if (fs.existsSync(MM_PATH)) {
 @property (nonatomic, copy) NSString *tabKey;
 - (UIViewController *)reactViewController;
 @end
+@implementation RNSBottomTabsScreenComponentView
+@end
 #endif
 
 #ifndef RNSBottomTabsHostComponentView_defined
 #define RNSBottomTabsHostComponentView_defined
 @interface RNSBottomTabsHostComponentView : UIView
 - (UITabBarController *)controller;
+@end
+@implementation RNSBottomTabsHostComponentView
 @end
 #endif
 
