@@ -344,6 +344,44 @@ export const stripeWebhook = onRequest(
           break;
         }
 
+        // ── Payment succeeded (recurring or first invoice) ──
+        case "invoice.payment_succeeded": {
+          const invoice = event.data.object as Stripe.Invoice;
+          const custId = customerId(invoice.customer);
+          if (!custId) break;
+
+          // Skip $0 invoices (e.g. trial starts)
+          if ((invoice.amount_paid ?? 0) === 0) break;
+
+          const snap = await db
+            .collection("profiles")
+            .where("stripe_customer_id", "==", custId)
+            .limit(1)
+            .get();
+
+          const profile = snap.empty ? null : snap.docs[0].data();
+          const priceId = invoice.lines?.data[0]?.price?.id ?? "";
+          const tier = tierFromPriceId(priceId);
+
+          await db.collection("payments").add({
+            stripe_customer_id: custId,
+            stripe_invoice_id: invoice.id,
+            stripe_payment_intent_id: invoice.payment_intent ?? null,
+            stripe_subscription_id: invoice.subscription ?? null,
+            user_id: snap.empty ? null : snap.docs[0].id,
+            user_name: profile
+              ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim()
+              : null,
+            email: profile?.email ?? invoice.customer_email ?? null,
+            amount: invoice.amount_paid,
+            currency: invoice.currency,
+            membership_tier: tier,
+            status: "succeeded",
+            created_at: new Date(invoice.created * 1000).toISOString(),
+          });
+          break;
+        }
+
         // ── Payment failed (card declined, etc.) ──
         case "invoice.payment_failed": {
           const invoice = event.data.object as Stripe.Invoice;
@@ -358,6 +396,25 @@ export const stripeWebhook = onRequest(
           if (snap.empty) break;
 
           await snap.docs[0].ref.update({ subscription_status: "past_due" });
+
+          const profile = snap.docs[0].data();
+          const priceId = invoice.lines?.data[0]?.price?.id ?? "";
+          const tier = tierFromPriceId(priceId);
+
+          await db.collection("payments").add({
+            stripe_customer_id: custId,
+            stripe_invoice_id: invoice.id,
+            stripe_payment_intent_id: invoice.payment_intent ?? null,
+            stripe_subscription_id: invoice.subscription ?? null,
+            user_id: snap.docs[0].id,
+            user_name: `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim(),
+            email: profile.email ?? null,
+            amount: invoice.amount_due,
+            currency: invoice.currency,
+            membership_tier: tier,
+            status: "failed",
+            created_at: new Date(invoice.created * 1000).toISOString(),
+          });
           break;
         }
 

@@ -4,11 +4,29 @@ import {
   onSnapshot,
   updateDoc,
   doc,
+  query,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { useToast } from "../components/Toast";
 
 type MembershipTier = "gold_card" | "platinum_card" | "founding_member" | "committee_member";
+
+interface PaymentRecord {
+  id: string;
+  stripe_customer_id: string;
+  stripe_invoice_id: string | null;
+  stripe_payment_intent_id: string | null;
+  user_id: string | null;
+  user_name: string | null;
+  email: string | null;
+  amount: number; // pence
+  currency: string;
+  membership_tier: MembershipTier | null;
+  status: "succeeded" | "failed";
+  created_at: string;
+}
 
 type SubscriptionStatus = "active" | "past_due" | "canceled" | "trialing";
 
@@ -105,6 +123,7 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 export default function Billing() {
   const { toast } = useToast();
   const [profiles, setProfiles] = useState<BillingProfile[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<"all" | MembershipTier>("all");
@@ -116,6 +135,20 @@ export default function Billing() {
         snap.docs.map((d) => ({ id: d.id, ...d.data() } as BillingProfile))
       );
       setLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "payments"),
+      orderBy("created_at", "desc"),
+      limit(50)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setPayments(
+        snap.docs.map((d) => ({ id: d.id, ...d.data() } as PaymentRecord))
+      );
     });
     return () => unsub();
   }, []);
@@ -632,9 +665,130 @@ export default function Billing() {
         </div>
       </div>
 
+      {/* Transactions */}
+      <div className="bg-dark border border-dark-border rounded-2xl overflow-hidden mt-6">
+        <div className="p-4 md:p-5 border-b border-dark-border flex items-center justify-between">
+          <div>
+            <h2 className="text-white font-semibold text-sm">Recent Transactions</h2>
+            <p className="text-gray-500 text-xs mt-0.5">Last 50 payments via Stripe webhook</p>
+          </div>
+          <span className="text-gray-500 text-xs">{payments.length} record{payments.length !== 1 ? "s" : ""}</span>
+        </div>
+
+        {payments.length === 0 ? (
+          <div className="py-12 text-center text-gray-600 text-sm">
+            No transactions yet — new payments will appear here automatically
+          </div>
+        ) : (
+          <>
+            {/* Desktop */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-dark-border">
+                    <th className="text-left px-5 py-3 text-gray-500 font-medium">Member</th>
+                    <th className="text-left px-5 py-3 text-gray-500 font-medium">Tier</th>
+                    <th className="text-right px-5 py-3 text-gray-500 font-medium">Amount</th>
+                    <th className="text-left px-5 py-3 text-gray-500 font-medium">Status</th>
+                    <th className="text-left px-5 py-3 text-gray-500 font-medium">Date</th>
+                    <th className="text-left px-5 py-3 text-gray-500 font-medium">Invoice</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.map((p) => (
+                    <tr key={p.id} className="border-b border-dark-border/50 hover:bg-white/[0.02] transition-colors">
+                      <td className="px-5 py-3.5">
+                        <div className="font-medium text-white">{p.user_name ?? "—"}</div>
+                        <div className="text-gray-500 text-xs mt-0.5">{p.email ?? "—"}</div>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {p.membership_tier ? (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${TIER_BADGE[p.membership_tier]}`}>
+                            {TIER_LABEL[p.membership_tier]}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600 text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3.5 text-right font-semibold text-white">
+                        £{(p.amount / 100).toFixed(2)}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          p.status === "succeeded"
+                            ? "bg-green-500/15 text-green-400"
+                            : "bg-red-500/15 text-red-400"
+                        }`}>
+                          {p.status === "succeeded" ? "Succeeded" : "Failed"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-gray-400 text-xs">
+                        {new Date(p.created_at).toLocaleDateString("en-GB", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {p.stripe_invoice_id ? (
+                          <a
+                            href={`https://dashboard.stripe.com/invoices/${p.stripe_invoice_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#635BFF] text-xs hover:underline"
+                          >
+                            {p.stripe_invoice_id.slice(-8)} ↗
+                          </a>
+                        ) : (
+                          <span className="text-gray-600 text-xs">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile */}
+            <div className="md:hidden divide-y divide-dark-border">
+              {payments.map((p) => (
+                <div key={p.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-white font-medium text-sm">{p.user_name ?? "—"}</p>
+                      <p className="text-gray-500 text-xs">{p.email ?? "—"}</p>
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      p.status === "succeeded"
+                        ? "bg-green-500/15 text-green-400"
+                        : "bg-red-500/15 text-red-400"
+                    }`}>
+                      {p.status === "succeeded" ? "Succeeded" : "Failed"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-xs">
+                      {new Date(p.created_at).toLocaleDateString("en-GB", {
+                        day: "numeric", month: "short", year: "numeric",
+                      })}
+                    </span>
+                    <span className="text-white font-semibold text-sm">
+                      £{(p.amount / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  {p.membership_tier && (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${TIER_BADGE[p.membership_tier]}`}>
+                      {TIER_LABEL[p.membership_tier]}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Disclaimer */}
       <p className="text-gray-700 text-xs mt-4 text-center">
-        Revenue figures are estimates based on membership tiers. Visit Stripe Dashboard for actual payment data, invoices, and transaction history.
+        Revenue figures are estimates based on membership tiers. Transaction history is recorded from webhook events going forward.
       </p>
     </div>
   );
