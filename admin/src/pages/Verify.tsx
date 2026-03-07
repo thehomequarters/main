@@ -4,16 +4,14 @@ import { useSearchParams } from "react-router-dom";
 // ─────────────────────────────────────────────────────────────
 // /verify — public page, no admin login required.
 // Staff scan a member's QR code with their phone camera which
-// opens this URL. They enter their 6-digit venue PIN to confirm
-// the redemption server-side.
+// opens this URL. They enter their 4-digit venue PIN to confirm
+// the redemption server-side via the Vercel /api/verify function.
 // ─────────────────────────────────────────────────────────────
 
-interface QRPayload {
-  type: string;
+interface TokenData {
   member_id: string;
   member_code: string;
   member_name: string;
-  member_tier: string;
   venue_id: string;
   venue_name: string;
   deal_id: string;
@@ -21,308 +19,251 @@ interface QRPayload {
   ts: string;
 }
 
-type Stage = "invalid" | "expired" | "pin_entry" | "submitting" | "success" | "error";
+type Status = "loading" | "invalid" | "pin_entry" | "verifying" | "success" | "error";
 
-const TIER_LABELS: Record<string, string> = {
-  gold_card: "Gold",
-  platinum_card: "Platinum",
-};
-
-const FUNCTION_URL = import.meta.env.VITE_VERIFY_FUNCTION_URL as string | undefined;
+const KEYPAD = [
+  ["1", "2", "3"],
+  ["4", "5", "6"],
+  ["7", "8", "9"],
+  ["", "0", "⌫"],
+];
 
 export default function Verify() {
   const [searchParams] = useSearchParams();
-  const [stage, setStage] = useState<Stage>("pin_entry");
-  const [payload, setPayload] = useState<QRPayload | null>(null);
+  const token = searchParams.get("t") ?? "";
+
+  const [status, setStatus] = useState<Status>("loading");
+  const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [pin, setPin] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
-  const [result, setResult] = useState<{
-    member_name: string;
-    member_tier: string;
-    deal_title: string;
-    venue_name: string;
-  } | null>(null);
 
   useEffect(() => {
-    const t = searchParams.get("t");
-    if (!t) {
-      setStage("invalid");
+    if (!token) {
+      setErrorMsg("No QR data found. Please scan a valid member QR code.");
+      setStatus("invalid");
       return;
     }
     try {
-      const decoded = JSON.parse(decodeURIComponent(t)) as QRPayload;
-      if (
-        decoded.type !== "hq_redeem" ||
-        !decoded.member_id ||
-        !decoded.venue_id ||
-        !decoded.deal_id ||
-        !decoded.ts
-      ) {
-        setStage("invalid");
-        return;
-      }
-      const ageMs = Date.now() - new Date(decoded.ts).getTime();
+      const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
+      const json = atob(base64);
+      const data = JSON.parse(json) as TokenData;
+      const ageMs = Date.now() - new Date(data.ts).getTime();
       if (ageMs > 10 * 60 * 1000) {
-        setStage("expired");
+        setErrorMsg("This QR code has expired. Ask the member to regenerate.");
+        setStatus("invalid");
         return;
       }
-      setPayload(decoded);
-      setStage("pin_entry");
+      setTokenData(data);
+      setStatus("pin_entry");
     } catch {
-      setStage("invalid");
+      setErrorMsg("Invalid QR code. Please scan a valid member QR code.");
+      setStatus("invalid");
     }
-  }, [searchParams]);
+  }, [token]);
 
-  const handleDigit = (d: string) => {
-    if (pin.length < 6) setPin((p) => p + d);
+  const handleKey = (key: string) => {
+    if (status === "verifying") return;
+    if (key === "⌫") {
+      setPin((p) => p.slice(0, -1));
+      return;
+    }
+    if (key === "") return;
+    if (pin.length >= 4) return;
+    const newPin = pin + key;
+    setPin(newPin);
+    if (newPin.length === 4) submitPin(newPin);
   };
 
-  const handleBackspace = () => setPin((p) => p.slice(0, -1));
-
-  const handleSubmit = async () => {
-    if (pin.length !== 6 || !payload || stage === "submitting") return;
-
-    if (!FUNCTION_URL) {
-      setErrorMsg("Verify function URL is not configured. Add VITE_VERIFY_FUNCTION_URL to the admin .env file.");
-      setStage("error");
-      return;
-    }
-
-    setStage("submitting");
+  const submitPin = async (enteredPin: string) => {
+    setStatus("verifying");
     try {
-      const token = searchParams.get("t")!;
-      const resp = await fetch(FUNCTION_URL, {
+      const res = await fetch("/api/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, pin }),
+        body: JSON.stringify({ token, pin: enteredPin }),
       });
-      const data = await resp.json();
-      if (!resp.ok) {
-        throw new Error(data.error ?? "Verification failed.");
+      const json = await res.json();
+      if (res.ok) {
+        setStatus("success");
+      } else {
+        setErrorMsg(json.error ?? "Verification failed.");
+        setPin("");
+        setStatus("error");
       }
-      setResult(data);
-      setStage("success");
-    } catch (e: unknown) {
-      setErrorMsg(e instanceof Error ? e.message : "Verification failed.");
-      setStage("error");
+    } catch {
+      setErrorMsg("Network error. Please check your connection and try again.");
+      setPin("");
+      setStatus("error");
     }
   };
 
-  // ── Shared chrome ──────────────────────────────────────────
-  const Logo = () => (
-    <div className="text-center mb-8">
-      <p className="text-xs font-bold uppercase tracking-[0.25em] text-stone-500 mb-1">HomeQuarters</p>
-      <p className="text-[10px] uppercase tracking-widest text-stone-600">Venue Verification</p>
-    </div>
-  );
+  const retry = () => {
+    setErrorMsg("");
+    setPin("");
+    setStatus("pin_entry");
+  };
 
-  // ── Invalid / Expired ──────────────────────────────────────
-  if (stage === "invalid") {
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (status === "loading") {
     return (
       <Screen>
-        <Logo />
-        <StatusIcon type="error" />
-        <h1 className="text-white text-xl font-bold text-center mt-6 mb-2">Invalid QR Code</h1>
-        <p className="text-stone-500 text-sm text-center">
-          This QR code is not valid. Make sure the member shows you their deal QR from the HomeQuarters app.
-        </p>
+        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
       </Screen>
     );
   }
 
-  if (stage === "expired") {
+  // ── Invalid token ────────────────────────────────────────────────────────
+  if (status === "invalid") {
     return (
       <Screen>
-        <Logo />
-        <StatusIcon type="expired" />
-        <h1 className="text-white text-xl font-bold text-center mt-6 mb-2">QR Code Expired</h1>
-        <p className="text-stone-500 text-sm text-center">
-          This QR code is more than 10 minutes old. Ask the member to open the deal again and generate a fresh code.
-        </p>
+        <div className="text-center px-8">
+          <div className="w-16 h-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <p className="text-white font-semibold text-lg mb-2">Invalid QR Code</p>
+          <p className="text-gray-400 text-sm leading-relaxed">{errorMsg}</p>
+        </div>
       </Screen>
     );
   }
 
-  // ── Success ────────────────────────────────────────────────
-  if (stage === "success" && result) {
-    const tier = TIER_LABELS[result.member_tier] ?? result.member_tier;
+  // ── Success ──────────────────────────────────────────────────────────────
+  if (status === "success" && tokenData) {
     return (
       <Screen>
-        <Logo />
-        <div className="flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center mb-6">
-            <svg className="w-10 h-10 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="text-center px-8">
+          <div className="w-20 h-20 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <p className="text-emerald-400 text-sm font-bold uppercase tracking-widest mb-6">Confirmed</p>
-
-          <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center space-y-3">
-            <p className="text-white text-2xl font-bold">{result.member_name}</p>
-            <span className={`inline-block text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full ${
-              result.member_tier === "platinum_card"
-                ? "bg-zinc-700 text-zinc-200"
-                : "bg-amber-500/20 text-amber-400"
-            }`}>
-              {tier} Member
-            </span>
-            <div className="pt-2 border-t border-zinc-800">
-              <p className="text-zinc-400 text-xs uppercase tracking-wider mb-1">Deal redeemed</p>
-              <p className="text-white text-sm font-semibold">{result.deal_title}</p>
-              <p className="text-zinc-600 text-xs mt-1">{result.venue_name}</p>
-            </div>
+          <p className="text-green-400 font-bold text-2xl mb-2">Verified!</p>
+          <p className="text-white text-lg font-semibold mb-1">{tokenData.member_name}</p>
+          <p className="text-gray-400 text-sm mb-4 tracking-widest">{tokenData.member_code}</p>
+          <div className="bg-dark border border-dark-border rounded-2xl px-6 py-4 text-center">
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Redeemed</p>
+            <p className="text-gold font-semibold">{tokenData.deal_title}</p>
+            <p className="text-gray-500 text-sm mt-1">at {tokenData.venue_name}</p>
           </div>
-
-          <button
-            onClick={() => { setStage("pin_entry"); setPin(""); setResult(null); }}
-            className="mt-8 text-zinc-500 text-sm hover:text-zinc-300 transition-colors"
-          >
-            Verify another member
-          </button>
         </div>
       </Screen>
     );
   }
 
-  // ── Error ──────────────────────────────────────────────────
-  if (stage === "error") {
+  // ── PIN entry + error ────────────────────────────────────────────────────
+  if ((status === "pin_entry" || status === "verifying" || status === "error") && tokenData) {
     return (
-      <Screen>
-        <Logo />
-        <StatusIcon type="error" />
-        <h1 className="text-white text-xl font-bold text-center mt-6 mb-2">Verification Failed</h1>
-        <p className="text-stone-500 text-sm text-center mb-8">{errorMsg}</p>
-        <button
-          onClick={() => { setStage("pin_entry"); setPin(""); setErrorMsg(""); }}
-          className="w-full py-4 bg-zinc-800 border border-zinc-700 text-white font-semibold rounded-2xl hover:bg-zinc-700 transition-colors"
-        >
-          Try Again
-        </button>
-      </Screen>
+      <div className="min-h-screen bg-black flex flex-col">
+        {/* Header */}
+        <div className="px-6 pt-12 pb-4 text-center">
+          <div className="inline-flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-gold-light border border-gold/25 flex items-center justify-center">
+              <span className="text-gold font-extrabold text-xs">HQ</span>
+            </div>
+            <span className="text-white font-bold">HomeQuarters</span>
+          </div>
+        </div>
+
+        {/* Member card */}
+        <div className="mx-5 mb-6">
+          <div className="bg-dark border border-dark-border rounded-2xl px-5 py-4">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-white font-bold text-lg leading-tight">{tokenData.member_name}</p>
+                <p className="text-gray-500 text-xs tracking-widest mt-0.5">{tokenData.member_code}</p>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-gold/10 text-gold border border-gold/20">
+                Member
+              </span>
+            </div>
+            <div className="border-t border-dark-border pt-3">
+              <p className="text-gray-500 text-xs uppercase tracking-wider mb-0.5">Redeeming</p>
+              <p className="text-white font-semibold text-sm">{tokenData.deal_title}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{tokenData.venue_name}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Error message */}
+        {status === "error" && errorMsg && (
+          <div className="mx-5 mb-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 text-center">
+              <p className="text-red-400 text-sm">{errorMsg}</p>
+            </div>
+          </div>
+        )}
+
+        {/* PIN dots */}
+        <div className="flex flex-col items-center mb-6 px-6">
+          <p className="text-gray-400 text-sm mb-5">Enter venue PIN</p>
+          <div className="flex gap-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                  i < pin.length
+                    ? "bg-gold scale-110"
+                    : "bg-dark border border-dark-border"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Keypad */}
+        <div className={`flex-1 px-8 pb-10 ${status === "verifying" ? "opacity-40 pointer-events-none" : ""}`}>
+          <div className="grid grid-rows-4 gap-3 max-w-xs mx-auto">
+            {KEYPAD.map((row, ri) => (
+              <div key={ri} className="grid grid-cols-3 gap-3">
+                {row.map((key, ki) => (
+                  <button
+                    key={ki}
+                    onClick={() => handleKey(key)}
+                    disabled={key === ""}
+                    className={`
+                      h-16 rounded-2xl text-xl font-semibold transition-all duration-100 active:scale-95
+                      ${key === ""
+                        ? "opacity-0 cursor-default"
+                        : key === "⌫"
+                          ? "bg-dark border border-dark-border text-gray-400 hover:text-white hover:bg-white/5"
+                          : "bg-dark border border-dark-border text-white hover:bg-white/8 hover:border-gold/30"
+                      }
+                    `}
+                  >
+                    {key}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {status === "verifying" && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
     );
   }
 
-  // ── PIN entry (main state) ─────────────────────────────────
-  const tierLabel = payload ? (TIER_LABELS[payload.member_tier] ?? payload.member_tier) : "";
-
-  return (
-    <Screen>
-      <Logo />
-
-      {/* Member + deal card */}
-      {payload && (
-        <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-8">
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="text-white font-bold text-lg leading-tight">{payload.member_name}</p>
-              <p className="text-zinc-500 text-xs font-mono mt-0.5">{payload.member_code}</p>
-            </div>
-            {tierLabel && (
-              <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex-shrink-0 ml-3 ${
-                payload.member_tier === "platinum_card"
-                  ? "bg-zinc-700 text-zinc-300"
-                  : "bg-amber-500/20 text-amber-400"
-              }`}>
-                {tierLabel}
-              </span>
-            )}
-          </div>
-          <div className="border-t border-zinc-800 pt-3">
-            <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-1">Redeeming</p>
-            <p className="text-white text-sm font-semibold">{payload.deal_title}</p>
-            <p className="text-zinc-600 text-xs mt-0.5">{payload.venue_name}</p>
-          </div>
-        </div>
-      )}
-
-      {/* PIN display */}
-      <p className="text-zinc-500 text-xs uppercase tracking-widest text-center mb-4">Enter venue PIN</p>
-      <div className="flex gap-3 justify-center mb-8">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors ${
-              i < pin.length
-                ? "border-amber-500/60 bg-amber-500/10"
-                : "border-zinc-700 bg-zinc-900"
-            }`}
-          >
-            {i < pin.length && (
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* Numeric keypad */}
-      <div className="grid grid-cols-3 gap-3 w-full max-w-xs mx-auto mb-6">
-        {["1","2","3","4","5","6","7","8","9"].map((d) => (
-          <button
-            key={d}
-            onClick={() => handleDigit(d)}
-            className="h-16 rounded-2xl bg-zinc-800 border border-zinc-700 text-white text-2xl font-semibold active:bg-zinc-700 hover:bg-zinc-700 transition-colors select-none"
-          >
-            {d}
-          </button>
-        ))}
-        {/* Bottom row: empty, 0, backspace */}
-        <div />
-        <button
-          onClick={() => handleDigit("0")}
-          className="h-16 rounded-2xl bg-zinc-800 border border-zinc-700 text-white text-2xl font-semibold active:bg-zinc-700 hover:bg-zinc-700 transition-colors select-none"
-        >
-          0
-        </button>
-        <button
-          onClick={handleBackspace}
-          className="h-16 rounded-2xl bg-zinc-800 border border-zinc-700 text-zinc-400 flex items-center justify-center active:bg-zinc-700 hover:bg-zinc-700 transition-colors select-none"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Confirm button */}
-      <button
-        onClick={handleSubmit}
-        disabled={pin.length !== 6 || stage === "submitting"}
-        className="w-full max-w-xs mx-auto block py-4 rounded-2xl font-bold text-base transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-        style={{ backgroundColor: pin.length === 6 ? "#C9A84C" : "#3f3f46", color: pin.length === 6 ? "#000" : "#71717a" }}
-      >
-        {stage === "submitting" ? "Verifying…" : "Confirm Redemption"}
-      </button>
-    </Screen>
-  );
+  return null;
 }
-
-// ── Small helpers ──────────────────────────────────────────────
 
 function Screen({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-black flex items-start justify-center px-5 py-12">
-      <div className="w-full max-w-sm">
-        {children}
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center">
+      <div className="mb-8">
+        <div className="inline-flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-gold-light border border-gold/25 flex items-center justify-center">
+            <span className="text-gold font-extrabold text-xs">HQ</span>
+          </div>
+          <span className="text-white font-bold">HomeQuarters</span>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function StatusIcon({ type }: { type: "error" | "expired" }) {
-  const isExpired = type === "expired";
-  return (
-    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto border-2 ${
-      isExpired ? "bg-amber-500/10 border-amber-500/30" : "bg-red-500/10 border-red-500/30"
-    }`}>
-      {isExpired ? (
-        <svg className="w-10 h-10 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ) : (
-        <svg className="w-10 h-10 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      )}
+      {children}
     </div>
   );
 }

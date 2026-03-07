@@ -159,20 +159,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ──── Venue PINs ────
+    // Admin dashboard (authenticated, non-anonymous) can read and write.
+    // The Vercel verify function uses Admin SDK so bypasses these rules entirely.
+    // Mobile app members cannot read PINs.
+    match /venue_pins/{venueId} {
+      allow read, write: if isAdmin();
+    }
+
     // ──── Redemptions ────
     match /redemptions/{redemptionId} {
       allow read: if isAuth();
       allow create: if isActiveMember() &&
         request.resource.data.member_id == request.auth.uid;
       allow update, delete: if false;
-    }
-
-    // ──── Venue PINs ────
-    // Never readable by clients — the verifyRedemption Cloud Function reads/writes
-    // these via the Admin SDK which bypasses Firestore rules entirely.
-    // Admins can write (to set/regenerate PINs) and read (to display in admin panel).
-    match /venue_pins/{venueId} {
-      allow read, write: if isAdmin();
     }
 
     // ──── Conversations ────

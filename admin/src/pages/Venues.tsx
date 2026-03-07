@@ -6,6 +6,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
   setDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -50,6 +51,8 @@ interface VenueStory {
   created_at: string;
 }
 
+type VenueTab = "deals" | "stories" | "pin";
+
 const CATEGORIES = ["restaurant", "bar", "cafe", "experience"];
 
 interface VenuePin {
@@ -91,12 +94,14 @@ export default function Venues() {
   const [form, setForm] = useState(EMPTY_VENUE);
   const [saving, setSaving] = useState(false);
   const [expandedVenue, setExpandedVenue] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Record<string, "deals" | "stories" | "pin">>({});
+  const [activeTab, setActiveTab] = useState<Record<string, VenueTab>>({});
 
-  // PIN management
-  const [venuePins, setVenuePins] = useState<Record<string, VenuePin | null>>({});
-  const [pinVisible, setPinVisible] = useState<Record<string, boolean>>({});
-  const [pinSaving, setPinSaving] = useState<string | null>(null);
+  // PIN state
+  const [pinInput, setPinInput] = useState("");
+  const [savedPin, setSavedPin] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinSaved, setPinSaved] = useState(false);
 
   // Deal form
   const [showDealForm, setShowDealForm] = useState<string | null>(null);
@@ -151,6 +156,52 @@ export default function Venues() {
     );
     return () => { u1(); u2(); u3(); u4(); };
   }, []);
+
+  // Load PIN when a venue is expanded
+  useEffect(() => {
+    if (!expandedVenue) return;
+    setPinInput("");
+    setSavedPin("");
+    setPinSaved(false);
+    loadPin(expandedVenue);
+  }, [expandedVenue]);
+
+  const loadPin = async (venueId: string) => {
+    setPinLoading(true);
+    try {
+      const snap = await getDoc(doc(db, "venue_pins", venueId));
+      if (snap.exists()) {
+        const p = snap.data().pin ?? "";
+        setSavedPin(p);
+        setPinInput(p);
+      }
+    } catch (e) {
+      console.error("Failed to load PIN:", e);
+    } finally {
+      setPinLoading(false);
+    }
+  };
+
+  const handleSavePin = async () => {
+    if (!expandedVenue) return;
+    if (!/^\d{4}$/.test(pinInput)) return;
+    setPinSaving(true);
+    setPinSaved(false);
+    try {
+      await setDoc(doc(db, "venue_pins", expandedVenue), {
+        pin: pinInput,
+        updated_at: new Date().toISOString(),
+      });
+      setSavedPin(pinInput);
+      setPinSaved(true);
+      setTimeout(() => setPinSaved(false), 3000);
+    } catch (e: any) {
+      console.error("Failed to save PIN:", e);
+      toast("Failed to save PIN: " + e.message, "error");
+    } finally {
+      setPinSaving(false);
+    }
+  };
 
   const buildImageUrls = (f: typeof form): string[] => {
     return [f.image_url, f.image_url_2, f.image_url_3]
@@ -669,19 +720,27 @@ export default function Venues() {
                 <div className="border-t border-dark-border bg-black/30">
                   {/* Tab strip */}
                   <div className="flex border-b border-dark-border">
-                    {(["deals", "stories", "pin"] as const).map((t) => (
-                      <button
-                        key={t}
-                        onClick={() => setActiveTab((prev) => ({ ...prev, [venue.id]: t }))}
-                        className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
-                          tab === t
-                            ? "text-gold border-b-2 border-gold"
-                            : "text-gray-500 hover:text-gray-300"
-                        }`}
-                      >
-                        {t === "deals" ? `Deals (${venueDeals.length})` : t === "stories" ? `Stories (${venueStories.length})` : "PIN"}
-                      </button>
-                    ))}
+                    {(["deals", "stories", "pin"] as VenueTab[]).map((t) => {
+                      const label =
+                        t === "deals"
+                          ? `Deals (${venueDeals.length})`
+                          : t === "stories"
+                          ? `Stories (${venueStories.length})`
+                          : "PIN";
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => setActiveTab((prev) => ({ ...prev, [venue.id]: t }))}
+                          className={`flex-1 py-3 text-xs font-semibold uppercase tracking-wider transition-colors ${
+                            tab === t
+                              ? "text-gold border-b-2 border-gold"
+                              : "text-gray-500 hover:text-gray-300"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   <div className="px-4 md:px-5 py-4">
@@ -882,6 +941,71 @@ export default function Venues() {
                                 <button onClick={() => handleDeleteStory(story.id)} className="text-red-400/50 hover:text-red-400 text-xs flex-shrink-0">Remove</button>
                               </div>
                             ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* PIN tab */}
+                    {tab === "pin" && (
+                      <div>
+                        <p className="text-white text-sm font-semibold mb-1">Staff Verification PIN</p>
+                        <p className="text-gray-500 text-xs mb-5">
+                          Staff enter this 4-digit PIN on the verify page after scanning a member's QR
+                          code. Share it with venue staff privately — do not post it publicly.
+                        </p>
+
+                        {pinLoading ? (
+                          <div className="flex items-center gap-2 text-gray-500 text-sm py-4">
+                            <div className="w-4 h-4 border border-gray-600 border-t-transparent rounded-full animate-spin" />
+                            Loading…
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="text-gray-500 text-xs uppercase tracking-wider block mb-2">
+                                4-Digit PIN
+                              </label>
+                              <div className="flex gap-3 items-center">
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="\d*"
+                                  maxLength={4}
+                                  value={pinInput}
+                                  onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                                    setPinInput(val);
+                                    setPinSaved(false);
+                                  }}
+                                  placeholder="e.g. 1234"
+                                  className="w-36 bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-xl font-bold tracking-widest focus:outline-none focus:border-gold/50 text-center"
+                                />
+                                <button
+                                  onClick={handleSavePin}
+                                  disabled={pinSaving || pinInput.length !== 4}
+                                  className="px-5 py-3 bg-gold text-black text-sm font-bold rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-40"
+                                >
+                                  {pinSaving ? "Saving…" : savedPin && pinInput === savedPin ? "Update PIN" : "Save PIN"}
+                                </button>
+                              </div>
+                              {pinInput.length > 0 && pinInput.length < 4 && (
+                                <p className="text-gray-600 text-xs mt-2">Enter all 4 digits</p>
+                              )}
+                            </div>
+
+                            {pinSaved && (
+                              <div className="flex items-center gap-2 text-green-400 text-sm">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                PIN saved successfully
+                              </div>
+                            )}
+
+                            {!savedPin && !pinSaved && (
+                              <p className="text-gray-600 text-xs">No PIN set yet.</p>
+                            )}
                           </div>
                         )}
                       </div>

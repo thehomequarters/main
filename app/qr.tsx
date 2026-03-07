@@ -25,25 +25,24 @@ export default function QRCodeScreen() {
   const [redeemed, setRedeemed] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
 
-  // Build the redemption payload. When EXPO_PUBLIC_VERIFY_URL is configured the QR
-  // encodes a full URL so staff can scan with any phone camera — it opens the verify
-  // page directly. Without that env var it falls back to raw JSON (old behaviour).
-  const payloadData = {
-    type: "hq_redeem",
-    member_id: profile?.id,
-    member_code: profile?.member_code,
+  // Encode redemption data as a base64url token inside a verify URL.
+  // Phone cameras open the URL automatically; staff then enter the venue PIN.
+  const tokenData = {
+    member_id: profile?.id ?? "",
+    member_code: profile?.member_code ?? "",
     member_name: `${profile?.first_name} ${profile?.last_name}`,
-    member_tier: profile?.membership_tier,
-    venue_id: venueId,
-    venue_name: venueName,
-    deal_id: dealId,
-    deal_title: dealTitle,
+    venue_id: venueId ?? "",
+    venue_name: venueName ?? "",
+    deal_id: dealId ?? "",
+    deal_title: dealTitle ?? "",
     ts: new Date().toISOString(),
   };
-  const verifyBase = process.env.EXPO_PUBLIC_VERIFY_URL;
-  const qrPayload = verifyBase
-    ? `${verifyBase}/verify?t=${encodeURIComponent(JSON.stringify(payloadData))}`
-    : JSON.stringify(payloadData);
+  const base64 = btoa(JSON.stringify(tokenData))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+  const verifyBase = process.env.EXPO_PUBLIC_VERIFY_URL ?? "";
+  const qrPayload = `${verifyBase}/verify?t=${base64}`;
 
   const handleRedeem = async () => {
     if (!user?.uid || !venueId || !dealId || redeemed) return;
