@@ -5,7 +5,6 @@ import {
   ScrollView,
   Pressable,
   RefreshControl,
-  Alert,
 } from "react-native";
 import {
   collection,
@@ -15,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -29,6 +29,7 @@ type EnrichedRedemption = Redemption & {
 export default function RedemptionsScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [redemptions, setRedemptions] = useState<EnrichedRedemption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,7 +73,7 @@ export default function RedemptionsScreen() {
 
       setRedemptions(enriched);
     } catch (e: any) {
-      Alert.alert("Error", "Could not load redemption history. Please try again.");
+      toast("Could not load redemption history. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -113,7 +114,7 @@ export default function RedemptionsScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -199,7 +200,7 @@ export default function RedemptionsScreen() {
             onPress={() => router.push("/(tabs)")}
             style={{
               marginTop: 20,
-              backgroundColor: colors.gold,
+              backgroundColor: colors.stone,
               borderRadius: 12,
               paddingHorizontal: 24,
               paddingVertical: 12,
@@ -280,11 +281,11 @@ export default function RedemptionsScreen() {
                   <Ionicons
                     name="storefront-outline"
                     size={12}
-                    color={colors.gold}
+                    color={colors.stone}
                   />
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 12,
                       fontWeight: "500",
                     }}

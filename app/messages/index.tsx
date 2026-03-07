@@ -191,7 +191,7 @@ export default function MessagesScreen() {
                 >
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 16,
                       fontWeight: "700",
                     }}
