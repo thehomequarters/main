@@ -11,6 +11,7 @@ if (getApps().length === 0) {
 const db = getFirestore();
 
 interface TokenData {
+  type?: string;
   member_id: string;
   member_code: string;
   member_name: string;
@@ -34,11 +35,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!token || !pin)
     return res.status(400).json({ error: "Missing token or pin" });
 
-  // Decode base64url token
+  // Decode token — supports both current (base64url) and legacy (URL-encoded JSON) formats
   let data: TokenData;
   try {
-    const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
-    const json = Buffer.from(base64, "base64").toString("utf-8");
+    let json: string;
+    if (token.startsWith("{")) {
+      // Legacy app format: encodeURIComponent(JSON.stringify(payload)) decoded by the browser
+      json = token;
+    } else {
+      // Current app format: base64url(JSON.stringify(payload))
+      const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
+      json = Buffer.from(base64, "base64").toString("utf-8");
+    }
     data = JSON.parse(json);
   } catch {
     return res.status(400).json({ error: "Invalid QR code" });
