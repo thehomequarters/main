@@ -1,4 +1,5 @@
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import * as crypto from "crypto";
 import {
   onDocumentUpdated,
   onDocumentCreated,
@@ -440,6 +441,145 @@ export const stripeWebhook = onRequest(
 // Requires Customer Portal to be enabled in Stripe dashboard:
 //   https://dashboard.stripe.com/settings/billing/portal
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// verifyRedemption
+// Public HTTP endpoint — no auth required (security comes from venue PIN + expiring token).
+// Called by the /verify page when staff scan a member's QR code.
+//
+// Body: { token: string, pin: string }
+//   token — encodeURIComponent(JSON.stringify(payload)) from the member's QR
+//   pin   — 6-digit venue PIN entered by staff
+//
+// Checks:
+//  1. Token structure and timestamp (< 10 minute window, max 60s clock skew)
+//  2. Venue PIN matches venue_pins/{venue_id} (Admin SDK — never exposed to clients)
+//  3. Member exists and is active
+//  4. Deal exists and is active
+//  5. No duplicate redemption for same member + deal + venue in the last 24 hours
+//
+// On success: writes a confirmed redemption and returns member/deal info for the UI.
+// ─────────────────────────────────────────────
+export const verifyRedemption = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const { token, pin } = req.body as { token?: unknown; pin?: unknown };
+
+  if (!token || typeof token !== "string") {
+    res.status(400).json({ error: "Missing token." });
+    return;
+  }
+
+  if (!pin || typeof pin !== "string" || !/^\d{6}$/.test(pin)) {
+    res.status(400).json({ error: "PIN must be 6 digits." });
+    return;
+  }
+
+  // Decode token
+  let payload: Record<string, unknown>;
+  try {
+    payload = JSON.parse(decodeURIComponent(token)) as Record<string, unknown>;
+  } catch {
+    res.status(400).json({ error: "Invalid token." });
+    return;
+  }
+
+  const { type, member_id, venue_id, deal_id, ts } = payload;
+
+  if (
+    type !== "hq_redeem" ||
+    typeof member_id !== "string" || !member_id ||
+    typeof venue_id !== "string" || !venue_id ||
+    typeof deal_id !== "string" || !deal_id ||
+    typeof ts !== "string" || !ts
+  ) {
+    res.status(400).json({ error: "Malformed token." });
+    return;
+  }
+
+  // Timestamp window: must be within the last 10 minutes, tolerate 60s clock skew
+  const tokenAge = Date.now() - new Date(ts).getTime();
+  if (tokenAge > 10 * 60 * 1000 || tokenAge < -60 * 1000) {
+    res.status(410).json({ error: "QR code has expired. Ask the member to generate a fresh one." });
+    return;
+  }
+
+  const db = getFirestore();
+
+  // Validate venue PIN — stored in venue_pins/{venue_id}, readable only via Admin SDK
+  const pinDoc = await db.doc(`venue_pins/${venue_id}`).get();
+  if (!pinDoc.exists) {
+    res.status(403).json({ error: "No PIN configured for this venue. Contact HomeQuarters support." });
+    return;
+  }
+
+  // Constant-time comparison to prevent timing attacks
+  const storedPin = pinDoc.data()!.pin as string;
+  const pinMatch = storedPin.length === pin.length &&
+    crypto.timingSafeEqual(Buffer.from(storedPin), Buffer.from(pin));
+  if (!pinMatch) {
+    res.status(403).json({ error: "Incorrect PIN. Please try again." });
+    return;
+  }
+
+  // Validate member is active
+  const profileDoc = await db.doc(`profiles/${member_id}`).get();
+  if (!profileDoc.exists) {
+    res.status(404).json({ error: "Member not found." });
+    return;
+  }
+  const profile = profileDoc.data()!;
+  if (profile.membership_status !== "active") {
+    res.status(403).json({ error: "This member's subscription is not currently active." });
+    return;
+  }
+
+  // Validate deal is active
+  const dealDoc = await db.doc(`deals/${deal_id}`).get();
+  if (!dealDoc.exists || !dealDoc.data()?.is_active) {
+    res.status(404).json({ error: "Deal not found or no longer active." });
+    return;
+  }
+
+  // Duplicate check: same member + same deal at this venue in the last 24 hours
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const dupeSnap = await db
+    .collection("redemptions")
+    .where("member_id", "==", member_id)
+    .where("deal_id", "==", deal_id)
+    .where("venue_id", "==", venue_id)
+    .where("redeemed_at", ">", since)
+    .limit(1)
+    .get();
+
+  if (!dupeSnap.empty) {
+    res.status(409).json({ error: "This deal has already been redeemed by this member today." });
+    return;
+  }
+
+  // Write confirmed redemption
+  const memberName = `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim();
+  await db.collection("redemptions").add({
+    member_id,
+    venue_id,
+    deal_id,
+    redeemed_at: new Date().toISOString(),
+    verified_by_venue: true,
+    member_name: memberName,
+    member_tier: profile.membership_tier ?? null,
+  });
+
+  res.json({
+    ok: true,
+    member_name: memberName,
+    member_tier: profile.membership_tier ?? null,
+    deal_title: dealDoc.data()!.title as string,
+    venue_name: (pinDoc.data()!.venue_name as string | undefined) ?? (payload.venue_name as string | undefined) ?? "",
+  });
+});
+
 export const getStripePortalUrl = onCall(
   { secrets: [stripeSecretKey] },
   async (request) => {

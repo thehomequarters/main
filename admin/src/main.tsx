@@ -14,6 +14,7 @@ import Posts from "./pages/Posts";
 import Invites from "./pages/Invites";
 import Onboarding from "./pages/Onboarding";
 import Billing from "./pages/Billing";
+import Verify from "./pages/Verify";
 
 function ProtectedRoutes() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -76,6 +77,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <ToastProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          {/* Public — no admin auth required; security handled by venue PIN + server */}
+          <Route path="/verify" element={<Verify />} />
           <Route path="/*" element={<ProtectedRoutes />} />
         </Routes>
         </ToastProvider>
