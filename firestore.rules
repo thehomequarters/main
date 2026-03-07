@@ -115,6 +115,15 @@ service cloud.firestore {
         resource.data.member_id == request.auth.uid;
     }
 
+    // ──── Venue PINs ────
+    // Admin dashboard (authenticated, non-anonymous) can read and write.
+    // The Vercel verify function uses Admin SDK so bypasses these rules entirely.
+    // Mobile app members cannot read PINs.
+    match /venue_pins/{venueId} {
+      allow read, write: if isAuth() &&
+        request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     // ──── Redemptions ────
     match /redemptions/{redemptionId} {
       // Users can read their own redemptions

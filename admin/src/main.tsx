@@ -10,6 +10,7 @@ import Members from "./pages/Members";
 import Venues from "./pages/Venues";
 import Events from "./pages/Events";
 import Posts from "./pages/Posts";
+import Verify from "./pages/Verify";
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/verify" element={<Verify />} />
           <Route path="/*" element={<ProtectedRoutes />} />
         </Routes>
       </AuthProvider>
