@@ -44,8 +44,16 @@ export default function Verify() {
       return;
     }
     try {
-      const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
-      const json = atob(base64);
+      let json: string;
+      if (token.startsWith("{")) {
+        // Legacy app format: encodeURIComponent(JSON.stringify(payload))
+        // useSearchParams already URL-decodes, so token is raw JSON here.
+        json = token;
+      } else {
+        // Current app format: base64url(JSON.stringify(payload))
+        const base64 = token.replace(/-/g, "+").replace(/_/g, "/");
+        json = atob(base64);
+      }
       const data = JSON.parse(json) as TokenData;
       const ageMs = Date.now() - new Date(data.ts).getTime();
       if (ageMs > 10 * 60 * 1000) {
