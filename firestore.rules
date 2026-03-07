@@ -74,8 +74,9 @@ service cloud.firestore {
     }
 
     // ──── Onboarding Slides ────
+    // Public read: shown before login, no sensitive data
     match /onboarding_slides/{slideId} {
-      allow read: if isAuth();
+      allow read: if true;
       allow write: if isAdmin();
     }
 

@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+// ─────────────────────────────────────────────────────────────
+// /verify — public page, no admin login required.
+// Staff scan a member's QR code with their phone camera which
+// opens this URL. They enter their 4-digit venue PIN to confirm
+// the redemption server-side via the Vercel /api/verify function.
+// ─────────────────────────────────────────────────────────────
+
 interface TokenData {
   member_id: string;
   member_code: string;

@@ -7,21 +7,21 @@ import {
   StyleSheet,
   Platform,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
+import { httpsCallable } from "firebase/functions";
 import { useAuth } from "@/lib/auth";
+import { functions } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
-// Swap for real Stripe / payment links when ready
-const PAYMENT_URLS: Record<string, string> = {
-  gold: "https://buy.stripe.com/placeholder_gold",
-  platinum: "https://buy.stripe.com/placeholder_platinum",
-};
+// ── Membership website URL ──────────────────────────────────────────────────
+// Payments are handled on the website (App Store compliant for digital subs).
+const MEMBERSHIP_URL = "https://homequarters-60838.web.app/membership";
 
-// Swap for real backend pkpass endpoint when ready
-// iOS opens .pkpass URLs natively and prompts "Add to Wallet"
+// ── Apple Wallet pass endpoint ──────────────────────────────────────────────
 const WALLET_PASS_BASE = "https://api.homequarters.co.uk/wallet/pass";
 
 const GOLD_FEATURES = [
@@ -37,10 +37,8 @@ const PLATINUM_FEATURES = [
   { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants in Zim" },
   { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
   { icon: "sparkles-outline" as const, text: "Curated experiences — events, stays & more" },
-  { icon: "phone-portrait-outline" as const, text: "Telecel Zimbabwe eSIM — arrive connected" },
 ];
 
-// Gold card colour tokens — deep warm amber background for legibility
 const G = {
   bg: "#1E1500",
   border: "rgba(201,168,76,0.28)",
@@ -58,6 +56,20 @@ const G = {
   check: "#C9A84C",
 };
 
+const SUB_STATUS_LABELS: Record<string, string> = {
+  active: "Active",
+  past_due: "Payment overdue",
+  canceled: "Cancelled",
+  trialing: "Trial",
+};
+
+const SUB_STATUS_COLORS: Record<string, string> = {
+  active: colors.green,
+  past_due: "#F5A623",
+  canceled: "#FF6B6B",
+  trialing: "#7B9CFF",
+};
+
 type Plan = "gold" | "platinum";
 
 export default function BillingScreen() {
@@ -67,10 +79,14 @@ export default function BillingScreen() {
   const [selected, setSelected] = useState<Plan>(
     profile?.membership_tier === "platinum_card" ? "platinum" : "gold"
   );
+  const [loadingPortal, setLoadingPortal] = useState(false);
 
   const isActive = profile?.membership_status === "active";
   const isGrace = profile?.membership_status === "accepted";
   const currentTier = profile?.membership_tier;
+  const subStatus = profile?.subscription_status;
+  const periodEnd = profile?.current_period_end;
+  const hasSubscription = !!profile?.stripe_customer_id;
 
   const currentPlanLabel =
     currentTier === "platinum_card" ? "Platinum"
@@ -78,17 +94,42 @@ export default function BillingScreen() {
     : currentTier === "committee_member" ? "Committee"
     : "Gold";
 
-  const isPaymentReady = !PAYMENT_URLS[selected].includes("placeholder");
-
   const handleContinue = async () => {
-    if (!isPaymentReady) return;
-    try { await Linking.openURL(PAYMENT_URLS[selected]); } catch { /* dev */ }
+    try {
+      await Linking.openURL(MEMBERSHIP_URL);
+    } catch {
+      /* dev/simulator */
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const getPortalUrl = httpsCallable<{ return_url: string }, { url: string }>(
+        functions,
+        "getStripePortalUrl"
+      );
+      const result = await getPortalUrl({ return_url: "https://homequarters.co.uk" });
+      await Linking.openURL(result.data.url);
+    } catch (err) {
+      console.error("Failed to open billing portal:", err);
+    } finally {
+      setLoadingPortal(false);
+    }
   };
 
   const handleAddToWallet = async () => {
     const url = `${WALLET_PASS_BASE}/${profile?.member_code}`;
-    try { await Linking.openURL(url); } catch { /* dev */ }
+    try {
+      await Linking.openURL(url);
+    } catch {
+      /* dev */
+    }
   };
+
+  const isOnSelectedPlan =
+    isActive &&
+    currentTier === (selected === "gold" ? "gold_card" : "platinum_card");
 
   return (
     <View style={styles.container}>
@@ -114,6 +155,20 @@ export default function BillingScreen() {
             : "Select the plan that fits how you use HomeQuarters."}
         </Text>
 
+        {/* ── Subscription status chip (if has Stripe subscription) ── */}
+        {hasSubscription && subStatus && (
+          <View style={[styles.statusRow, { borderColor: (SUB_STATUS_COLORS[subStatus] ?? colors.stone) + "33" }]}>
+            <View style={[styles.statusDot, { backgroundColor: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]} />
+            <Text style={[styles.statusText, { color: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]}>
+              {SUB_STATUS_LABELS[subStatus] ?? subStatus}
+              {subStatus === "past_due" && " · Please update your payment method"}
+              {periodEnd && subStatus === "active" && (
+                ` · Renews ${new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+              )}
+            </Text>
+          </View>
+        )}
+
         {/* ── Apple Wallet — iOS only, active members ── */}
         {Platform.OS === "ios" && isActive && (
           <Pressable
@@ -122,14 +177,14 @@ export default function BillingScreen() {
           >
             <View style={styles.walletLeft}>
               <View style={styles.walletIconWrap}>
-                <Ionicons name="wallet" size={18} color="#FFFFFF" />
+                <Ionicons name="wallet" size={18} color={colors.dark} />
               </View>
               <View>
                 <Text style={styles.walletLabel}>Add to Apple Wallet</Text>
                 <Text style={styles.walletSub}>Save your membership pass to Wallet</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.55)" />
+            <Ionicons name="chevron-forward" size={16} color={colors.stone} />
           </Pressable>
         )}
 
@@ -234,11 +289,6 @@ export default function BillingScreen() {
             ))}
           </View>
 
-          <View style={styles.esimPill}>
-            <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.5)" />
-            <Text style={styles.esimPillText}>Harare · Bulawayo · Victoria Falls</Text>
-          </View>
-
           {selected === "platinum" && (
             <View style={styles.selectedRow}>
               <Ionicons name="checkmark-circle" size={20} color="#E8E8E8" />
@@ -248,34 +298,55 @@ export default function BillingScreen() {
         </Pressable>
 
         <Text style={styles.billingNote}>
-          Billed monthly. Cancel anytime. Membership activates immediately on payment confirmation.
+          Membership is managed at thehomequarters.com · Cancel anytime
         </Text>
       </ScrollView>
 
       {/* Sticky CTA */}
       <View style={styles.footer}>
-        {isActive && currentTier === (selected === "gold" ? "gold_card" : "platinum_card") ? (
+        {isOnSelectedPlan && hasSubscription ? (
+          // On this plan and has a Stripe subscription → show manage button
+          <Pressable
+            onPress={handleManageSubscription}
+            disabled={loadingPortal}
+            style={({ pressed }) => [styles.manageBtn, { opacity: pressed || loadingPortal ? 0.75 : 1 }]}
+          >
+            {loadingPortal ? (
+              <ActivityIndicator size="small" color={colors.dark} />
+            ) : (
+              <>
+                <Ionicons name="settings-outline" size={16} color={colors.dark} />
+                <Text style={styles.manageBtnText}>Manage Subscription</Text>
+              </>
+            )}
+          </Pressable>
+        ) : isOnSelectedPlan ? (
+          // On this plan but no Stripe record (founding/committee/manually set)
           <View style={styles.managePill}>
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
-        ) : isPaymentReady ? (
+        ) : (
+          // Not on this plan → open website to subscribe
           <Pressable
             onPress={handleContinue}
             style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
           >
             <Text style={styles.ctaBtnText}>
-              {isActive ? "Switch to " : "Activate "}
-              {selected === "platinum" ? "Platinum · £15/mo" : "Gold · £5/mo"}
+              {isActive ? "Change plan" : "Get membership"} · thehomequarters.com
             </Text>
             <Ionicons name="arrow-forward" size={16} color={colors.white} />
           </Pressable>
-        ) : (
-          <View style={[styles.managePill, { backgroundColor: "rgba(245,166,35,0.08)", borderColor: "rgba(245,166,35,0.2)" }]}>
-            <Text style={[styles.managePillText, { color: "#F5A623" }]}>
-              Payments coming soon · Contact us to activate
-            </Text>
-          </View>
         )}
+
+        {/* Manage subscription link if on a different plan but has subscription */}
+        {hasSubscription && !isOnSelectedPlan && (
+          <Pressable onPress={handleManageSubscription} disabled={loadingPortal}>
+            <Text style={styles.manageLink}>
+              {loadingPortal ? "Opening…" : "Manage or cancel existing subscription"}
+            </Text>
+          </Pressable>
+        )}
+
         <Text style={styles.footerNote}>
           Questions?{" "}
           <Text
@@ -331,7 +402,31 @@ const styles = StyleSheet.create({
     color: colors.stone,
     fontSize: 14,
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 16,
+  },
+
+  // ── Subscription status chip ──
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(0,0,0,0.03)",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 20,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+    flex: 1,
+    flexWrap: "wrap",
   },
 
   // ── Apple Wallet row ──
@@ -339,8 +434,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: colors.dark,
+    backgroundColor: colors.white,
     borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingVertical: 16,
     paddingHorizontal: 18,
     marginBottom: 24,
@@ -354,18 +451,18 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 10,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: colors.sand,
     justifyContent: "center",
     alignItems: "center",
   },
   walletLabel: {
-    color: "#FFFFFF",
+    color: colors.dark,
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.1,
   },
   walletSub: {
-    color: "rgba(255,255,255,0.72)",
+    color: colors.stone,
     fontSize: 12,
     marginTop: 1,
   },
@@ -493,6 +590,22 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.2,
   },
+  manageBtn: {
+    backgroundColor: colors.sand,
+    borderRadius: 100,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  manageBtnText: {
+    color: colors.dark,
+    fontSize: 15,
+    fontWeight: "700",
+    letterSpacing: 0.1,
+  },
   managePill: {
     backgroundColor: "rgba(76,175,80,0.08)",
     borderRadius: 100,
@@ -503,5 +616,11 @@ const styles = StyleSheet.create({
     borderColor: "rgba(76,175,80,0.2)",
   },
   managePillText: { color: colors.green, fontSize: 13, fontWeight: "600" },
+  manageLink: {
+    color: colors.stone,
+    fontSize: 12,
+    textAlign: "center",
+    textDecorationLine: "underline",
+  },
   footerNote: { color: colors.stone, fontSize: 12, textAlign: "center" },
 });

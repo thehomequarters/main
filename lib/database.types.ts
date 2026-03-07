@@ -51,6 +51,11 @@ export interface Profile {
   allow_messages?: "all" | "connections";
   // Grace period
   accepted_at?: string | null;  // ISO timestamp set when status → "accepted"
+  // Stripe billing
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
+  subscription_status?: "active" | "past_due" | "canceled" | "trialing" | null;
+  current_period_end?: string | null;  // ISO timestamp of current billing period end
   // Nomination system
   vouchers: string[];        // UIDs of members who have vouched
   voucher_count: number;     // denormalised length of vouchers

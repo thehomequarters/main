@@ -103,7 +103,7 @@ export default function QRCodeScreen() {
           letterSpacing: 0.3,
         }}
       >
-        Show this to staff to redeem
+        Ask staff to scan this with their phone
       </Text>
 
       {/* Venue + Deal context */}
@@ -193,62 +193,55 @@ export default function QRCodeScreen() {
         </View>
       </View>
 
-      {/* Mark as redeemed button (for when staff confirms) */}
-      {venueId && dealId && (
-        <Pressable
-          onPress={handleRedeem}
-          disabled={redeemed || redeeming}
-          style={{
-            marginTop: 24,
-            backgroundColor: redeemed
-              ? "rgba(76, 175, 80, 0.15)"
-              : colors.stone,
-            borderRadius: 12,
-            paddingVertical: 14,
-            paddingHorizontal: 40,
-            opacity: redeeming ? 0.6 : 1,
-          }}
-        >
-          <Text
-            style={{
-              color: redeemed ? colors.green : colors.black,
-              fontSize: 15,
-              fontWeight: "700",
-              textAlign: "center",
-            }}
-          >
-            {redeemed
-              ? "Redeemed"
-              : redeeming
-                ? "Recording..."
-                : "Mark as Redeemed"}
-          </Text>
-        </Pressable>
-      )}
 
       {/* How it works */}
       <View style={{ marginTop: 24, gap: 8, alignItems: "center" }}>
-        <View
-          style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-        >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Ionicons name="scan-outline" size={16} color={colors.grey} />
           <Text style={{ color: colors.grey, fontSize: 12 }}>
-            Staff scans to verify your membership
+            Staff scans with their camera — no app needed
           </Text>
         </View>
-        <View
-          style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-        >
-          <Ionicons
-            name="checkmark-circle-outline"
-            size={16}
-            color={colors.grey}
-          />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Ionicons name="checkmark-circle-outline" size={16} color={colors.grey} />
           <Text style={{ color: colors.grey, fontSize: 12 }}>
-            Tap "Mark as Redeemed" once staff confirms
+            They enter their venue PIN to confirm
           </Text>
         </View>
       </View>
+
+      {/* Manual fallback — only if venue isn't set up with PIN yet */}
+      {venueId && dealId && (
+        <View style={{ marginTop: 20, alignItems: "center" }}>
+          <Text style={{ color: colors.grey, fontSize: 11, marginBottom: 8 }}>
+            No scanner available at this venue?
+          </Text>
+          <Pressable
+            onPress={handleRedeem}
+            disabled={redeemed || redeeming}
+            style={{
+              backgroundColor: "transparent",
+              borderWidth: 1,
+              borderColor: redeemed ? "rgba(76, 175, 80, 0.3)" : "rgba(255,255,255,0.1)",
+              borderRadius: 10,
+              paddingVertical: 10,
+              paddingHorizontal: 28,
+              opacity: redeeming ? 0.6 : 1,
+            }}
+          >
+            <Text
+              style={{
+                color: redeemed ? colors.green : colors.grey,
+                fontSize: 13,
+                fontWeight: "600",
+                textAlign: "center",
+              }}
+            >
+              {redeemed ? "Recorded" : redeeming ? "Recording..." : "Mark as redeemed manually"}
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
