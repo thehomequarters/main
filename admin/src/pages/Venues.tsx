@@ -6,6 +6,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import ConfirmModal from "../components/ConfirmModal";
@@ -51,6 +52,12 @@ interface VenueStory {
 
 const CATEGORIES = ["restaurant", "bar", "cafe", "experience"];
 
+interface VenuePin {
+  pin: string;
+  venue_name: string;
+  updated_at: string;
+}
+
 const EMPTY_VENUE = {
   name: "",
   description: "",
@@ -84,7 +91,12 @@ export default function Venues() {
   const [form, setForm] = useState(EMPTY_VENUE);
   const [saving, setSaving] = useState(false);
   const [expandedVenue, setExpandedVenue] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Record<string, "deals" | "stories">>({});
+  const [activeTab, setActiveTab] = useState<Record<string, "deals" | "stories" | "pin">>({});
+
+  // PIN management
+  const [venuePins, setVenuePins] = useState<Record<string, VenuePin | null>>({});
+  const [pinVisible, setPinVisible] = useState<Record<string, boolean>>({});
+  const [pinSaving, setPinSaving] = useState<string | null>(null);
 
   // Deal form
   const [showDealForm, setShowDealForm] = useState<string | null>(null);
@@ -100,8 +112,8 @@ export default function Venues() {
   });
 
   useEffect(() => {
-    let venuesReady = false, dealsReady = false, storiesReady = false;
-    const checkDone = () => { if (venuesReady && dealsReady && storiesReady) setLoading(false); };
+    let venuesReady = false, dealsReady = false, storiesReady = false, pinsReady = false;
+    const checkDone = () => { if (venuesReady && dealsReady && storiesReady && pinsReady) setLoading(false); };
 
     const u1 = onSnapshot(
       collection(db, "venues"),
@@ -127,7 +139,17 @@ export default function Venues() {
       },
       (err) => { console.error("venue_stories snapshot error:", err); storiesReady = true; checkDone(); }
     );
-    return () => { u1(); u2(); u3(); };
+    const u4 = onSnapshot(
+      collection(db, "venue_pins"),
+      (snap) => {
+        const pins: Record<string, VenuePin | null> = {};
+        snap.docs.forEach((d) => { pins[d.id] = d.data() as VenuePin; });
+        setVenuePins(pins);
+        pinsReady = true; checkDone();
+      },
+      (err) => { console.error("venue_pins snapshot error:", err); pinsReady = true; checkDone(); }
+    );
+    return () => { u1(); u2(); u3(); u4(); };
   }, []);
 
   const buildImageUrls = (f: typeof form): string[] => {
@@ -321,6 +343,23 @@ export default function Venues() {
       longitude: (venue as any).longitude ? String((venue as any).longitude) : "",
     });
     setShowForm(true);
+  };
+
+  const handleGeneratePin = async (venue: Venue) => {
+    setPinSaving(venue.id);
+    try {
+      const newPin = Math.floor(100000 + Math.random() * 900000).toString();
+      await setDoc(doc(db, "venue_pins", venue.id), {
+        pin: newPin,
+        venue_name: venue.name,
+        updated_at: new Date().toISOString(),
+      });
+      toast("New PIN generated");
+    } catch {
+      toast("Failed to generate PIN", "error");
+    } finally {
+      setPinSaving(null);
+    }
   };
 
   const getTab = (venueId: string) => activeTab[venueId] ?? "deals";
@@ -630,7 +669,7 @@ export default function Venues() {
                 <div className="border-t border-dark-border bg-black/30">
                   {/* Tab strip */}
                   <div className="flex border-b border-dark-border">
-                    {(["deals", "stories"] as const).map((t) => (
+                    {(["deals", "stories", "pin"] as const).map((t) => (
                       <button
                         key={t}
                         onClick={() => setActiveTab((prev) => ({ ...prev, [venue.id]: t }))}
@@ -640,7 +679,7 @@ export default function Venues() {
                             : "text-gray-500 hover:text-gray-300"
                         }`}
                       >
-                        {t === "deals" ? `Deals (${venueDeals.length})` : `Stories (${venueStories.length})`}
+                        {t === "deals" ? `Deals (${venueDeals.length})` : t === "stories" ? `Stories (${venueStories.length})` : "PIN"}
                       </button>
                     ))}
                   </div>
@@ -706,6 +745,68 @@ export default function Venues() {
                         )}
                       </div>
                     )}
+
+                    {/* ── PIN tab ── */}
+                    {tab === "pin" && (() => {
+                      const pinData = venuePins[venue.id];
+                      const isVisible = pinVisible[venue.id] ?? false;
+                      const isSaving = pinSaving === venue.id;
+                      return (
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-white text-sm font-semibold mb-1">Staff Verification PIN</p>
+                            <p className="text-gray-500 text-xs">
+                              Staff enter this 6-digit PIN on the verify page after scanning a member's QR code.
+                              Share it with venue staff privately — do not post it publicly.
+                            </p>
+                          </div>
+
+                          {pinData ? (
+                            <div className="bg-black border border-dark-border rounded-xl px-4 py-3 flex items-center justify-between">
+                              <div>
+                                <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Current PIN</p>
+                                <p className="text-white font-mono text-xl tracking-[0.3em] font-bold">
+                                  {isVisible ? pinData.pin : "••••••"}
+                                </p>
+                                <p className="text-gray-600 text-[10px] mt-1">
+                                  Last updated {new Date(pinData.updated_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => setPinVisible((p) => ({ ...p, [venue.id]: !isVisible }))}
+                                className="text-gold text-xs hover:underline ml-4 flex-shrink-0"
+                              >
+                                {isVisible ? "Hide" : "Reveal"}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="bg-black border border-dark-border rounded-xl px-4 py-3">
+                              <p className="text-gray-600 text-sm">No PIN set yet.</p>
+                            </div>
+                          )}
+
+                          <button
+                            onClick={() => handleGeneratePin(venue)}
+                            disabled={isSaving}
+                            className="px-4 py-2 bg-gold text-black text-xs font-bold rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-50"
+                          >
+                            {isSaving ? "Generating…" : pinData ? "Regenerate PIN" : "Generate PIN"}
+                          </button>
+
+                          {pinData && (
+                            <div className="bg-dark border border-dark-border rounded-xl px-4 py-3">
+                              <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">How it works</p>
+                              <ol className="text-gray-400 text-xs space-y-1 list-decimal list-inside">
+                                <li>Member opens a deal in the app and taps to generate their QR code</li>
+                                <li>Staff scan the QR with their phone camera — it opens the verify page automatically</li>
+                                <li>Staff enter this PIN to confirm the redemption</li>
+                                <li>The page shows the member's name, tier, and deal confirmed</li>
+                              </ol>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     {/* ── Stories tab ── */}
                     {tab === "stories" && (

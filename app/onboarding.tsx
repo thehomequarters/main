@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
 import { useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const { width: W, height: H } = Dimensions.get("window");
 
@@ -45,7 +47,33 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const slides = DEFAULT_SLIDES;
+  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const snap = await getDocs(
+          query(collection(db, "onboarding_slides"), orderBy("order", "asc"))
+        );
+        if (!snap.empty) {
+          const remote = snap.docs
+            .filter((d) => d.data().is_active === true)
+            .map((d) => {
+              const data = d.data();
+              return {
+                id: d.id,
+                image: { uri: data.image_url as string },
+                eyebrow: (data.eyebrow as string) ?? "",
+                title: ((data.title as string) ?? "").replace(/\\n/g, "\n"),
+              };
+            });
+          if (remote.length > 0) setSlides(remote);
+        }
+      } catch {
+        // Network error — keep default slides
+      }
+    })();
+  }, []);
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {

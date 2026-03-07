@@ -13,6 +13,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   doc,
@@ -48,7 +49,6 @@ export default function VenueDetailScreen() {
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapFailed, setMapFailed] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
   const screenWidth = Dimensions.get("window").width;
@@ -335,6 +335,73 @@ export default function VenueDetailScreen() {
             </Text>
           ) : null}
 
+          {/* ── Your Benefits (above the map) ── */}
+          {deals.length > 0 && (
+            <>
+              <Text
+                style={{
+                  color: colors.dark,
+                  fontSize: 18,
+                  fontWeight: "600",
+                  marginBottom: 16,
+                }}
+              >
+                Your Benefits
+              </Text>
+
+              {deals.map((deal) => (
+                <View
+                  key={deal.id}
+                  style={{
+                    backgroundColor: colors.white,
+                    borderRadius: 12,
+                    padding: 18,
+                    marginBottom: 12,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: colors.dark,
+                      fontSize: 16,
+                      fontWeight: "600",
+                      marginBottom: deal.description || deal.terms ? 6 : 0,
+                    }}
+                  >
+                    {deal.title}
+                  </Text>
+                  {deal.description && (
+                    <Text
+                      style={{
+                        color: colors.stone,
+                        fontSize: 13,
+                        lineHeight: 20,
+                        marginBottom: deal.terms ? 6 : 0,
+                      }}
+                    >
+                      {deal.description}
+                    </Text>
+                  )}
+                  {deal.terms && (
+                    <Text
+                      style={{
+                        color: colors.stone,
+                        fontSize: 12,
+                        fontStyle: "italic",
+                        opacity: 0.7,
+                      }}
+                    >
+                      {deal.terms}
+                    </Text>
+                  )}
+                </View>
+              ))}
+
+              <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 24 }} />
+            </>
+          )}
+
           {/* Location card with static map preview */}
           {venue.latitude != null && venue.longitude != null && (
             <Pressable
@@ -347,14 +414,27 @@ export default function VenueDetailScreen() {
                 marginBottom: 16,
               }}
             >
-              {/* Static map image */}
-              <Image
-                source={{
-                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=15&size=600x200&markers=${venue.latitude},${venue.longitude},red-marker-m`,
-                }}
+              {/* Apple Maps preview */}
+              <MapView
                 style={{ width: "100%", height: 140 }}
-                resizeMode="cover"
-              />
+                provider={undefined}
+                region={{
+                  latitude: venue.latitude,
+                  longitude: venue.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+                pointerEvents="none"
+              >
+                <Marker
+                  coordinate={{ latitude: venue.latitude, longitude: venue.longitude }}
+                  title={venue.name}
+                />
+              </MapView>
               {/* Address row below map */}
               <View
                 style={{
@@ -522,73 +602,6 @@ export default function VenueDetailScreen() {
             </Pressable>
           </View>
 
-          {/* Divider */}
-          <View style={{ height: 1, backgroundColor: colors.border, marginBottom: 24 }} />
-
-          {/* Your Benefits */}
-          {deals.length > 0 && (
-            <>
-              <Text
-                style={{
-                  color: colors.dark,
-                  fontSize: 18,
-                  fontWeight: "600",
-                  marginBottom: 16,
-                }}
-              >
-                Your Benefits
-              </Text>
-
-              {deals.map((deal) => (
-                <View
-                  key={deal.id}
-                  style={{
-                    backgroundColor: colors.white,
-                    borderRadius: 12,
-                    padding: 18,
-                    marginBottom: 12,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: colors.dark,
-                      fontSize: 16,
-                      fontWeight: "600",
-                      marginBottom: deal.description || deal.terms ? 6 : 0,
-                    }}
-                  >
-                    {deal.title}
-                  </Text>
-                  {deal.description && (
-                    <Text
-                      style={{
-                        color: colors.stone,
-                        fontSize: 13,
-                        lineHeight: 20,
-                        marginBottom: deal.terms ? 6 : 0,
-                      }}
-                    >
-                      {deal.description}
-                    </Text>
-                  )}
-                  {deal.terms && (
-                    <Text
-                      style={{
-                        color: colors.stone,
-                        fontSize: 12,
-                        fontStyle: "italic",
-                        opacity: 0.7,
-                      }}
-                    >
-                      {deal.terms}
-                    </Text>
-                  )}
-                </View>
-              ))}
-            </>
-          )}
         </View>
       </ScrollView>
 

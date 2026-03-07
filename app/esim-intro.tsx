@@ -65,7 +65,7 @@ export default function ESIMIntroScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (profile?.membership_status === "accepted") {
+    if (profile?.membership_status === "pending" || profile?.membership_status === "rejected") {
       router.replace("/activate");
     }
   }, [profile?.membership_status]);

@@ -74,8 +74,9 @@ service cloud.firestore {
     }
 
     // ──── Onboarding Slides ────
+    // Public read: shown before login, no sensitive data
     match /onboarding_slides/{slideId} {
-      allow read: if isAuth();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
@@ -164,6 +165,14 @@ service cloud.firestore {
       allow create: if isActiveMember() &&
         request.resource.data.member_id == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    // ──── Venue PINs ────
+    // Never readable by clients — the verifyRedemption Cloud Function reads/writes
+    // these via the Admin SDK which bypasses Firestore rules entirely.
+    // Admins can write (to set/regenerate PINs) and read (to display in admin panel).
+    match /venue_pins/{venueId} {
+      allow read, write: if isAdmin();
     }
 
     // ──── Conversations ────

@@ -369,7 +369,7 @@ export default function AccountTab() {
             subtitle={
               profile?.membership_status === "active"
                 ? profile?.membership_tier === "platinum_card"
-                  ? "Platinum · £15/mo — Zim venues & eSIM"
+                  ? "Platinum · £15/mo — UK & Zimbabwe venues"
                   : "Gold · £5/mo — diaspora deals"
                 : "Choose a plan to activate"
             }
@@ -432,8 +432,8 @@ export default function AccountTab() {
           <MenuItem
             icon="airplane-outline"
             label="eSIM & Travel"
-            subtitle={isGrace ? "Activate to unlock eSIM perks" : "Get connected in Zimbabwe with Airalo"}
-            onPress={() => router.push(isGrace ? "/activate" : ("/esim-intro" as any))}
+            subtitle="Get connected in Zimbabwe — powered by Airalo"
+            onPress={() => router.push("/esim-intro" as any)}
           />
         </View>
       </View>
