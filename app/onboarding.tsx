@@ -30,16 +30,16 @@ const DEFAULT_SLIDES = [
     image: {
       uri: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=90",
     },
-    eyebrow: "EXCLUSIVE ACCESS",
-    title: "The Best of\nYour City",
+    eyebrow: "DEALS & PERKS",
+    title: "15+ Venues.\nAll Yours.",
   },
   {
     id: "3",
     image: {
       uri: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=90",
     },
-    eyebrow: "YOUR PEOPLE",
-    title: "Connect &\nBelong",
+    eyebrow: "YOUR COMMUNITY",
+    title: "Find Your\nTribe",
   },
 ];
 
@@ -170,7 +170,7 @@ export default function OnboardingScreen() {
           ]}
         >
           <Text style={styles.btnText}>
-            {isLast ? "Apply for Membership" : "Continue"}
+            {isLast ? "Join HomeQuarters" : "Next"}
           </Text>
         </Pressable>
 
@@ -200,14 +200,14 @@ const styles = StyleSheet.create({
     width: W,
     height: H,
   },
-  // Deep gradient vignette so text always reads against any image
+  // Dark overlay from mid-screen down so text is always readable
   vignette: {
-    ...StyleSheet.absoluteFillObject,
-    // Simulate a gradient: fully transparent at top, very dark at bottom
-    backgroundColor: "transparent",
-    // We use a bottom-heavy overlay
-    top: "35%",
-    background: undefined,
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "70%",
+    backgroundColor: "rgba(0,0,0,0.55)",
   },
   logoWrap: {
     position: "absolute",

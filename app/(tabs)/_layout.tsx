@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text, Platform } from "react-native";
@@ -26,6 +26,7 @@ function TabIcon({
         color={focused ? colors.ink : colors.stone}
       />
       <Text
+        numberOfLines={1}
         style={{
           color: focused ? colors.ink : colors.stone,
           fontSize: 10,
@@ -54,8 +55,19 @@ function TabIcon({
 }
 
 export default function TabLayout() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const router = useRouter();
   const [pendingCount, setPendingCount] = useState(0);
+
+  // Defensive guard: if status is not active/accepted, boot back to root.
+  // Prevents deep links or stale navigation from bypassing the apply/pending gates.
+  useEffect(() => {
+    if (!user) { router.replace("/onboarding"); return; }
+    const s = profile?.membership_status;
+    if (s && s !== "active" && s !== "accepted") {
+      router.replace("/");
+    }
+  }, [user, profile?.membership_status]);
 
   useEffect(() => {
     if (!user?.uid) { setPendingCount(0); return; }

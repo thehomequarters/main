@@ -33,6 +33,8 @@ export default function ApplyScreen() {
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [inviteData, setInviteData] = useState<any>(null);
+  const [usedInviteCode, setUsedInviteCode] = useState(false);
+  const [noCode, setNoCode] = useState(false); // true = showing "no code" message
 
   // Step 2: fill out details
   const [firstName, setFirstName] = useState("");
@@ -40,6 +42,9 @@ export default function ApplyScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [about, setAbout] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +70,7 @@ export default function ApplyScreen() {
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setInviteData({ ...data, id: code });
+      setUsedInviteCode(true);
       setVerified(true);
     } catch (e: any) {
       toast(e.message, "error");
@@ -101,15 +107,17 @@ export default function ApplyScreen() {
       const memberCode = genCode("HQ");
       const applicationCode = genCode("APP");
 
-      // Mark invite as used
-      await updateDoc(doc(db, "invites", inviteData.id), {
-        used: true,
-        used_by: user.uid,
-        used_at: new Date().toISOString(),
-      });
+      // Mark invite as used only if they came through the code path
+      let inviterUid: string | null = null;
+      if (usedInviteCode && inviteData) {
+        await updateDoc(doc(db, "invites", inviteData.id), {
+          used: true,
+          used_by: user.uid,
+          used_at: new Date().toISOString(),
+        });
+        inviterUid = inviteData.created_by ?? null;
+      }
 
-      // Determine inviter UID from the invite (created_by field)
-      const inviterUid: string = inviteData.created_by ?? null;
       const initialVouchers = inviterUid ? [inviterUid] : [];
 
       await setDoc(doc(db, "profiles", user.uid), {
@@ -121,6 +129,7 @@ export default function ApplyScreen() {
         member_code: memberCode,
         application_code: applicationCode,
         membership_status: "pending",
+        application_type: usedInviteCode ? "invited" : "open",
         push_token: null,
         created_at: new Date().toISOString(),
         // nomination fields
@@ -129,12 +138,12 @@ export default function ApplyScreen() {
         nominations_used: 0,
         // social fields
         title: null,
-        bio: null,
+        bio: about.trim() || null,
         city: null,
         industry: null,
         interests: [],
-        instagram_handle: null,
-        linkedin_handle: null,
+        instagram_handle: instagram.trim().replace(/^@/, "") || null,
+        linkedin_handle: linkedin.trim() || null,
       });
 
       router.replace("/pending");
@@ -162,7 +171,7 @@ export default function ApplyScreen() {
         {/* Wordmark */}
         <Text style={styles.wordmark}>HQ</Text>
 
-        {!verified ? (
+        {!verified && !noCode ? (
           /* ─── Step 1: Enter invitation code ─── */
           <>
             <View style={styles.sealWrap}>
@@ -206,9 +215,15 @@ export default function ApplyScreen() {
               </Text>
             </Pressable>
 
+            <Pressable onPress={() => setNoCode(true)} style={styles.signinRow}>
+              <Text style={styles.signinText}>
+                I don't have an invitation code
+              </Text>
+            </Pressable>
+
             <Pressable
               onPress={() => router.push("/login")}
-              style={styles.signinRow}
+              style={[styles.signinRow, { marginTop: 6 }]}
             >
               <Text style={styles.signinText}>
                 Already a member?{" "}
@@ -216,12 +231,52 @@ export default function ApplyScreen() {
               </Text>
             </Pressable>
           </>
+        ) : !verified && noCode ? (
+          /* ─── No code: message screen ─── */
+          <>
+            <View style={styles.sealWrap}>
+              <View style={styles.seal}>
+                <Text style={styles.sealSymbol}>✦</Text>
+              </View>
+            </View>
+
+            <Text style={styles.headline}>Applications are rarely considered.</Text>
+            <Text style={styles.subtext}>
+              HomeQuarters is by invitation only. On special occasions, outstanding
+              applications without a code are reviewed by the membership committee.
+            </Text>
+            <Text style={styles.subtext}>
+              If you believe you're an exceptional fit, you're welcome to share
+              your details. We'll be in touch if there's a match.
+            </Text>
+
+            <View style={styles.divider} />
+
+            <Pressable
+              onPress={() => { setVerified(true); setNoCode(false); }}
+              style={styles.btn}
+            >
+              <Text style={styles.btnText}>Apply Without Code</Text>
+            </Pressable>
+
+            <Pressable onPress={() => setNoCode(false)} style={styles.signinRow}>
+              <Text style={styles.signinText}>
+                ← Back — I have a code
+              </Text>
+            </Pressable>
+          </>
         ) : (
           /* ─── Step 2: Complete your application ─── */
           <>
-            <View style={styles.verifiedBadge}>
-              <Text style={styles.verifiedBadgeText}>✓ INVITATION VERIFIED</Text>
-            </View>
+            {usedInviteCode ? (
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedBadgeText}>✓ INVITATION VERIFIED</Text>
+              </View>
+            ) : (
+              <View style={[styles.verifiedBadge, styles.openBadge]}>
+                <Text style={[styles.verifiedBadgeText, styles.openBadgeText]}>OPEN APPLICATION</Text>
+              </View>
+            )}
 
             <Text style={styles.headline2}>Complete your{"\n"}application.</Text>
             <Text style={styles.subtext}>
@@ -287,6 +342,39 @@ export default function ApplyScreen() {
               onChangeText={setPhone}
               keyboardType="phone-pad"
               style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>INSTAGRAM (OPTIONAL)</Text>
+            <TextInput
+              placeholder="@yourhandle"
+              placeholderTextColor={colors.stone}
+              value={instagram}
+              onChangeText={setInstagram}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>LINKEDIN (OPTIONAL)</Text>
+            <TextInput
+              placeholder="linkedin.com/in/yourname"
+              placeholderTextColor={colors.stone}
+              value={linkedin}
+              onChangeText={setLinkedin}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={styles.input}
+            />
+
+            <Text style={styles.fieldLabel}>ABOUT YOU (OPTIONAL)</Text>
+            <TextInput
+              placeholder="Who you are, what you do, and why HomeQuarters."
+              placeholderTextColor={colors.stone}
+              value={about}
+              onChangeText={setAbout}
+              multiline
+              numberOfLines={4}
+              style={[styles.input, { minHeight: 100, textAlignVertical: "top" }]}
             />
 
             {/* Age confirmation */}
@@ -509,6 +597,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
+  },
+  openBadge: {
+    backgroundColor: "rgba(201,168,76,0.1)",
+    borderColor: "rgba(201,168,76,0.3)",
+  },
+  openBadgeText: {
+    color: "#C9A84C",
   },
   disclaimer: {
     color: colors.stone,
