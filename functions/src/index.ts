@@ -772,6 +772,91 @@ export const verifyRedemption = onRequest({ cors: true }, async (req, res) => {
   });
 });
 
+// ─────────────────────────────────────────────
+// sendBroadcastNotification
+// Callable from the admin dashboard.
+// Sends a push notification to all active members who have a push token.
+// FCM multicast is capped at 500 tokens per call, so we chunk automatically.
+// Logs each broadcast to broadcast_notifications/{id}.
+// ─────────────────────────────────────────────
+export const sendBroadcastNotification = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Must be authenticated.");
+  }
+
+  const db = getFirestore();
+
+  // Verify caller is an admin
+  const adminDoc = await db.doc(`admins/${request.auth.uid}`).get();
+  if (!adminDoc.exists) {
+    throw new HttpsError("permission-denied", "Admin access required.");
+  }
+
+  const { title, body, type, data: extraData } = request.data as {
+    title: string;
+    body: string;
+    type: string;
+    data?: Record<string, string>;
+  };
+
+  if (!title?.trim() || !body?.trim()) {
+    throw new HttpsError("invalid-argument", "title and body are required.");
+  }
+
+  // Fetch all active members with a push token
+  const snap = await db
+    .collection("profiles")
+    .where("membership_status", "==", "active")
+    .where("push_token", "!=", null)
+    .get();
+
+  const tokens = snap.docs
+    .map((d) => d.data().push_token as string)
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return { sent: 0, failed: 0 };
+  }
+
+  // Chunk into batches of 500 (FCM multicast limit)
+  const chunks: string[][] = [];
+  for (let i = 0; i < tokens.length; i += 500) {
+    chunks.push(tokens.slice(i, i + 500));
+  }
+
+  let totalSent = 0;
+  let totalFailed = 0;
+
+  for (const chunk of chunks) {
+    try {
+      const result = await getMessaging().sendEachForMulticast({
+        tokens: chunk,
+        notification: { title: title.trim(), body: body.trim() },
+        data: { type, ...(extraData ?? {}) },
+      });
+      totalSent += result.successCount;
+      totalFailed += result.failureCount;
+    } catch (err) {
+      console.error("FCM multicast error:", err);
+      totalFailed += chunk.length;
+    }
+  }
+
+  // Log the broadcast
+  await db.collection("broadcast_notifications").add({
+    title: title.trim(),
+    body: body.trim(),
+    type,
+    sent_to: totalSent,
+    failed: totalFailed,
+    total_tokens: tokens.length,
+    sent_by: request.auth.uid,
+    sent_at: new Date().toISOString(),
+  });
+
+  return { sent: totalSent, failed: totalFailed };
+});
+
 export const getStripePortalUrl = onCall(
   { secrets: [stripeSecretKey] },
   async (request) => {
