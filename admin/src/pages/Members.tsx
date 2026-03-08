@@ -20,7 +20,7 @@ interface Profile {
   phone: string | null;
   avatar_url: string | null;
   member_code: string;
-  membership_status: "pending" | "accepted" | "active" | "rejected" | "suspended";
+  membership_status: "pending" | "open_application" | "accepted" | "active" | "rejected" | "suspended";
   title: string | null;
   bio: string | null;
   city: string | null;
@@ -33,16 +33,17 @@ interface Profile {
   application_code?: string;
 }
 
-type FilterTab = "all" | "pending" | "accepted" | "active" | "rejected" | "suspended";
+type FilterTab = "all" | "pending" | "open_application" | "accepted" | "active" | "rejected" | "suspended";
 
 const PAGE_SIZE = 20;
 
 const STATUS_COLORS: Record<string, string> = {
-  active:    "bg-green-500/15 text-green-400",
-  accepted:  "bg-amber-500/15 text-amber-400",
-  pending:   "bg-yellow-400/15 text-yellow-400",
-  rejected:  "bg-red-500/15 text-red-400",
-  suspended: "bg-orange-500/15 text-orange-400",
+  active:           "bg-green-500/15 text-green-400",
+  accepted:         "bg-amber-500/15 text-amber-400",
+  pending:          "bg-yellow-400/15 text-yellow-400",
+  open_application: "bg-blue-400/15 text-blue-400",
+  rejected:         "bg-red-500/15 text-red-400",
+  suspended:        "bg-orange-500/15 text-orange-400",
 };
 
 export default function Members() {
@@ -131,6 +132,7 @@ export default function Members() {
     () => ({
       all: members.length,
       pending: members.filter((m) => m.membership_status === "pending").length,
+      open_application: members.filter((m) => m.membership_status === "open_application").length,
       accepted: members.filter((m) => m.membership_status === "accepted").length,
       active: members.filter((m) => m.membership_status === "active").length,
       rejected: members.filter((m) => m.membership_status === "rejected").length,
@@ -140,12 +142,13 @@ export default function Members() {
   );
 
   const TABS: { key: FilterTab; label: string }[] = [
-    { key: "all",       label: "All"       },
-    { key: "pending",   label: "Pending"   },
-    { key: "accepted",  label: "Accepted"  },
-    { key: "active",    label: "Active"    },
-    { key: "suspended", label: "Suspended" },
-    { key: "rejected",  label: "Rejected"  },
+    { key: "all",              label: "All"          },
+    { key: "pending",          label: "Pending"      },
+    { key: "open_application", label: "Open Apps"    },
+    { key: "accepted",         label: "Accepted"     },
+    { key: "active",           label: "Active"       },
+    { key: "suspended",        label: "Suspended"    },
+    { key: "rejected",         label: "Rejected"     },
   ];
 
   const handleUpdateStatus = async (
@@ -322,6 +325,9 @@ export default function Members() {
               {counts.pending > 0 && (
                 <span className="text-yellow-400"> · {counts.pending} pending review</span>
               )}
+              {counts.open_application > 0 && (
+                <span className="text-blue-400"> · {counts.open_application} open applications</span>
+              )}
               {counts.accepted > 0 && (
                 <span className="text-amber-400"> · {counts.accepted} in grace period</span>
               )}
@@ -418,10 +424,11 @@ export default function Members() {
           <div className="space-y-2">
             {paginated.map((member) => {
               const initials = (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
-              const isPending   = member.membership_status === "pending";
-              const isAccepted  = member.membership_status === "accepted";
-              const isActive    = member.membership_status === "active";
-              const isSuspended = member.membership_status === "suspended";
+              const isPending         = member.membership_status === "pending";
+              const isOpenApplication = member.membership_status === "open_application";
+              const isAccepted        = member.membership_status === "accepted";
+              const isActive          = member.membership_status === "active";
+              const isSuspended       = member.membership_status === "suspended";
               const isUpdating  = updating === member.id;
               const isSelected  = selected?.id === member.id;
               const isBulkSelected = selectedIds.has(member.id);
@@ -437,6 +444,8 @@ export default function Members() {
                       ? "border-gold/20 bg-gold-light/5"
                       : isPending
                       ? "border-amber-400/20 hover:border-amber-400/40"
+                      : isOpenApplication
+                      ? "border-blue-400/20 hover:border-blue-400/40"
                       : "border-dark-border hover:border-white/10"
                   }`}
                 >
@@ -485,7 +494,7 @@ export default function Members() {
 
                   {/* Quick actions */}
                   <div className="flex gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-                    {isPending && (
+                    {(isPending || isOpenApplication) && (
                       <>
                         <button onClick={() => handleUpdateStatus(member.id, "accepted")} disabled={isUpdating} className="px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-xl hover:bg-amber-500/25 transition-colors disabled:opacity-50">
                           {isUpdating ? "..." : "Accept"}
@@ -678,6 +687,9 @@ export default function Members() {
                         value={`${selected.voucher_count ?? 0} / 2 ${(selected.voucher_count ?? 0) >= 2 ? "✓ ready to review" : "— needs more"}`}
                       />
                     )}
+                    {selected.membership_status === "open_application" && (
+                      <DetailRow label="Application type" value="Open (no invite code)" />
+                    )}
                     {selected.accepted_at && (
                       <DetailRow
                         label="Accepted"
@@ -710,7 +722,7 @@ export default function Members() {
 
                   {/* Status actions */}
                   <div className="space-y-2">
-                    {selected.membership_status === "pending" && (
+                    {(selected.membership_status === "pending" || selected.membership_status === "open_application") && (
                       <>
                         <button onClick={() => handleUpdateStatus(selected.id, "accepted")} disabled={updating === selected.id} className="w-full py-2.5 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-sm font-bold rounded-xl hover:bg-amber-500/25 transition-colors disabled:opacity-50">
                           {updating === selected.id ? "Updating…" : "Accept Member"}

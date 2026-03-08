@@ -1,4 +1,4 @@
-export type MembershipStatus = "pending" | "accepted" | "active" | "rejected" | "suspended";
+export type MembershipStatus = "pending" | "open_application" | "accepted" | "active" | "rejected" | "suspended";
 export type MembershipTier =
   | "gold_card"
   | "platinum_card"
@@ -61,6 +61,7 @@ export interface Profile {
   voucher_count: number;     // denormalised length of vouchers
   application_code: string;  // short code applicants share to collect vouches
   nominations_used: number;  // how many nominations this member has sent
+  application_type?: "invited" | "open"; // "invited" = had a code, "open" = no code application
 }
 
 export interface Notification {

@@ -18,6 +18,7 @@ const REQUIRED_VOUCHERS = 2;
 export default function PendingScreen() {
   const { profile } = useAuth();
 
+  const isOpenApplication = profile?.membership_status === "open_application";
   const vouchers = profile?.voucher_count ?? 0;
   const appCode = profile?.application_code ?? "—";
   const hasEnough = vouchers >= REQUIRED_VOUCHERS;
@@ -51,97 +52,112 @@ export default function PendingScreen() {
 
       {/* Status icon */}
       <View style={styles.iconWrap}>
-        <View style={[styles.iconCircle, hasEnough && styles.iconCircleReady]}>
+        <View style={[styles.iconCircle, hasEnough && !isOpenApplication && styles.iconCircleReady]}>
           <Ionicons
-            name={hasEnough ? "checkmark" : "hourglass-outline"}
+            name={isOpenApplication ? "mail-outline" : hasEnough ? "checkmark" : "hourglass-outline"}
             size={28}
-            color={hasEnough ? "#4CAF50" : colors.stone}
+            color={isOpenApplication ? colors.stone : hasEnough ? "#4CAF50" : colors.stone}
           />
         </View>
       </View>
 
       <Text style={styles.headline}>
-        {hasEnough
+        {isOpenApplication
+          ? "Application received."
+          : hasEnough
           ? "Application complete."
           : "Awaiting nomination."}
       </Text>
 
       <Text style={styles.subtext}>
-        {hasEnough
+        {isOpenApplication
+          ? "Thank you for applying to HomeQuarters. We'll review your application and be in touch if there's a fit."
+          : hasEnough
           ? "You have the required nominations. Your application is now with the membership committee. We will be in touch."
           : "Every HomeQuarters member must be nominated by at least two existing members before their application can be reviewed."}
       </Text>
 
-      {/* Nomination progress */}
-      <View style={styles.card}>
-        <Text style={styles.cardLabel}>NOMINATIONS RECEIVED</Text>
+      {/* Nomination progress — only for invited applicants */}
+      {!isOpenApplication && (
+        <>
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>NOMINATIONS RECEIVED</Text>
 
-        {/* Progress bar */}
-        <View style={styles.progressTrack}>
-          {Array.from({ length: REQUIRED_VOUCHERS }).map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.progressSegment,
-                i < vouchers
-                  ? i === 0
-                    ? styles.progressFilled
-                    : styles.progressFilledSecond
-                  : styles.progressEmpty,
-              ]}
-            />
-          ))}
-        </View>
+            {/* Progress bar */}
+            <View style={styles.progressTrack}>
+              {Array.from({ length: REQUIRED_VOUCHERS }).map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.progressSegment,
+                    i < vouchers
+                      ? i === 0
+                        ? styles.progressFilled
+                        : styles.progressFilledSecond
+                      : styles.progressEmpty,
+                  ]}
+                />
+              ))}
+            </View>
 
-        <View style={styles.progressLabelRow}>
-          <Text style={styles.progressCount}>
-            <Text style={[styles.progressNum, hasEnough && { color: "#4CAF50" }]}>
-              {vouchers}
-            </Text>
-            <Text style={styles.progressDen}> / {REQUIRED_VOUCHERS}</Text>
-          </Text>
-          <Text style={styles.progressStatus}>
-            {hasEnough
-              ? "Under review"
-              : vouchers === 0
-              ? "None yet"
-              : "1 more needed"}
-          </Text>
-        </View>
-      </View>
-
-      {/* Application code — share to collect second voucher */}
-      {!hasEnough && (
-        <View style={styles.codeCard}>
-          <View style={styles.codeCardHeader}>
-            <Ionicons name="key-outline" size={16} color={colors.stone} />
-            <Text style={styles.codeCardTitle}>YOUR APPLICATION CODE</Text>
+            <View style={styles.progressLabelRow}>
+              <Text style={styles.progressCount}>
+                <Text style={[styles.progressNum, hasEnough && { color: "#4CAF50" }]}>
+                  {vouchers}
+                </Text>
+                <Text style={styles.progressDen}> / {REQUIRED_VOUCHERS}</Text>
+              </Text>
+              <Text style={styles.progressStatus}>
+                {hasEnough
+                  ? "Under review"
+                  : vouchers === 0
+                  ? "None yet"
+                  : "1 more needed"}
+              </Text>
+            </View>
           </View>
 
-          <Text style={styles.code}>{appCode}</Text>
+          {/* Application code — share to collect second voucher */}
+          {!hasEnough && (
+            <View style={styles.codeCard}>
+              <View style={styles.codeCardHeader}>
+                <Ionicons name="key-outline" size={16} color={colors.stone} />
+                <Text style={styles.codeCardTitle}>YOUR APPLICATION CODE</Text>
+              </View>
 
-          <Text style={styles.codeHint}>
-            Share this code privately with a current HQ member. They can vouch
-            for you from the Nominate screen in the app.
-          </Text>
+              <Text style={styles.code}>{appCode}</Text>
 
-          <Pressable onPress={handleShare} style={styles.shareBtn}>
-            <Ionicons name="share-outline" size={16} color={colors.black} />
-            <Text style={styles.shareBtnText}>Share with a Member</Text>
-          </Pressable>
-        </View>
+              <Text style={styles.codeHint}>
+                Share this code privately with a current HQ member. They can vouch
+                for you from the Nominate screen in the app.
+              </Text>
+
+              <Pressable onPress={handleShare} style={styles.shareBtn}>
+                <Ionicons name="share-outline" size={16} color={colors.black} />
+                <Text style={styles.shareBtnText}>Share with a Member</Text>
+              </Pressable>
+            </View>
+          )}
+        </>
       )}
 
       {/* What happens next */}
       <View style={styles.infoCard}>
         <Text style={styles.infoTitle}>What happens next?</Text>
-        {[
-          hasEnough
-            ? "Your application is being reviewed by the committee."
-            : `Collect ${REQUIRED_VOUCHERS - vouchers} more nomination${REQUIRED_VOUCHERS - vouchers === 1 ? "" : "s"} from current members.`,
-          "Once approved, you will receive a notification and gain full access.",
-          "Membership decisions are final and confidential.",
-        ].map((item, i) => (
+        {(isOpenApplication
+          ? [
+              "We review open applications periodically.",
+              "If we think there's a fit, we'll reach out by email.",
+              "Membership decisions are final and confidential.",
+            ]
+          : [
+              hasEnough
+                ? "Your application is being reviewed by the committee."
+                : `Collect ${REQUIRED_VOUCHERS - vouchers} more nomination${REQUIRED_VOUCHERS - vouchers === 1 ? "" : "s"} from current members.`,
+              "Once approved, you will receive a notification and gain full access.",
+              "Membership decisions are final and confidential.",
+            ]
+        ).map((item, i) => (
           <View key={i} style={styles.infoRow}>
             <View style={styles.infoDot} />
             <Text style={styles.infoText}>{item}</Text>

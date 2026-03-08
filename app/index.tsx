@@ -19,9 +19,13 @@ export default function Index() {
 
     if (profile?.membership_status === "active" || profile?.membership_status === "accepted") {
       router.replace("/(tabs)");
-    } else if (profile?.membership_status === "pending") {
+    } else if (
+      profile?.membership_status === "pending" ||
+      profile?.membership_status === "open_application"
+    ) {
       router.replace("/pending");
     } else {
+      // "rejected", "suspended", or no profile yet → apply flow
       router.replace("/apply");
     }
   }, [loading, user, profile]);
