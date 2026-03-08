@@ -19,14 +19,13 @@ function TabIcon({
   badge?: number;
 }) {
   return (
-    <View style={{ alignItems: "center", marginTop: 2, position: "relative", width: "100%" }}>
+    <View style={{ alignItems: "center", marginTop: 2, position: "relative" }}>
       <Ionicons
         name={name}
         size={22}
         color={focused ? colors.ink : colors.stone}
       />
       <Text
-        numberOfLines={1}
         style={{
           color: focused ? colors.ink : colors.stone,
           fontSize: 10,
