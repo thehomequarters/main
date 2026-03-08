@@ -217,48 +217,7 @@
     }
     .partner-cell:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); }
 
-    /* ── MEMBERSHIP PLANS ── */
-    .plans { background: var(--dark); padding-top: 0; }
-    .plans-inner { max-width: 800px; margin: 0 auto; text-align: center; }
-    .plans h2 { font-size: 32px; font-weight: 800; margin-bottom: 12px; }
-    .plans .sub { color: rgba(255,255,255,0.45); font-size: 15px; margin-bottom: 48px; }
-    .plans-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
-    .plan-card {
-      border-radius: 20px; border: 2px solid; padding: 28px 24px;
-    }
-    .plan-card.gold {
-      background: #1E1500; border-color: rgba(201,168,76,0.35);
-    }
-    .plan-card.plat {
-      background: #1C1C1E; border-color: rgba(255,255,255,0.1);
-    }
-    .plan-name { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-    .plan-card.gold .plan-name { color: var(--gold-light); }
-    .plan-card.plat .plan-name { color: var(--white); }
-    .plan-price { font-size: 32px; font-weight: 800; margin: 14px 0 4px; }
-    .plan-card.gold .plan-price { color: var(--gold-light); }
-    .plan-card.plat .plan-price { color: var(--white); }
-    .plan-price span { font-size: 14px; font-weight: 500; opacity: 0.45; }
-    .plan-desc { font-size: 13px; line-height: 1.6; margin-bottom: 20px; opacity: 0.55; }
-    .plan-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-    .plan-features li { font-size: 13px; padding-left: 16px; position: relative; }
-    .plan-card.gold .plan-features li { color: rgba(245,230,160,0.8); }
-    .plan-card.gold .plan-features li::before { content: "✦"; position: absolute; left: 0; color: var(--gold); font-size: 8px; top: 3px; }
-    .plan-card.plat .plan-features li { color: rgba(255,255,255,0.75); }
-    .plan-card.plat .plan-features li::before { content: "✦"; position: absolute; left: 0; color: #ccc; font-size: 8px; top: 3px; }
-    .plan-card.plat .plan-features li.dim { color: rgba(255,255,255,0.3); }
-    .plan-card.plat .plan-features li.dim::before { color: rgba(255,255,255,0.15); }
-    .plan-btn {
-      display: block; width: 100%; padding: 14px;
-      border-radius: 100px; text-align: center;
-      font-size: 14px; font-weight: 800; letter-spacing: 0.2px;
-      transition: opacity .2s;
-    }
-    .plan-btn:hover { opacity: 0.85; }
-    .plan-card.gold .plan-btn { background: var(--gold); color: #1E1500; }
-    .plan-card.plat .plan-btn { background: var(--white); color: #1C1C1E; }
-
-    /* ── CONTACT ── */
+    /* ── CONTACT / APPLICATION ── */
     .contact { background: var(--cream); color: var(--dark); }
     .contact-inner { max-width: 560px; margin: 0 auto; text-align: center; }
     .contact h2 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
@@ -321,18 +280,18 @@
     <div class="nav-logo">HomeQuarters</div>
     <div class="nav-links">
       <a href="#features">About</a>
-      <a href="#membership">Membership</a>
-      <a href="#contact">Contact</a>
+      <a href="#apply">Apply</a>
+      <a href="#apply">Contact</a>
     </div>
-    <a href="/membership" class="nav-cta">Join</a>
+    <a href="#apply" class="nav-cta">Apply</a>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
     <div class="hero-content">
       <div class="hero-eyebrow">A private members' community</div>
-      <h1>Unlock the best of <em>two worlds.</em></h1>
-      <p>Exclusive deals at top UK venues, members-only events, and curated experiences across Zimbabwe — all in your pocket.</p>
+      <h1>Built for the diaspora.<br><em>By invitation only.</em></h1>
+      <p>HomeQuarters brings together a curated community of Zimbabweans in the UK. Membership is by invitation from a current member. Applications are rarely considered.</p>
       <div class="hero-btns">
         <a href="#" class="store-btn">
           <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
@@ -415,9 +374,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2>Complimentary membership application.</h2>
-        <p>To begin your membership, download the HomeQuarters app and apply.</p>
-        <p>Applications are reviewed by the membership committee on an ongoing basis.</p>
+        <h2>Membership is by invitation.</h2>
+        <p>Access to HomeQuarters requires a personal invitation from a current member. Invitations are non-transferable and strictly confidential.</p>
+        <p>On rare occasions, outstanding applications without a code are reviewed. If you believe you're a fit, you're welcome to apply below.</p>
       </div>
     </div>
 
@@ -449,7 +408,7 @@
 
   <!-- CTA -->
   <div class="cta-section">
-    <p>Apply for complimentary membership</p>
+    <p>Have an invitation? Download the app to apply.</p>
     <div class="hero-btns" style="justify-content:center">
       <a href="#" class="store-btn" style="background:#111; border-color:#111;">
         <svg viewBox="0 0 24 24" style="fill:#fff; width:20px; height:20px;"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
@@ -490,68 +449,36 @@
     </div>
   </section>
 
-  <!-- MEMBERSHIP PLANS -->
-  <section class="plans" id="membership">
-    <div class="plans-inner">
-      <h2>Choose your plan</h2>
-      <p class="sub">Join the community. Unlock exclusive access in the UK and Zimbabwe.</p>
-      <div class="plans-grid">
-        <div class="plan-card gold">
-          <div class="plan-name">Gold</div>
-          <div style="font-size:11px; color:rgba(245,230,160,0.4); font-weight:500;">Your Diaspora Pass</div>
-          <div class="plan-price">£5<span>/mo</span></div>
-          <p class="plan-desc">Built for members living in the UK. Access exclusive deals and carry your HQ card wherever you go.</p>
-          <ul class="plan-features">
-            <li>Deals at 15+ partner venues across the UK</li>
-            <li>Connect &amp; Discover — full community access</li>
-            <li>Members-only events &amp; social nights</li>
-            <li>Digital HQ membership card</li>
-            <li>Nominate friends to join</li>
-          </ul>
-          <a href="/membership" class="plan-btn">Get Gold</a>
-        </div>
-        <div class="plan-card plat">
-          <div style="display:inline-block; background:rgba(255,255,255,0.07); border-radius:4px; padding:3px 8px; font-size:9px; font-weight:700; letter-spacing:1.5px; color:rgba(255,255,255,0.35); margin-bottom:10px;">BEST VALUE</div>
-          <div class="plan-name">Platinum</div>
-          <div style="font-size:11px; color:rgba(255,255,255,0.35); font-weight:500;">Your Zimbabwe Pass</div>
-          <div class="plan-price">£15<span>/mo</span></div>
-          <p class="plan-desc">For members heading back to Zimbabwe. Unlock the best restaurants, bars, and experiences in Harare.</p>
-          <ul class="plan-features">
-            <li class="dim">Everything in Gold</li>
-            <li>Member discounts at top restaurants in Zim</li>
-            <li>Exclusive rates at premium bars &amp; lounges</li>
-            <li>Curated experiences — events, stays &amp; more</li>
-            <li>Telecel Zimbabwe eSIM — arrive connected</li>
-          </ul>
-          <a href="/membership" class="plan-btn">Get Platinum</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section class="contact" id="contact">
+  <!-- APPLICATION FORM -->
+  <section class="contact" id="apply">
     <div class="contact-inner">
-      <h2>Contact us</h2>
-      <p class="sub">For all enquiries including current trips, membership and press, email us or use the form below.</p>
-      <form action="mailto:hello@homequarters.co.uk" method="post" enctype="text/plain">
+      <h2>Request consideration.</h2>
+      <p class="sub">HomeQuarters is by invitation only. On special occasions, outstanding applications without a code are reviewed. Share your details and we'll be in touch if there's a fit.</p>
+      <form id="applyForm" action="https://formsubmit.co/hello@homequarters.co.uk" method="POST">
+        <input type="hidden" name="_subject" value="Open Application — HomeQuarters">
+        <input type="hidden" name="_template" value="table">
+        <input type="hidden" name="_captcha" value="false">
         <div class="form-row">
-          <input type="text" placeholder="First Name (required)" required />
-          <input type="text" placeholder="Last Name (required)" required />
+          <input type="text" name="first_name" placeholder="First name" required />
+          <input type="text" name="last_name" placeholder="Last name" required />
         </div>
-        <input type="email" placeholder="Email (required)" required style="width:100%; margin-bottom:12px;" />
-        <input type="text" placeholder="Subject" style="width:100%; margin-bottom:12px;" />
-        <textarea placeholder="Message"></textarea>
-        <button type="submit" class="contact-submit">Submit</button>
+        <input type="email" name="email" placeholder="Email address" required style="width:100%; margin-bottom:12px;" />
+        <input type="text" name="instagram" placeholder="Instagram handle (@username)" style="width:100%; margin-bottom:12px;" />
+        <input type="text" name="linkedin" placeholder="LinkedIn URL or handle" style="width:100%; margin-bottom:12px;" />
+        <textarea name="about" placeholder="Tell us about yourself — who you are, what you do, and why HomeQuarters."></textarea>
+        <button type="submit" class="contact-submit">Submit Application</button>
       </form>
+      <p style="font-size:12px; color:var(--stone); margin-top:16px; text-align:center;">
+        Have an invitation code? <a href="#" style="color:var(--dark); font-weight:600; text-decoration:underline;">Download the app</a> to apply directly.
+      </p>
     </div>
   </section>
 
   <!-- FOOTER -->
   <footer>
     <div class="footer-links">
-      <a href="#">Contact</a>
-      <a href="#">FAQ</a>
+      <a href="#apply">Apply</a>
+      <a href="mailto:hello@homequarters.co.uk">Contact</a>
       <a href="/terms">Terms</a>
       <a href="/privacy">Privacy</a>
     </div>

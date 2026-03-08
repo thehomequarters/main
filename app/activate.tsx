@@ -40,8 +40,8 @@ export default function ActivateScreen() {
   const daysLeft = useMemo(() => {
     if (!profile?.accepted_at) return 365;
     const acceptedMs = new Date(profile.accepted_at).getTime();
-    const expiryMs   = acceptedMs + 365 * 24 * 60 * 60 * 1000;
-    return Math.max(0, Math.ceil((expiryMs - Date.now()) / (24 * 60 * 60 * 1000)));
+    const expiryMs   = acceptedMs + 90 * 24 * 60 * 60 * 1000;
+    return Math.max(0, Math.ceil((expiryMs - Date.now()) / (24 * 60 * 60 * 1000))); // 90-day grace
   }, [profile?.accepted_at]);
 
   const approvedDate = profile?.accepted_at
@@ -87,7 +87,7 @@ export default function ActivateScreen() {
           <View style={styles.graceCard}>
             <Ionicons name="time-outline" size={16} color={AMBER} />
             <Text style={styles.graceText}>
-              Approved on {approvedDate} · {daysLeft} day{daysLeft !== 1 ? "s" : ""} remaining in grace period
+              Approved on {approvedDate} · {daysLeft} day{daysLeft !== 1 ? "s" : ""} left in your 3-month grace period
             </Text>
           </View>
         )}
