@@ -99,14 +99,14 @@ export default function DeleteAccountScreen() {
               <Pressable
                 onPress={() =>
                   Linking.openURL(
-                    "mailto:hello@homequarters.co.uk?subject=Cancel%20Membership&body=Please%20cancel%20my%20HomeQuarters%20membership.%20Member%20code%3A%20" +
+                    "mailto:hello@thehomequarters.com?subject=Cancel%20Membership&body=Please%20cancel%20my%20HomeQuarters%20membership.%20Member%20code%3A%20" +
                       (profile?.member_code ?? "")
                   )
                 }
                 style={styles.contactLink}
               >
                 <Text style={styles.contactLinkText}>
-                  Email us to cancel · hello@homequarters.co.uk
+                  Email us to cancel · hello@thehomequarters.com
                 </Text>
                 <Ionicons name="open-outline" size={13} color="#F5A623" />
               </Pressable>

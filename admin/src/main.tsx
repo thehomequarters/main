@@ -14,6 +14,7 @@ import Posts from "./pages/Posts";
 import Invites from "./pages/Invites";
 import Onboarding from "./pages/Onboarding";
 import Billing from "./pages/Billing";
+import Notifications from "./pages/Notifications";
 import Verify from "./pages/Verify";
 
 function ProtectedRoutes() {
@@ -65,6 +66,7 @@ function ProtectedRoutes() {
         <Route path="/invites" element={<Invites />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/billing" element={<Billing />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Routes>
     </Layout>
   );
