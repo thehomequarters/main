@@ -323,9 +323,12 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     paddingVertical: 12,
     paddingHorizontal: 24,
+    borderWidth: 1,
+    borderColor: colors.dark,
   },
   continueBtnWarning: {
     backgroundColor: colors.red,
+    borderColor: colors.red,
   },
   continueBtnText: {
     color: colors.white,

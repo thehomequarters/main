@@ -19,7 +19,7 @@ function TabIcon({
   badge?: number;
 }) {
   return (
-    <View style={{ alignItems: "center", marginTop: 2, position: "relative" }}>
+    <View style={{ alignItems: "center", marginTop: 2, position: "relative", width: "100%" }}>
       <Ionicons
         name={name}
         size={22}

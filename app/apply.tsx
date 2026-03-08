@@ -208,7 +208,7 @@ export default function ApplyScreen() {
             <Pressable
               onPress={handleVerifyCode}
               disabled={verifying}
-              style={[styles.btn, { opacity: verifying ? 0.6 : 1 }]}
+              style={[styles.btn, verifying && { backgroundColor: "rgba(28,28,30,0.5)" }]}
             >
               <Text style={styles.btnText}>
                 {verifying ? "Verifying..." : "Verify Invitation"}
@@ -428,7 +428,7 @@ export default function ApplyScreen() {
             <Pressable
               onPress={handleSubmit}
               disabled={submitting}
-              style={[styles.btn, { opacity: submitting ? 0.6 : 1 }]}
+              style={[styles.btn, submitting && { backgroundColor: "rgba(28,28,30,0.5)" }]}
             >
               <Text style={styles.btnText}>
                 {submitting ? "Submitting..." : "Submit Application"}
@@ -439,6 +439,23 @@ export default function ApplyScreen() {
               Applications are reviewed by the membership committee. You will
               be notified of your decision.
             </Text>
+
+            <Pressable
+              onPress={() => { setVerified(false); setNoCode(false); setUsedInviteCode(false); setInviteData(null); setInviteCode(""); }}
+              style={[styles.signinRow, { marginTop: 16 }]}
+            >
+              <Text style={styles.signinText}>← Back — I have an invitation code</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/login")}
+              style={[styles.signinRow, { marginTop: 8, marginBottom: 8 }]}
+            >
+              <Text style={styles.signinText}>
+                Already a member?{" "}
+                <Text style={styles.signinLink}>Sign in</Text>
+              </Text>
+            </Pressable>
           </>
         )}
       </ScrollView>

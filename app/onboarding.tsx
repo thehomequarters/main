@@ -200,14 +200,10 @@ const styles = StyleSheet.create({
     width: W,
     height: H,
   },
-  // Dark overlay from mid-screen down so text is always readable
+  // Full-screen dark overlay for legibility across all images
   vignette: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: "70%",
-    backgroundColor: "rgba(0,0,0,0.55)",
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.45)",
   },
   logoWrap: {
     position: "absolute",
@@ -280,7 +276,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     backgroundColor: colors.white,
-    borderRadius: 4,
+    borderRadius: 100,
     paddingVertical: 17,
     paddingHorizontal: 40,
     alignItems: "center",
@@ -299,7 +295,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   signInText: {
-    color: "rgba(255,255,255,0.5)",
+    color: "rgba(255,255,255,0.9)",
     fontSize: 13,
     fontFamily: fonts.body,
     letterSpacing: 0.3,
