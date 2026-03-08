@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Tabs, useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text, Platform } from "react-native";
+import { View, Platform } from "react-native";
 import { useAuth } from "@/lib/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -10,38 +10,21 @@ import { db } from "@/lib/firebase";
 function TabIcon({
   focused,
   name,
-  label,
   badge,
 }: {
   focused: boolean;
   name: keyof typeof Ionicons.glyphMap;
-  label: string;
   badge?: number;
 }) {
   return (
-    <View style={{ alignItems: "center", marginTop: 2, position: "relative" }}>
-      <Ionicons
-        name={name}
-        size={22}
-        color={focused ? colors.ink : colors.stone}
-      />
-      <Text
-        style={{
-          color: focused ? colors.ink : colors.stone,
-          fontSize: 10,
-          fontFamily: focused ? fonts.semibold : fonts.body,
-          marginTop: 3,
-          letterSpacing: 0.2,
-        }}
-      >
-        {label}
-      </Text>
+    <View style={{ position: "relative" }}>
+      <Ionicons name={name} size={22} color={focused ? colors.ink : colors.stone} />
       {!!badge && (
         <View
           style={{
             position: "absolute",
             top: -2,
-            right: -8,
+            right: -6,
             width: 7,
             height: 7,
             borderRadius: 3.5,
@@ -89,48 +72,57 @@ export default function TabLayout() {
           position: "absolute",
           elevation: 0,
           shadowOpacity: 0,
-          height: Platform.OS === "ios" ? 88 : 70,
-          paddingBottom: Platform.OS === "ios" ? 24 : 10,
+          height: Platform.OS === "ios" ? 80 : 64,
+          paddingBottom: Platform.OS === "ios" ? 20 : 8,
           paddingTop: 8,
         },
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: colors.white,
-        tabBarInactiveTintColor: colors.dark,
+        tabBarShowLabel: true,
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontFamily: fonts.body,
+          letterSpacing: 0.2,
+          marginTop: 2,
+        },
+        tabBarActiveTintColor: colors.ink,
+        tabBarInactiveTintColor: colors.stone,
         tabBarItemStyle: {
-          justifyContent: "center",
-          alignItems: "center",
+          paddingVertical: 4,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
+          tabBarLabel: "Home",
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} name="home" label="Home" />
+            <TabIcon focused={focused} name="home" />
           ),
         }}
       />
       <Tabs.Screen
         name="events"
         options={{
+          tabBarLabel: "Events",
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} name="calendar" label="Events" />
+            <TabIcon focused={focused} name="calendar" />
           ),
         }}
       />
       <Tabs.Screen
         name="connect"
         options={{
+          tabBarLabel: "Connect",
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} name="chatbubbles" label="Connect" />
+            <TabIcon focused={focused} name="chatbubbles" />
           ),
         }}
       />
       <Tabs.Screen
         name="discover"
         options={{
+          tabBarLabel: "Discover",
           tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} name="compass" label="Discover" badge={pendingCount} />
+            <TabIcon focused={focused} name="compass" badge={pendingCount} />
           ),
         }}
       />
