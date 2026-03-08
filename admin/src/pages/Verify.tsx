@@ -76,10 +76,10 @@ export default function Verify() {
       return;
     }
     if (key === "") return;
-    if (pin.length >= 4) return;
+    if (pin.length >= 6) return;
     const newPin = pin + key;
     setPin(newPin);
-    if (newPin.length === 4) submitPin(newPin);
+    if (newPin.length === 6) submitPin(newPin);
   };
 
   const submitPin = async (enteredPin: string) => {
@@ -207,7 +207,7 @@ export default function Verify() {
         <div className="flex flex-col items-center mb-6 px-6">
           <p className="text-gray-400 text-sm mb-5">Enter venue PIN</p>
           <div className="flex gap-4">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
                 className={`w-4 h-4 rounded-full transition-all duration-150 ${
