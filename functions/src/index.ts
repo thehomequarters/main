@@ -10,11 +10,165 @@ import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { getMessaging } from "firebase-admin/messaging";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import {
+  applicationReceivedHtml, applicationReceivedText,
+  membershipApprovedHtml, membershipApprovedText,
+  applicationRejectedHtml, applicationRejectedText,
+  membershipSuspendedHtml, membershipSuspendedText,
+  passwordResetHtml, passwordResetText,
+} from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
+const resendApiKey = defineSecret("RESEND_API_KEY");
+
+const FROM_EMAIL = "HomeQuarters <noreply@homequarters.co.uk>";
+
+async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  apiKey: string;
+}): Promise<void> {
+  const resend = new Resend(opts.apiKey);
+  const { error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    text: opts.text,
+  });
+  if (error) {
+    console.error("Resend error:", error);
+  }
+}
 
 initializeApp();
+
+// ─────────────────────────────────────────────
+// onApplicationReceived
+// Fires when a new profile document is created (i.e. someone submits
+// an application). Sends a branded confirmation email with their code.
+// ─────────────────────────────────────────────
+export const onApplicationReceived = onDocumentCreated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const profile = event.data?.data();
+    if (!profile) return;
+    if (!profile.email || typeof profile.email !== "string") return;
+    if (profile.membership_status !== "pending") return;
+
+    try {
+      await sendEmail({
+        to: profile.email,
+        subject: "Your HomeQuarters application is with us",
+        html: applicationReceivedHtml({
+          firstName: profile.first_name as string ?? "there",
+          applicationCode: profile.application_code as string ?? "",
+          applicationType: (profile.application_type as "invited" | "open") ?? "open",
+        }),
+        text: applicationReceivedText({
+          firstName: profile.first_name as string ?? "there",
+          applicationCode: profile.application_code as string ?? "",
+        }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send application received email:", err);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// onApplicationRejected
+// Fires when membership_status changes to "rejected".
+// ─────────────────────────────────────────────
+export const onApplicationRejected = onDocumentUpdated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+    if (before.membership_status === after.membership_status) return;
+    if (after.membership_status !== "rejected") return;
+    if (!after.email || typeof after.email !== "string") return;
+
+    try {
+      await sendEmail({
+        to: after.email,
+        subject: "HomeQuarters — Membership Decision",
+        html: applicationRejectedHtml({ firstName: after.first_name as string ?? "there" }),
+        text: applicationRejectedText({ firstName: after.first_name as string ?? "there" }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send rejection email:", err);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// sendPasswordReset
+// Callable from the app. Generates a Firebase Auth password-reset link
+// and sends it via Resend with full HQ branding.
+// ─────────────────────────────────────────────
+export const sendPasswordReset = onCall(
+  { secrets: [resendApiKey] },
+  async (request) => {
+    const email = request.data?.email as string | undefined;
+    if (!email || typeof email !== "string" || !email.includes("@")) {
+      throw new HttpsError("invalid-argument", "A valid email address is required.");
+    }
+
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    // Generate a branded reset link via Admin SDK
+    let resetLink: string;
+    try {
+      resetLink = await getAuth().generatePasswordResetLink(sanitizedEmail, {
+        url: process.env.APP_BASE_URL ?? "https://homequarters.co.uk",
+      });
+    } catch (err: any) {
+      // If the user doesn't exist, return success to avoid email enumeration
+      if (err?.code === "auth/user-not-found") {
+        return { sent: true };
+      }
+      throw new HttpsError("internal", "Could not generate reset link.");
+    }
+
+    // Look up first name for personalised greeting
+    let firstName: string | undefined;
+    try {
+      const snap = await getFirestore()
+        .collection("profiles")
+        .where("email", "==", sanitizedEmail)
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        firstName = snap.docs[0].data().first_name as string | undefined;
+      }
+    } catch {
+      // Non-fatal — send without first name
+    }
+
+    try {
+      await sendEmail({
+        to: sanitizedEmail,
+        subject: "Reset your HomeQuarters password",
+        html: passwordResetHtml({ firstName, resetLink }),
+        text: passwordResetText({ firstName, resetLink }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send password reset email:", err);
+      throw new HttpsError("internal", "Could not send reset email.");
+    }
+
+    return { sent: true };
+  }
+);
 
 // ─────────────────────────────────────────────
 // deleteAuthUser
@@ -91,7 +245,7 @@ export const deleteAuthUser = onCall(async (request) => {
 // If membership_status changed to "active", sends a welcome push notification.
 // ─────────────────────────────────────────────
 export const onMemberApproved = onDocumentUpdated(
-  "profiles/{userId}",
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
@@ -100,20 +254,42 @@ export const onMemberApproved = onDocumentUpdated(
     if (before.membership_status === after.membership_status) return;
     if (after.membership_status !== "active") return;
 
+    // Push notification
     const pushToken = after.push_token as string | undefined;
-    if (!pushToken) return;
+    if (pushToken) {
+      try {
+        await getMessaging().send({
+          token: pushToken,
+          notification: {
+            title: "Welcome to HomeQuarters",
+            body: `${after.first_name as string}, your membership has been approved. Welcome to the community.`,
+          },
+          data: { type: "membership_approved" },
+        });
+      } catch (err) {
+        console.error("Failed to send approval push notification:", err);
+      }
+    }
 
-    try {
-      await getMessaging().send({
-        token: pushToken,
-        notification: {
-          title: "Welcome to HomeQuarters",
-          body: `${after.first_name as string}, your membership has been approved. Welcome to the community.`,
-        },
-        data: { type: "membership_approved" },
-      });
-    } catch (err) {
-      console.error("Failed to send approval notification:", err);
+    // Email
+    if (after.email && typeof after.email === "string") {
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: `Welcome to HomeQuarters, ${after.first_name ?? ""}`.trim(),
+          html: membershipApprovedHtml({
+            firstName: after.first_name as string ?? "there",
+            memberCode: after.member_code as string ?? "",
+          }),
+          text: membershipApprovedText({
+            firstName: after.first_name as string ?? "there",
+            memberCode: after.member_code as string ?? "",
+          }),
+          apiKey: resendApiKey.value(),
+        });
+      } catch (err) {
+        console.error("Failed to send approval email:", err);
+      }
     }
   }
 );
@@ -124,7 +300,7 @@ export const onMemberApproved = onDocumentUpdated(
 // If membership_status changed to "suspended", notifies the member.
 // ─────────────────────────────────────────────
 export const onMemberSuspended = onDocumentUpdated(
-  "profiles/{userId}",
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
   async (event) => {
     const before = event.data?.before.data();
     const after = event.data?.after.data();
@@ -133,20 +309,36 @@ export const onMemberSuspended = onDocumentUpdated(
     if (before.membership_status === after.membership_status) return;
     if (after.membership_status !== "suspended") return;
 
+    // Push notification
     const pushToken = after.push_token as string | undefined;
-    if (!pushToken) return;
+    if (pushToken) {
+      try {
+        await getMessaging().send({
+          token: pushToken,
+          notification: {
+            title: "HomeQuarters Membership",
+            body: "Your membership has been suspended. Please contact support for more information.",
+          },
+          data: { type: "membership_suspended" },
+        });
+      } catch (err) {
+        console.error("Failed to send suspension push notification:", err);
+      }
+    }
 
-    try {
-      await getMessaging().send({
-        token: pushToken,
-        notification: {
-          title: "HomeQuarters Membership",
-          body: "Your membership has been suspended. Please contact support for more information.",
-        },
-        data: { type: "membership_suspended" },
-      });
-    } catch (err) {
-      console.error("Failed to send suspension notification:", err);
+    // Email
+    if (after.email && typeof after.email === "string") {
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Your HomeQuarters membership has been suspended",
+          html: membershipSuspendedHtml({ firstName: after.first_name as string ?? "there" }),
+          text: membershipSuspendedText({ firstName: after.first_name as string ?? "there" }),
+          apiKey: resendApiKey.value(),
+        });
+      } catch (err) {
+        console.error("Failed to send suspension email:", err);
+      }
     }
   }
 );

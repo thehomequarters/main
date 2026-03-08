@@ -11,7 +11,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import * as Haptics from "expo-haptics";
 import { auth } from "@/lib/firebase";
 import { useToast } from "@/components/Toast";
@@ -36,7 +37,8 @@ export default function LoginScreen() {
     }
     setResetLoading(true);
     try {
-      await sendPasswordResetEmail(auth, addr);
+      const sendPasswordReset = httpsCallable(getFunctions(), "sendPasswordReset");
+      await sendPasswordReset({ email: addr });
       setResetSent(true);
     } catch {
       // Show success even on error to avoid email enumeration
