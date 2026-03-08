@@ -217,6 +217,71 @@
     }
     .partner-cell:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); }
 
+    /* ── HOUSE RULES ── */
+    .rules { background: var(--dark); }
+    .rules-inner { max-width: 860px; margin: 0 auto; }
+    .rules-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+    }
+    .rules-heading {
+      font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+      color: var(--white); letter-spacing: -0.5px; margin-bottom: 14px;
+    }
+    .rules-sub {
+      font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.45);
+      max-width: 560px; margin-bottom: 40px;
+    }
+    .rules-highlight {
+      display: flex; align-items: flex-start; gap: 20px;
+      background: rgba(201,168,76,0.07);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 16px; padding: 24px 28px; margin-bottom: 40px;
+    }
+    .rules-highlight-icon {
+      color: var(--gold); font-size: 18px; flex-shrink: 0; margin-top: 2px;
+    }
+    .rules-highlight-title {
+      font-size: 17px; font-weight: 700; color: var(--gold-light);
+      margin-bottom: 8px;
+    }
+    .rules-highlight-body {
+      font-size: 14px; line-height: 1.75; color: rgba(245,230,160,0.65);
+    }
+    .rules-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px; margin-bottom: 32px;
+    }
+    .rule-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; padding: 22px 20px;
+    }
+    .rule-card-red {
+      background: rgba(229,57,53,0.04);
+      border-color: rgba(229,57,53,0.2);
+    }
+    .rule-num {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.2); margin-bottom: 10px;
+    }
+    .rule-num-red { color: rgba(229,57,53,0.5); }
+    .rule-title {
+      font-size: 14px; font-weight: 700; color: var(--white);
+      margin-bottom: 8px; line-height: 1.3;
+    }
+    .rule-title-red { color: #ef5350; }
+    .rule-body {
+      font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.4);
+    }
+    .rules-footer {
+      font-size: 12px; color: rgba(255,255,255,0.2); text-align: center;
+    }
+    @media (max-width: 768px) {
+      .rules-grid { grid-template-columns: 1fr; }
+      .rules-highlight { flex-direction: column; gap: 12px; }
+    }
+
     /* ── CONTACT / APPLICATION ── */
     .contact { background: var(--cream); color: var(--dark); }
     .contact-inner { max-width: 560px; margin: 0 auto; text-align: center; }
@@ -280,8 +345,8 @@
     <div class="nav-logo">HomeQuarters</div>
     <div class="nav-links">
       <a href="#features">About</a>
+      <a href="#rules">House Rules</a>
       <a href="#apply">Apply</a>
-      <a href="#apply">Contact</a>
     </div>
     <a href="#apply" class="nav-cta">Apply</a>
   </nav>
@@ -446,6 +511,58 @@
       <div class="partner-cell">Zim Lounge</div>
       <div class="partner-cell">HQ Bar</div>
       <div class="partner-cell">Members Co.</div>
+    </div>
+  </section>
+
+  <!-- HOUSE RULES -->
+  <section class="rules" id="rules">
+    <div class="rules-inner">
+      <div class="rules-eyebrow">The Code We Live By</div>
+      <h2 class="rules-heading">House Rules.</h2>
+      <p class="rules-sub">HomeQuarters is more than an app — it's a community. These rules exist to protect the culture we're building together.</p>
+
+      <div class="rules-highlight">
+        <div class="rules-highlight-icon">✦</div>
+        <div>
+          <p class="rules-highlight-title">Friendship first, always.</p>
+          <p class="rules-highlight-body">HQ is not a networking platform. Do not cold-message members for jobs, business opportunities, or unsolicited pitches. We are here because of a shared passion for our homelands — let genuine friendship be the foundation of every connection.</p>
+        </div>
+      </div>
+
+      <div class="rules-grid">
+        <div class="rule-card">
+          <div class="rule-num">01</div>
+          <p class="rule-title">Respect Every Member</p>
+          <p class="rule-body">Treat every member, guest, and venue staff with courtesy and dignity. Discrimination, harassment, or intimidation of any kind will not be tolerated.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">02</div>
+          <p class="rule-title">Honour the Space</p>
+          <p class="rule-body">Our partner venues open their doors to us — treat them as you would your own home. Leave spaces as you found them, respect venue rules, and tip generously.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">03</div>
+          <p class="rule-title">Keep It Confidential</p>
+          <p class="rule-body">What happens at HQ stays at HQ. Do not share other members' personal information, conversations, or photos without their explicit consent.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">04</div>
+          <p class="rule-title">Redeem Responsibly</p>
+          <p class="rule-body">Member benefits are for personal use only. Do not abuse, resell, or share your QR codes. One redemption per benefit per visit unless stated otherwise.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">05</div>
+          <p class="rule-title">Represent the Culture</p>
+          <p class="rule-body">As an HQ member, you represent the community. Whether at events or partner venues, carry yourself with pride and embody the values of the diaspora.</p>
+        </div>
+        <div class="rule-card rule-card-red">
+          <div class="rule-num rule-num-red">06</div>
+          <p class="rule-title rule-title-red">Membership Can Be Revoked</p>
+          <p class="rule-body">Violation of these rules may result in immediate suspension or permanent revocation — regardless of tier. Access is a privilege upheld by your conduct, not a right.</p>
+        </div>
+      </div>
+
+      <p class="rules-footer">These rules apply equally to all membership tiers. Last updated March 2026.</p>
     </div>
   </section>
 

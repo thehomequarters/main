@@ -24,9 +24,9 @@ const RULES = [
     icon: "lock-closed-outline" as const,
   },
   {
-    title: "Be Present, Be Real",
+    title: "Friendship First, Always",
     description:
-      "HQ is about genuine connection. Show up authentically, engage meaningfully, and support fellow members in their journeys. No spam, no hustling, no unsolicited pitches.",
+      "HQ is not a networking platform. Do not cold-message members for jobs, business opportunities, or unsolicited pitches. We are here because of a shared passion for our homelands — let genuine friendship be the foundation of every connection.",
     icon: "people-outline" as const,
   },
   {
