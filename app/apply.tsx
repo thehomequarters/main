@@ -439,6 +439,23 @@ export default function ApplyScreen() {
               Applications are reviewed by the membership committee. You will
               be notified of your decision.
             </Text>
+
+            <Pressable
+              onPress={() => { setVerified(false); setNoCode(false); setUsedInviteCode(false); setInviteData(null); setInviteCode(""); }}
+              style={[styles.signinRow, { marginTop: 16 }]}
+            >
+              <Text style={styles.signinText}>← Back — I have an invitation code</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.push("/login")}
+              style={[styles.signinRow, { marginTop: 8, marginBottom: 8 }]}
+            >
+              <Text style={styles.signinText}>
+                Already a member?{" "}
+                <Text style={styles.signinLink}>Sign in</Text>
+              </Text>
+            </Pressable>
           </>
         )}
       </ScrollView>
