@@ -208,7 +208,7 @@ export default function ApplyScreen() {
             <Pressable
               onPress={handleVerifyCode}
               disabled={verifying}
-              style={[styles.btn, { opacity: verifying ? 0.6 : 1 }]}
+              style={[styles.btn, verifying && { backgroundColor: "rgba(28,28,30,0.5)" }]}
             >
               <Text style={styles.btnText}>
                 {verifying ? "Verifying..." : "Verify Invitation"}
@@ -428,7 +428,7 @@ export default function ApplyScreen() {
             <Pressable
               onPress={handleSubmit}
               disabled={submitting}
-              style={[styles.btn, { opacity: submitting ? 0.6 : 1 }]}
+              style={[styles.btn, submitting && { backgroundColor: "rgba(28,28,30,0.5)" }]}
             >
               <Text style={styles.btnText}>
                 {submitting ? "Submitting..." : "Submit Application"}

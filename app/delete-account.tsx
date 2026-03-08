@@ -156,7 +156,14 @@ export default function DeleteAccountScreen() {
           disabled={deleting || !password}
           style={({ pressed }) => [
             styles.deleteBtn,
-            { opacity: deleting || !password ? 0.5 : pressed ? 0.85 : 1 },
+            {
+              backgroundColor:
+                deleting || !password
+                  ? "rgba(229,57,53,0.35)"
+                  : pressed
+                  ? "rgba(229,57,53,0.85)"
+                  : colors.red,
+            },
           ]}
           accessibilityRole="button"
         >
@@ -164,8 +171,19 @@ export default function DeleteAccountScreen() {
             <Text style={styles.deleteBtnText}>Deleting account...</Text>
           ) : (
             <>
-              <Ionicons name="trash-outline" size={16} color={colors.white} />
-              <Text style={styles.deleteBtnText}>Permanently Delete Account</Text>
+              <Ionicons
+                name="trash-outline"
+                size={16}
+                color={!password ? colors.stone : colors.white}
+              />
+              <Text
+                style={[
+                  styles.deleteBtnText,
+                  !password && { color: colors.stone },
+                ]}
+              >
+                Permanently Delete Account
+              </Text>
             </>
           )}
         </Pressable>

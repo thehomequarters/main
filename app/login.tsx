@@ -190,11 +190,10 @@ export default function LoginScreen() {
           onPress={handleLogin}
           disabled={loading}
           style={{
-            backgroundColor: colors.dark,
+            backgroundColor: loading ? "rgba(28,28,30,0.5)" : colors.dark,
             borderRadius: 10,
             paddingVertical: 16,
             marginTop: 24,
-            opacity: loading ? 0.6 : 1,
           }}
         >
           <Text
@@ -332,11 +331,10 @@ export default function LoginScreen() {
                 onPress={handlePasswordReset}
                 disabled={resetLoading}
                 style={{
-                  backgroundColor: colors.dark,
+                  backgroundColor: resetLoading ? "rgba(28,28,30,0.5)" : colors.dark,
                   borderRadius: 12,
                   paddingVertical: 16,
                   alignItems: "center",
-                  opacity: resetLoading ? 0.6 : 1,
                 }}
               >
                 {resetLoading ? (
