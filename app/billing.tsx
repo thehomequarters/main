@@ -107,7 +107,7 @@ export default function BillingScreen() {
         functions,
         "getStripePortalUrl"
       );
-      const result = await getPortalUrl({ return_url: "https://homequarters.co.uk" });
+      const result = await getPortalUrl({ return_url: "https://thehomequarters.com" });
       await Linking.openURL(result.data.url);
     } catch (err) {
       console.error("Failed to open billing portal:", err);
@@ -321,9 +321,9 @@ export default function BillingScreen() {
           Opens thehomequarters.com · Questions?{" "}
           <Text
             style={{ textDecorationLine: "underline" }}
-            onPress={() => Linking.openURL("mailto:hello@homequarters.co.uk")}
+            onPress={() => Linking.openURL("mailto:hello@thehomequarters.com")}
           >
-            hello@homequarters.co.uk
+            hello@thehomequarters.com
           </Text>
         </Text>
       </View>

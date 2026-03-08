@@ -4,7 +4,7 @@
 // Palette: cream #F2EBE0 · dark #1C1C1E · gold #C9A84C · stone #9A8E82
 // ─────────────────────────────────────────────
 
-const BASE_URL = process.env.APP_BASE_URL ?? "https://homequarters.co.uk";
+const BASE_URL = process.env.APP_BASE_URL ?? "https://thehomequarters.com";
 
 function wrap(content: string): string {
   return `<!DOCTYPE html>
@@ -171,14 +171,14 @@ export function applicationRejectedHtml(opts: {
     </p>
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      We wish you well. If you believe this decision was made in error, or if your circumstances change, you are welcome to reach out to us at <a href="mailto:hello@homequarters.co.uk" style="color:#1C1C1E;font-weight:600;">hello@homequarters.co.uk</a>.
+      We wish you well. If you believe this decision was made in error, or if your circumstances change, you are welcome to reach out to us at <a href="mailto:hello@thehomequarters.com" style="color:#1C1C1E;font-weight:600;">hello@thehomequarters.com</a>.
     </p>
   `;
   return wrap(body);
 }
 
 export function applicationRejectedText(opts: { firstName: string }): string {
-  return `Hi ${opts.firstName},\n\nThank you for applying to HomeQuarters. After careful consideration, we are not able to move forward at this time.\n\nIf you have any questions, contact us at hello@homequarters.co.uk.\n\nHomeQuarters`;
+  return `Hi ${opts.firstName},\n\nThank you for applying to HomeQuarters. After careful consideration, we are not able to move forward at this time.\n\nIf you have any questions, contact us at hello@thehomequarters.com.\n\nHomeQuarters`;
 }
 
 // ─────────────────────────────────────────────
@@ -196,17 +196,17 @@ export function membershipSuspendedHtml(opts: {
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
       If you believe this is an error, or if you would like to understand the reason for suspension, please contact the team.
     </p>
-    ${ctaButton("Contact Support", "mailto:hello@homequarters.co.uk", "#1C1C1E")}
+    ${ctaButton("Contact Support", "mailto:hello@thehomequarters.com", "#1C1C1E")}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      Reach us at <a href="mailto:hello@homequarters.co.uk" style="color:#1C1C1E;font-weight:600;">hello@homequarters.co.uk</a>. We handle all queries confidentially and fairly.
+      Reach us at <a href="mailto:hello@thehomequarters.com" style="color:#1C1C1E;font-weight:600;">hello@thehomequarters.com</a>. We handle all queries confidentially and fairly.
     </p>
   `;
   return wrap(body);
 }
 
 export function membershipSuspendedText(opts: { firstName: string }): string {
-  return `Hi ${opts.firstName},\n\nYour HomeQuarters membership has been suspended. Access to member benefits has been paused.\n\nFor questions, contact hello@homequarters.co.uk.\n\nHomeQuarters`;
+  return `Hi ${opts.firstName},\n\nYour HomeQuarters membership has been suspended. Access to member benefits has been paused.\n\nFor questions, contact hello@thehomequarters.com.\n\nHomeQuarters`;
 }
 
 // ─────────────────────────────────────────────
@@ -229,7 +229,7 @@ export function passwordResetHtml(opts: {
     ${ctaButton("Reset Password", opts.resetLink)}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      If you did not request a password reset, you can safely ignore this email. Your password will not change. If you&rsquo;re concerned about your account security, contact us at <a href="mailto:hello@homequarters.co.uk" style="color:#1C1C1E;font-weight:600;">hello@homequarters.co.uk</a>.
+      If you did not request a password reset, you can safely ignore this email. Your password will not change. If you&rsquo;re concerned about your account security, contact us at <a href="mailto:hello@thehomequarters.com" style="color:#1C1C1E;font-weight:600;">hello@thehomequarters.com</a>.
     </p>
   `;
   return wrap(body);

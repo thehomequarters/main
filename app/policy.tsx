@@ -11,7 +11,7 @@ const SECTIONS = [
   },
   {
     title: "2. Who Can Use HQ",
-    body: "HomeQuarters is open to adults aged 21 and over only. We do not knowingly collect personal data from persons under 21. If you believe a user under 21 has registered, please contact us at hello@homequarters.co.uk and we will take immediate action.",
+    body: "HomeQuarters is open to adults aged 21 and over only. We do not knowingly collect personal data from persons under 21. If you believe a user under 21 has registered, please contact us at hello@thehomequarters.com and we will take immediate action.",
   },
   {
     title: "3. Data We Collect",
@@ -35,7 +35,7 @@ const SECTIONS = [
   },
   {
     title: "8. Your Rights",
-    body: "Under UK GDPR you have the right to:\n\n• Access the personal data we hold about you\n• Request correction of inaccurate data\n• Request deletion of your data (right to erasure)\n• Object to or restrict certain processing\n• Data portability\n\nTo exercise any of these rights, email hello@homequarters.co.uk. We will respond within 30 days.",
+    body: "Under UK GDPR you have the right to:\n\n• Access the personal data we hold about you\n• Request correction of inaccurate data\n• Request deletion of your data (right to erasure)\n• Object to or restrict certain processing\n• Data portability\n\nTo exercise any of these rights, email hello@thehomequarters.com. We will respond within 30 days.",
   },
   {
     title: "9. Data Security",
@@ -55,7 +55,7 @@ const SECTIONS = [
   },
   {
     title: "13. Contact Us",
-    body: "If you have questions or concerns about this Privacy Policy or how we handle your data, please contact:\n\nHomeQuarters Ltd\nhello@homequarters.co.uk",
+    body: "If you have questions or concerns about this Privacy Policy or how we handle your data, please contact:\n\nHomeQuarters Ltd\nhello@thehomequarters.com",
   },
 ];
 

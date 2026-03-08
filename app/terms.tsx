@@ -172,7 +172,7 @@ export default function TermsScreen() {
           opacity: 0.7,
         }}
       >
-        Questions about these Terms?{"\n"}Contact us at hello@homequarters.co.uk
+        Questions about these Terms?{"\n"}Contact us at hello@thehomequarters.com
       </Text>
     </ScrollView>
   );

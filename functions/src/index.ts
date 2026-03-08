@@ -23,7 +23,7 @@ const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
-const FROM_EMAIL = "HomeQuarters <noreply@homequarters.co.uk>";
+const FROM_EMAIL = "HomeQuarters <noreply@thehomequarters.com>";
 
 async function sendEmail(opts: {
   to: string;
@@ -128,7 +128,7 @@ export const sendPasswordReset = onCall(
     let resetLink: string;
     try {
       resetLink = await getAuth().generatePasswordResetLink(sanitizedEmail, {
-        url: process.env.APP_BASE_URL ?? "https://homequarters.co.uk",
+        url: process.env.APP_BASE_URL ?? "https://thehomequarters.com",
       });
     } catch (err: any) {
       // If the user doesn't exist, return success to avoid email enumeration
@@ -796,7 +796,7 @@ export const getStripePortalUrl = onCall(
     const returnUrl =
       (request.data?.return_url as string | undefined) ||
       process.env.STRIPE_PORTAL_RETURN_URL ||
-      "https://homequarters.co.uk";
+      "https://thehomequarters.com";
 
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
