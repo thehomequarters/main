@@ -26,6 +26,7 @@ function TabIcon({
         color={focused ? colors.ink : colors.stone}
       />
       <Text
+        numberOfLines={1}
         style={{
           color: focused ? colors.ink : colors.stone,
           fontSize: 10,

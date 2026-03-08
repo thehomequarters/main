@@ -21,8 +21,6 @@ import { colors } from "@/constants/theme";
 // Payments are handled on the website (App Store compliant for digital subs).
 const MEMBERSHIP_URL = "https://homequarters-60838.web.app/membership";
 
-// ── Apple Wallet pass endpoint ──────────────────────────────────────────────
-const WALLET_PASS_BASE = "https://api.homequarters.co.uk/wallet/pass";
 
 const GOLD_FEATURES = [
   { icon: "storefront-outline" as const, text: "Deals at 15+ partner venues across the UK" },
@@ -118,15 +116,6 @@ export default function BillingScreen() {
     }
   };
 
-  const handleAddToWallet = async () => {
-    const url = `${WALLET_PASS_BASE}/${profile?.member_code}`;
-    try {
-      await Linking.openURL(url);
-    } catch {
-      /* dev */
-    }
-  };
-
   const isOnSelectedPlan =
     isActive &&
     currentTier === (selected === "gold" ? "gold_card" : "platinum_card");
@@ -167,25 +156,6 @@ export default function BillingScreen() {
               )}
             </Text>
           </View>
-        )}
-
-        {/* ── Apple Wallet — iOS only, active members ── */}
-        {Platform.OS === "ios" && isActive && (
-          <Pressable
-            onPress={handleAddToWallet}
-            style={({ pressed }) => [styles.walletRow, { opacity: pressed ? 0.82 : 1 }]}
-          >
-            <View style={styles.walletLeft}>
-              <View style={styles.walletIconWrap}>
-                <Ionicons name="wallet" size={18} color={colors.dark} />
-              </View>
-              <View>
-                <Text style={styles.walletLabel}>Add to Apple Wallet</Text>
-                <Text style={styles.walletSub}>Save your membership pass to Wallet</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color={colors.stone} />
-          </Pressable>
         )}
 
         {/* ── GOLD CARD ── */}
@@ -298,7 +268,7 @@ export default function BillingScreen() {
         </Pressable>
 
         <Text style={styles.billingNote}>
-          Membership is managed at thehomequarters.com · Cancel anytime
+          Cancel anytime · No lock-in
         </Text>
       </ScrollView>
 
@@ -332,7 +302,7 @@ export default function BillingScreen() {
             style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
           >
             <Text style={styles.ctaBtnText}>
-              {isActive ? "Change plan" : "Get membership"} · thehomequarters.com
+              {isActive ? "Change Plan" : "Get Membership"}
             </Text>
             <Ionicons name="arrow-forward" size={16} color={colors.white} />
           </Pressable>
@@ -348,7 +318,7 @@ export default function BillingScreen() {
         )}
 
         <Text style={styles.footerNote}>
-          Questions?{" "}
+          Opens thehomequarters.com · Questions?{" "}
           <Text
             style={{ textDecorationLine: "underline" }}
             onPress={() => Linking.openURL("mailto:hello@homequarters.co.uk")}
@@ -427,44 +397,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     flex: 1,
     flexWrap: "wrap",
-  },
-
-  // ── Apple Wallet row ──
-  walletRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    marginBottom: 24,
-  },
-  walletLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  walletIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: colors.sand,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  walletLabel: {
-    color: colors.dark,
-    fontSize: 14,
-    fontWeight: "700",
-    letterSpacing: 0.1,
-  },
-  walletSub: {
-    color: colors.stone,
-    fontSize: 12,
-    marginTop: 1,
   },
 
   // ── Plan cards ──
