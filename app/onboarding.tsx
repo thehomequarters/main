@@ -54,7 +54,8 @@ export default function OnboardingScreen() {
       try {
         const snap = await getDocs(
           query(collection(db, "onboarding_slides"), orderBy("order", "asc"))
-        );
+        ).catch(() => null);
+        if (!snap) return;
         if (!snap.empty) {
           const remote = snap.docs
             .filter((d) => d.data().is_active === true)
@@ -174,10 +175,10 @@ export default function OnboardingScreen() {
           </Text>
         </Pressable>
 
-        {/* Sign in — text link, no border */}
+        {/* Sign in — outlined pill */}
         <Pressable
           onPress={handleSignIn}
-          style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }, styles.signInWrap]}
+          style={({ pressed }) => [styles.signInBtn, { opacity: pressed ? 0.75 : 1 }]}
         >
           <Text style={styles.signInText}>Already a member? Sign in</Text>
         </Pressable>
@@ -291,12 +292,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
-  signInWrap: {
-    paddingVertical: 6,
+  signInBtn: {
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.55)",
+    borderRadius: 100,
+    paddingVertical: 15,
+    paddingHorizontal: 40,
+    alignItems: "center",
+    alignSelf: "stretch",
   },
   signInText: {
     color: "rgba(255,255,255,0.9)",
-    fontSize: 13,
+    fontSize: 14,
     fontFamily: fonts.body,
     letterSpacing: 0.3,
   },
