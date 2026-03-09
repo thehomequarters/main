@@ -8,6 +8,8 @@ Usage:
   python scripts/scrape_dinexp.py --query harare --output venues_harare.csv
 """
 
+from __future__ import annotations
+
 import argparse
 import csv
 import json
