@@ -67,6 +67,7 @@ export default function HomeTab() {
   const isGrace = profile?.membership_status === "accepted";
 
   const fetchVenues = useCallback(async () => {
+    if (!user) return; // wait for auth to resolve before querying
     try {
       const venuesQuery = query(
         collection(db, "venues"),
@@ -117,7 +118,7 @@ export default function HomeTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchVenues();
