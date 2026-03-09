@@ -307,6 +307,33 @@
     }
     .contact-submit:hover { opacity: 0.8; }
 
+    /* ── LIFESTYLE GALLERY ── */
+    .lifestyle { background: var(--dark); padding: 80px 48px; }
+    .lifestyle-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold);
+      text-align: center; margin-bottom: 48px;
+    }
+    .lifestyle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .lifestyle-grid img {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: opacity .2s;
+    }
+    .lifestyle-grid img:hover { opacity: 0.85; }
+    .lifestyle-grid img:nth-child(4n+1) { grid-column: span 2; aspect-ratio: 16/9; }
+    @media (max-width: 768px) {
+      .lifestyle { padding: 60px 24px; }
+      .lifestyle-grid { grid-template-columns: 1fr 1fr; }
+      .lifestyle-grid img:nth-child(4n+1) { grid-column: span 1; aspect-ratio: 4/3; }
+    }
+
     /* ── FOOTER ── */
     footer {
       background: var(--dark);
@@ -354,9 +381,9 @@
   <!-- HERO -->
   <section class="hero">
     <div class="hero-content">
-      <div class="hero-eyebrow">A private members' community</div>
-      <h1>Built for the diaspora.<br><em>By invitation only.</em></h1>
-      <p>HomeQuarters brings together a curated community of Zimbabweans in the UK. Membership is by invitation from a current member. Applications are rarely considered.</p>
+      <div class="hero-eyebrow" id="cms-hero-eyebrow">A private members' community</div>
+      <h1><span id="cms-hero-line1">Built for the diaspora.</span><br><em id="cms-hero-line2">By invitation only.</em></h1>
+      <p id="cms-hero-body">HomeQuarters brings together a curated community of Zimbabweans in the UK. Membership is by invitation from a current member. Applications are rarely considered.</p>
       <div class="hero-btns">
         <a href="#" class="store-btn">
           <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
@@ -416,9 +443,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2>Discover exclusive deals at top UK venues.</h2>
-        <p>Access members-only pricing at restaurants, bars, and lounges across the UK.</p>
-        <p>Exceptional offers you won't find anywhere else — from dozens of top-tier venues.</p>
+        <h2 id="cms-f1-headline">Discover exclusive deals at top UK venues.</h2>
+        <p id="cms-f1-p1">Access members-only pricing at restaurants, bars, and lounges across the UK.</p>
+        <p id="cms-f1-p2">Exceptional offers you won't find anywhere else — from dozens of top-tier venues.</p>
       </div>
     </div>
 
@@ -439,9 +466,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2>Membership is by invitation.</h2>
-        <p>Access to HomeQuarters requires a personal invitation from a current member. Invitations are non-transferable and strictly confidential.</p>
-        <p>On rare occasions, outstanding applications without a code are reviewed. If you believe you're a fit, you're welcome to apply below.</p>
+        <h2 id="cms-f2-headline">Membership is by invitation.</h2>
+        <p id="cms-f2-p1">Access to HomeQuarters requires a personal invitation from a current member. Invitations are non-transferable and strictly confidential.</p>
+        <p id="cms-f2-p2">On rare occasions, outstanding applications without a code are reviewed. If you believe you're a fit, you're welcome to apply below.</p>
       </div>
     </div>
 
@@ -463,9 +490,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2>Access restaurants, clubs, and more with Platinum.</h2>
-        <p>Upgrade to Platinum for £15/mo. For members heading back to Zimbabwe — unlock the best of Harare.</p>
-        <p>It's optional and you can cancel anytime.</p>
+        <h2 id="cms-f3-headline">Access restaurants, clubs, and more with Platinum.</h2>
+        <p id="cms-f3-p1">Upgrade to Platinum for £15/mo. For members heading back to Zimbabwe — unlock the best of Harare.</p>
+        <p id="cms-f3-p2">It's optional and you can cancel anytime.</p>
       </div>
     </div>
 
@@ -495,7 +522,7 @@
   <!-- PARTNERS -->
   <section class="partners">
     <div class="partners-eyebrow">Members pricing from exceptional venues including</div>
-    <div class="partners-grid">
+    <div class="partners-grid" id="cms-partners-grid">
       <div class="partner-cell">Venue One</div>
       <div class="partner-cell">The Grand</div>
       <div class="partner-cell">Harare Club</div>
@@ -512,6 +539,12 @@
       <div class="partner-cell">HQ Bar</div>
       <div class="partner-cell">Members Co.</div>
     </div>
+  </section>
+
+  <!-- LIFESTYLE GALLERY (hidden until CMS images are set) -->
+  <section class="lifestyle" id="cms-lifestyle" style="display:none;">
+    <div class="lifestyle-eyebrow">Life at HomeQuarters</div>
+    <div class="lifestyle-grid" id="cms-lifestyle-grid"></div>
   </section>
 
   <!-- HOUSE RULES -->
@@ -633,6 +666,58 @@
         btn.textContent = 'Submit Application';
       }
     });
+  </script>
+
+  <!-- CMS HYDRATION — fetches content from /api/content and updates the page -->
+  <script>
+    (function() {
+      function set(id, text) {
+        var el = document.getElementById(id);
+        if (el && text) el.textContent = text;
+      }
+      fetch('/api/content')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(c) {
+          if (!c) return;
+          // Hero
+          if (c.hero) {
+            set('cms-hero-eyebrow', c.hero.eyebrow);
+            set('cms-hero-line1', c.hero.headline_line1);
+            set('cms-hero-line2', c.hero.headline_line2);
+            set('cms-hero-body', c.hero.body);
+          }
+          // Features
+          ['f1','f2','f3'].forEach(function(f, i) {
+            var key = 'feature' + (i + 1);
+            if (c[key]) {
+              set('cms-' + f + '-headline', c[key].headline);
+              set('cms-' + f + '-p1', c[key].p1);
+              set('cms-' + f + '-p2', c[key].p2);
+            }
+          });
+          // Partners
+          if (c.partners && c.partners.length) {
+            var grid = document.getElementById('cms-partners-grid');
+            if (grid) {
+              grid.innerHTML = c.partners.map(function(p) {
+                return '<div class="partner-cell">' + p.replace(/</g,'&lt;') + '</div>';
+              }).join('');
+            }
+          }
+          // Lifestyle gallery
+          if (c.lifestyle_images && c.lifestyle_images.length) {
+            var section = document.getElementById('cms-lifestyle');
+            var lgrid = document.getElementById('cms-lifestyle-grid');
+            if (section && lgrid) {
+              lgrid.innerHTML = c.lifestyle_images.map(function(url) {
+                return '<img src="' + url.replace(/"/g,'') + '" alt="HQ lifestyle" loading="lazy" />';
+              }).join('');
+              section.style.display = '';
+            }
+          }
+        })
+        .catch(function() {});
+    })();
   </script>
 
   <!-- FOOTER -->

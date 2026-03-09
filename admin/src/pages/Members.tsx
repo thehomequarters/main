@@ -31,6 +31,8 @@ interface Profile {
   voucher_count?: number;
   vouchers?: string[];
   application_code?: string;
+  instagram_handle?: string | null;
+  linkedin_handle?: string | null;
 }
 
 type FilterTab = "all" | "pending" | "open_application" | "accepted" | "active" | "rejected" | "suspended";
@@ -749,6 +751,33 @@ export default function Members() {
                       value={new Date(selected.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                     />
                   </div>
+
+                  {/* Application details */}
+                  {(selected.instagram_handle || selected.linkedin_handle || selected.bio) && (
+                    <div className="mb-5">
+                      <p className="text-gray-600 text-xs uppercase tracking-wider font-semibold mb-3">Application</p>
+                      <div className="bg-black/40 border border-dark-border rounded-xl p-3 space-y-3">
+                        {selected.bio && (
+                          <div>
+                            <span className="text-gray-600 text-xs uppercase tracking-wider">About</span>
+                            <p className="text-gray-300 text-sm mt-0.5 leading-relaxed">{selected.bio}</p>
+                          </div>
+                        )}
+                        {selected.instagram_handle && (
+                          <div>
+                            <span className="text-gray-600 text-xs uppercase tracking-wider">Instagram</span>
+                            <p className="text-gray-300 text-sm mt-0.5 font-mono">@{selected.instagram_handle.replace(/^@/, "")}</p>
+                          </div>
+                        )}
+                        {selected.linkedin_handle && (
+                          <div>
+                            <span className="text-gray-600 text-xs uppercase tracking-wider">LinkedIn</span>
+                            <p className="text-gray-300 text-sm mt-0.5 break-all">{selected.linkedin_handle}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Edit button */}
                   <button

@@ -16,6 +16,10 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
       {
+        "source": "/api/content",
+        "function": "getWebsiteContent"
+      },
+      {
         "source": "/api/webApplication",
         "function": "handleWebApplication"
       }
