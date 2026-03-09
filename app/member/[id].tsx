@@ -155,6 +155,7 @@ export default function MemberProfileScreen() {
   const isConnected = connection?.status === "accepted";
   const isPending = connection?.status === "pending";
   const isSelf = user?.uid === member.id;
+  const isMasked = member.profile_visibility === "connections" && !isConnected && !isSelf;
 
   return (
     <View style={styles.root}>
@@ -170,7 +171,7 @@ export default function MemberProfileScreen() {
 
         {/* Avatar */}
         <View style={styles.avatarWrap}>
-          {member.avatar_url ? (
+          {!isMasked && member.avatar_url ? (
             <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
           ) : (
             <View style={[styles.avatar, styles.avatarFallback]}>
@@ -180,21 +181,27 @@ export default function MemberProfileScreen() {
         </View>
 
         {/* Name & title */}
-        <Text style={styles.name}>{member.first_name} {member.last_name}</Text>
-        {member.title ? (
+        <Text style={styles.name}>
+          {isMasked
+            ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
+            : `${member.first_name} ${member.last_name}`}
+        </Text>
+        {!isMasked && member.title ? (
           <Text style={styles.title}>{member.title}</Text>
+        ) : isMasked ? (
+          <Text style={styles.title}>HQ Member</Text>
         ) : null}
 
         {/* Meta chips — location + industry */}
-        {(member.city || member.industry) ? (
+        {!isMasked && (member.city || member.industry) ? (
           <View style={styles.chips}>
-            {member.city ? (
+            {member.city && !member.hide_city ? (
               <View style={styles.chip}>
                 <Ionicons name="location-outline" size={12} color={colors.stone} />
                 <Text style={styles.chipText}>{member.city}</Text>
               </View>
             ) : null}
-            {member.industry ? (
+            {member.industry && !member.hide_industry ? (
               <View style={styles.chip}>
                 <Ionicons name="briefcase-outline" size={12} color={colors.stone} />
                 <Text style={styles.chipText}>
@@ -248,8 +255,18 @@ export default function MemberProfileScreen() {
           </View>
         )}
 
+        {/* Locked profile notice */}
+        {isMasked && (
+          <View style={[styles.card, { flexDirection: "row", alignItems: "center", gap: 12 }]}>
+            <Ionicons name="lock-closed-outline" size={16} color={colors.stone} />
+            <Text style={{ color: colors.stone, fontSize: 14, flex: 1, lineHeight: 20 }}>
+              Connect to see this member's full profile
+            </Text>
+          </View>
+        )}
+
         {/* Bio */}
-        {member.bio ? (
+        {!isMasked && member.bio ? (
           <View style={styles.card}>
             <Text style={styles.cardLabel}>ABOUT</Text>
             <Text style={styles.bio}>{member.bio}</Text>
@@ -257,7 +274,7 @@ export default function MemberProfileScreen() {
         ) : null}
 
         {/* Interests */}
-        {member.interests && member.interests.length > 0 && (
+        {!isMasked && !member.hide_interests && member.interests && member.interests.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardLabel}>INTERESTS</Text>
             <View style={styles.tags}>
@@ -271,7 +288,7 @@ export default function MemberProfileScreen() {
         )}
 
         {/* Social */}
-        {(member.instagram_handle || member.linkedin_handle) && (
+        {!isMasked && !member.hide_social_links && (member.instagram_handle || member.linkedin_handle) && (
           <View style={styles.card}>
             <Text style={styles.cardLabel}>FIND ME ONLINE</Text>
             {member.instagram_handle ? (

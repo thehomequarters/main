@@ -43,7 +43,8 @@ export interface Profile {
   linkedin_handle: string | null;
   // Push notifications
   push_token: string | null;
-  // Privacy settings (all default to false = visible)
+  // Privacy settings (all default to false / "everyone" = visible)
+  profile_visibility?: "everyone" | "connections"; // "connections" = only accepted connections see full profile
   hide_city?: boolean;
   hide_industry?: boolean;
   hide_interests?: boolean;

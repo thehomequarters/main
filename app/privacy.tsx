@@ -22,6 +22,9 @@ export default function PrivacyScreen() {
   const { user, profile, refreshProfile } = useAuth();
   const { toast } = useToast();
 
+  const [profileVisibility, setProfileVisibility] = useState<"everyone" | "connections">(
+    profile?.profile_visibility ?? "everyone"
+  );
   const [hideCity, setHideCity] = useState(profile?.hide_city ?? false);
   const [hideIndustry, setHideIndustry] = useState(profile?.hide_industry ?? false);
   const [hideInterests, setHideInterests] = useState(profile?.hide_interests ?? false);
@@ -53,6 +56,11 @@ export default function PrivacyScreen() {
     await save({ [field]: !current });
   };
 
+  const setVisibility = async (value: "everyone" | "connections") => {
+    setProfileVisibility(value);
+    await save({ profile_visibility: value });
+  };
+
   const setMessages = async (value: "all" | "connections") => {
     setAllowMessages(value);
     await save({ allow_messages: value });
@@ -78,12 +86,48 @@ export default function PrivacyScreen() {
       <View style={styles.infoBanner}>
         <Ionicons name="eye-outline" size={16} color={colors.stone} />
         <Text style={styles.infoBannerText}>
-          Your name and photo are always visible to active members. These settings
-          control additional profile details.
+          Set to "Connections only" to appear anonymously in Discover — only your
+          initials and first name are shown until someone connects with you.
         </Text>
       </View>
 
       {/* Profile visibility */}
+      <Text style={styles.sectionLabel}>WHO CAN SEE YOUR PROFILE</Text>
+      <View style={[styles.card, { marginBottom: 28 }]}>
+        <Pressable
+          onPress={() => setVisibility("everyone")}
+          style={styles.radioRow}
+        >
+          <View style={styles.radioIconWrap}>
+            <Ionicons name="people-outline" size={18} color={colors.grey} />
+          </View>
+          <View style={styles.radioBody}>
+            <Text style={styles.radioLabel}>Everyone</Text>
+            <Text style={styles.radioSub}>All active members can see your profile</Text>
+          </View>
+          <View style={[styles.radioCircle, profileVisibility === "everyone" && styles.radioCircleActive]}>
+            {profileVisibility === "everyone" && <View style={styles.radioInner} />}
+          </View>
+        </Pressable>
+        <View style={styles.divider} />
+        <Pressable
+          onPress={() => setVisibility("connections")}
+          style={styles.radioRow}
+        >
+          <View style={styles.radioIconWrap}>
+            <Ionicons name="lock-closed-outline" size={18} color={colors.grey} />
+          </View>
+          <View style={styles.radioBody}>
+            <Text style={styles.radioLabel}>Connections only</Text>
+            <Text style={styles.radioSub}>Others see a limited anonymous card until you connect</Text>
+          </View>
+          <View style={[styles.radioCircle, profileVisibility === "connections" && styles.radioCircleActive]}>
+            {profileVisibility === "connections" && <View style={styles.radioInner} />}
+          </View>
+        </Pressable>
+      </View>
+
+      {/* Profile details */}
       <Text style={styles.sectionLabel}>PROFILE DETAILS</Text>
       <View style={styles.card}>
         <ToggleRow
