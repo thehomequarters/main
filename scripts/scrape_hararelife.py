@@ -60,14 +60,33 @@ session = requests.Session()
 session.headers.update(HEADERS)
 
 
-def fetch(url: str) -> BeautifulSoup | None:
-    try:
-        resp = session.get(url, timeout=20)
-        resp.raise_for_status()
-        return BeautifulSoup(resp.text, "lxml")
-    except requests.RequestException as e:
-        print(f"  Warning fetching {url}: {e}", file=sys.stderr)
-        return None
+def fetch(url: str, retries: int = 4) -> BeautifulSoup | None:
+    """Fetch URL with exponential-backoff retry on timeout/connection errors."""
+    delay = 2
+    for attempt in range(retries + 1):
+        try:
+            resp = session.get(url, timeout=40)
+            resp.raise_for_status()
+            return BeautifulSoup(resp.text, "lxml")
+        except requests.exceptions.Timeout as e:
+            if attempt < retries:
+                print(f"  Timeout fetching {url} (attempt {attempt+1}), retrying in {delay}s…", file=sys.stderr)
+                time.sleep(delay)
+                delay *= 2
+            else:
+                print(f"  Failed after {retries+1} attempts: {url}", file=sys.stderr)
+                return None
+        except requests.RequestException as e:
+            print(f"  Warning fetching {url}: {e}", file=sys.stderr)
+            return None
+    return None
+
+
+def page_url(page_num: int) -> str:
+    """Build the listing page URL for a given page number."""
+    if page_num == 1:
+        return LISTING_URL
+    return f"{LISTING_URL}page/{page_num}/"
 
 
 def get_image(tag) -> str:
@@ -135,25 +154,14 @@ def parse_card(article) -> dict:
     }
 
 
-def scrape_listing_page(url: str) -> tuple[list[dict], str | None]:
-    """Scrape one listing page, return (cards, next_page_url)."""
+def scrape_listing_page(url: str) -> list[dict]:
+    """Scrape one listing page and return cards. Empty list = no more pages."""
     soup = fetch(url)
     if not soup:
-        return [], None
+        return []
 
     articles = soup.select("article.geodir-category-listing")
-    cards = [parse_card(a) for a in articles]
-
-    # Multiple pagination selector patterns used by GeoDirectory / Townhub
-    next_link = soup.select_one(
-        "a.next.page-numbers, "
-        "a[rel='next'], "
-        ".geodir-pagination a.next, "
-        ".pagination a.next"
-    )
-    next_url = next_link["href"] if next_link else None
-
-    return cards, next_url
+    return [parse_card(a) for a in articles]
 
 
 def _extract_coords_from_jsonld(soup: BeautifulSoup) -> tuple[str, str]:
@@ -360,29 +368,31 @@ def parse_detail_page(url: str) -> dict:
 def run(output: str, limit: int | None, skip_detail: bool = False):
     all_cards: list[dict] = []
     seen_urls: set[str] = set()
-    page_url: str | None = LISTING_URL
     page_num = 1
 
-    # Pass 1: collect all listing cards from all paginated listing pages
-    while page_url:
-        print(f"Fetching listing page {page_num}: {page_url}")
-        cards, next_url = scrape_listing_page(page_url)
+    # Pass 1: walk numbered pages until one returns 0 results (= past last page)
+    while True:
+        url = page_url(page_num)
+        print(f"Fetching listing page {page_num}: {url}")
+        cards = scrape_listing_page(url)
         print(f"  Found {len(cards)} listing(s)")
 
+        if not cards:
+            print(f"  No listings on page {page_num} — stopping pagination.")
+            break
+
         for card in cards:
-            url = card["listing_url"]
-            if url and url not in seen_urls:
-                seen_urls.add(url)
+            u = card["listing_url"]
+            if u and u not in seen_urls:
+                seen_urls.add(u)
                 all_cards.append(card)
 
         if limit and len(all_cards) >= limit:
             all_cards = all_cards[:limit]
             break
 
-        page_url = next_url
         page_num += 1
-        if page_url:
-            time.sleep(1)
+        time.sleep(1.5)
 
     if not all_cards:
         print("No listings found. The site structure may have changed.", file=sys.stderr)
