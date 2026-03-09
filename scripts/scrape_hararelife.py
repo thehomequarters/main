@@ -33,10 +33,20 @@ HEADERS = {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html,application/xhtml+xml,*/*;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Referer": BASE_URL,
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Cache-Control": "max-age=0",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
 }
+
+# GeoDirectory REST API — faster and less bot-sensitive than HTML scraping
+API_BASE = f"{BASE_URL}/wp-json/geodir/v2"
 
 CSV_FIELDS = [
     "name",
@@ -60,23 +70,71 @@ session = requests.Session()
 session.headers.update(HEADERS)
 
 
+def _warm_up_session():
+    """Hit the homepage first so we get any cookies/CF clearance tokens."""
+    try:
+        session.get(BASE_URL, timeout=40)
+        time.sleep(1)
+    except Exception:
+        pass
+
+
 def fetch(url: str, retries: int = 4) -> BeautifulSoup | None:
-    """Fetch URL with exponential-backoff retry on timeout/connection errors."""
-    delay = 2
+    """Fetch URL with exponential-backoff retry on timeout/503 errors."""
+    delay = 3
     for attempt in range(retries + 1):
         try:
             resp = session.get(url, timeout=40)
+            if resp.status_code == 503:
+                if attempt < retries:
+                    print(f"  503 on {url} (attempt {attempt+1}), retrying in {delay}s…", file=sys.stderr)
+                    time.sleep(delay)
+                    delay *= 2
+                    continue
+                print(f"  Giving up on {url} after {retries+1} attempts (503).", file=sys.stderr)
+                return None
             resp.raise_for_status()
             return BeautifulSoup(resp.text, "lxml")
-        except requests.exceptions.Timeout as e:
+        except requests.exceptions.Timeout:
             if attempt < retries:
-                print(f"  Timeout fetching {url} (attempt {attempt+1}), retrying in {delay}s…", file=sys.stderr)
+                print(f"  Timeout on {url} (attempt {attempt+1}), retrying in {delay}s…", file=sys.stderr)
                 time.sleep(delay)
                 delay *= 2
             else:
-                print(f"  Failed after {retries+1} attempts: {url}", file=sys.stderr)
+                print(f"  Giving up on {url} after {retries+1} attempts (timeout).", file=sys.stderr)
                 return None
         except requests.RequestException as e:
+            print(f"  Warning fetching {url}: {e}", file=sys.stderr)
+            return None
+    return None
+
+
+def fetch_json(url: str, params: dict | None = None, retries: int = 4) -> dict | list | None:
+    """Fetch JSON (used for REST API calls) with the same retry logic."""
+    delay = 3
+    for attempt in range(retries + 1):
+        try:
+            resp = session.get(url, params=params, timeout=40)
+            if resp.status_code in (503, 429):
+                if attempt < retries:
+                    wait = int(resp.headers.get("Retry-After", delay))
+                    print(f"  {resp.status_code} on {url} (attempt {attempt+1}), retrying in {wait}s…", file=sys.stderr)
+                    time.sleep(wait)
+                    delay *= 2
+                    continue
+                return None
+            if resp.status_code == 404:
+                return None
+            resp.raise_for_status()
+            return resp.json()
+        except requests.exceptions.Timeout:
+            if attempt < retries:
+                print(f"  Timeout on {url} (attempt {attempt+1}), retrying in {delay}s…", file=sys.stderr)
+                time.sleep(delay)
+                delay *= 2
+            else:
+                return None
+        except (requests.RequestException, ValueError) as e:
             print(f"  Warning fetching {url}: {e}", file=sys.stderr)
             return None
     return None
@@ -162,6 +220,105 @@ def scrape_listing_page(url: str) -> list[dict]:
 
     articles = soup.select("article.geodir-category-listing")
     return [parse_card(a) for a in articles]
+
+
+# ---------------------------------------------------------------------------
+# GeoDirectory REST API path (primary — less bot-sensitive than HTML)
+# ---------------------------------------------------------------------------
+
+def _api_card(item: dict) -> dict:
+    """Map a GeoDirectory REST API listing object to our card schema."""
+    # Coordinates
+    latitude = str(item.get("latitude") or item.get("lat") or "")
+    longitude = str(item.get("longitude") or item.get("lng") or "")
+
+    # Images: featured_image is the main image; images list for gallery
+    image_url = item.get("featured_image_url") or item.get("featured_media_src_url") or ""
+    gallery = item.get("images") or []
+    extra = [img.get("url", img) if isinstance(img, dict) else str(img) for img in gallery if img]
+    extra = [u for u in extra if u and u != image_url]
+
+    # Tags / categories
+    cats = item.get("gd_placecategory") or []
+    cat_names = [c.get("name", "") if isinstance(c, dict) else str(c) for c in cats]
+    category = cat_names[0] if cat_names else "Restaurant"
+    tags_list = item.get("post_tags") or item.get("tags") or []
+    tags = ", ".join(t.get("name", "") if isinstance(t, dict) else str(t) for t in tags_list)
+
+    # Address
+    address_parts = filter(None, [
+        item.get("street"),
+        item.get("city"),
+        item.get("region"),
+        item.get("country"),
+    ])
+    address = ", ".join(address_parts)
+
+    return {
+        "name": item.get("title", {}).get("rendered", "") if isinstance(item.get("title"), dict) else item.get("post_title", ""),
+        "description": BeautifulSoup(
+            (item.get("content", {}).get("rendered", "") if isinstance(item.get("content"), dict) else item.get("post_content", "")),
+            "lxml"
+        ).get_text(separator=" ", strip=True),
+        "category": category,
+        "city": item.get("city", "Harare"),
+        "country": item.get("country", "Zimbabwe"),
+        "address": address,
+        "phone": item.get("phone", ""),
+        "menu_url": item.get("website", "") or item.get("menu_url", ""),
+        "image_url": image_url,
+        "image_url_2": extra[0] if len(extra) > 0 else "",
+        "image_url_3": extra[1] if len(extra) > 1 else "",
+        "logo_url": "",
+        "tags": tags,
+        "latitude": latitude,
+        "longitude": longitude,
+        "listing_url": item.get("link", ""),
+    }
+
+
+def scrape_via_api(limit: int | None) -> list[dict] | None:
+    """
+    Try the GeoDirectory REST API.
+    Returns a list of cards, or None if the API is not available.
+    """
+    per_page = 100
+    test = fetch_json(f"{API_BASE}/listings", params={"per_page": 1, "page": 1})
+    if test is None:
+        return None  # API not available
+
+    print("  GeoDirectory REST API available — using API path.")
+    all_cards: list[dict] = []
+    page = 1
+    seen: set[str] = set()
+
+    while True:
+        print(f"  API page {page}…")
+        items = fetch_json(
+            f"{API_BASE}/listings",
+            params={"per_page": per_page, "page": page, "post_type": "gd_place"},
+        )
+        if not items:
+            break
+
+        for item in items:
+            card = _api_card(item)
+            url = card["listing_url"]
+            if url not in seen:
+                seen.add(url)
+                all_cards.append(card)
+
+        if limit and len(all_cards) >= limit:
+            all_cards = all_cards[:limit]
+            break
+
+        if len(items) < per_page:
+            break  # last page
+
+        page += 1
+        time.sleep(1)
+
+    return all_cards
 
 
 def _extract_coords_from_jsonld(soup: BeautifulSoup) -> tuple[str, str]:
@@ -367,32 +524,46 @@ def parse_detail_page(url: str) -> dict:
 
 def run(output: str, limit: int | None, skip_detail: bool = False):
     all_cards: list[dict] = []
-    seen_urls: set[str] = set()
-    page_num = 1
 
-    # Pass 1: walk numbered pages until one returns 0 results (= past last page)
-    while True:
-        url = page_url(page_num)
-        print(f"Fetching listing page {page_num}: {url}")
-        cards = scrape_listing_page(url)
-        print(f"  Found {len(cards)} listing(s)")
+    _warm_up_session()
 
-        if not cards:
-            print(f"  No listings on page {page_num} — stopping pagination.")
-            break
+    # --- Strategy 1: GeoDirectory REST API (preferred) ---
+    print("Trying GeoDirectory REST API…")
+    api_cards = scrape_via_api(limit)
 
-        for card in cards:
-            u = card["listing_url"]
-            if u and u not in seen_urls:
-                seen_urls.add(u)
-                all_cards.append(card)
+    if api_cards is not None:
+        all_cards = api_cards
+        # API already returns full data; skip HTML detail pass unless forced
+        skip_detail = True
+        print(f"  API returned {len(all_cards)} listing(s).")
+    else:
+        # --- Strategy 2: HTML pagination fallback ---
+        print("REST API unavailable — falling back to HTML scraping.")
+        seen_urls: set[str] = set()
+        page_num = 1
 
-        if limit and len(all_cards) >= limit:
-            all_cards = all_cards[:limit]
-            break
+        while True:
+            url = page_url(page_num)
+            print(f"Fetching listing page {page_num}: {url}")
+            cards = scrape_listing_page(url)
+            print(f"  Found {len(cards)} listing(s)")
 
-        page_num += 1
-        time.sleep(1.5)
+            if not cards:
+                print(f"  No listings on page {page_num} — stopping pagination.")
+                break
+
+            for card in cards:
+                u = card["listing_url"]
+                if u and u not in seen_urls:
+                    seen_urls.add(u)
+                    all_cards.append(card)
+
+            if limit and len(all_cards) >= limit:
+                all_cards = all_cards[:limit]
+                break
+
+            page_num += 1
+            time.sleep(1.5)
 
     if not all_cards:
         print("No listings found. The site structure may have changed.", file=sys.stderr)
