@@ -60,6 +60,40 @@ interface VenuePin {
   updated_at: string;
 }
 
+// ── CSV helpers ──────────────────────────────────────────────────────────────
+function splitCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+      else inQuotes = !inQuotes;
+    } else if (ch === "," && !inQuotes) {
+      result.push(current); current = "";
+    } else { current += ch; }
+  }
+  result.push(current);
+  return result;
+}
+
+function parseCsvText(text: string): Record<string, string>[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = splitCsvLine(lines[0]).map((h) => h.trim().replace(/^"|"$/g, ""));
+  return lines.slice(1).filter((l) => l.trim()).map((line) => {
+    const values = splitCsvLine(line);
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => { row[h] = (values[i] ?? "").replace(/^"|"$/g, "").trim(); });
+    return row;
+  });
+}
+
+const VENUE_TEMPLATE =
+  "name,description,category,city,country,address,phone,menu_url,image_url,image_url_2,image_url_3,logo_url,tags,latitude,longitude\n" +
+  '"The Copper Pot","Traditional cuisine in the heart of the city","restaurant","Harare","Zimbabwe","14 Samora Machel Ave","","","","","","","African|Fine Dining","",""';
+
 const EMPTY_VENUE = {
   name: "",
   description: "",
@@ -112,6 +146,13 @@ export default function Venues() {
     caption: "",
     order: 0,
   });
+
+  // CSV import
+  const [showImport, setShowImport] = useState(false);
+  const [importRows, setImportRows] = useState<Record<string, string>[]>([]);
+  const [importFileError, setImportFileError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importDone, setImportDone] = useState<{ success: number; skipped: string[] } | null>(null);
 
   useEffect(() => {
     let venuesReady = false, dealsReady = false, storiesReady = false, pinsReady = false;
@@ -208,6 +249,65 @@ export default function Venues() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleVenueFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportFileError(null);
+    setImportDone(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const rows = parseCsvText(ev.target?.result as string);
+        if (rows.length === 0) { setImportFileError("No data rows found in the CSV."); return; }
+        setImportRows(rows);
+      } catch {
+        setImportFileError("Failed to parse the CSV file.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImportVenues = async () => {
+    setImporting(true);
+    const skipped: string[] = [];
+    let success = 0;
+    for (const row of importRows) {
+      if (!row.name?.trim() || !row.address?.trim()) {
+        skipped.push(row.name?.trim() || "(unnamed)");
+        continue;
+      }
+      try {
+        const imageUrls = [row.image_url, row.image_url_2, row.image_url_3]
+          .map((u) => u?.trim()).filter(Boolean) as string[];
+        const tagList = row.tags ? row.tags.split("|").map((t) => t.trim()).filter(Boolean) : [];
+        await addDoc(collection(db, "venues"), {
+          name: row.name.trim(),
+          description: row.description?.trim() || "",
+          category: CATEGORIES.includes(row.category) ? row.category : "restaurant",
+          city: row.city?.trim() || "Harare",
+          country: row.country?.trim() || "Zimbabwe",
+          address: row.address.trim(),
+          phone: row.phone?.trim() || null,
+          menu_url: row.menu_url?.trim() || null,
+          image_url: imageUrls[0] ?? null,
+          image_urls: imageUrls.length > 0 ? imageUrls : null,
+          logo_url: row.logo_url?.trim() || null,
+          tags: tagList.length > 0 ? tagList : null,
+          latitude: row.latitude?.trim() ? parseFloat(row.latitude) : 0,
+          longitude: row.longitude?.trim() ? parseFloat(row.longitude) : 0,
+          is_active: true,
+          created_at: new Date().toISOString(),
+        });
+        success++;
+      } catch {
+        skipped.push(row.name.trim());
+      }
+    }
+    setImporting(false);
+    setImportDone({ success, skipped });
+    setImportRows([]);
   };
 
   const handleToggleActive = async (venue: Venue) => {
@@ -396,13 +496,122 @@ export default function Venues() {
             {venues.length} partner venue{venues.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button
-          onClick={() => { setEditingVenue(null); setForm(EMPTY_VENUE); setShowForm(true); }}
-          className="px-5 py-2.5 bg-gold text-black font-bold text-sm rounded-xl hover:bg-gold/90 transition-colors"
-        >
-          + Add Venue
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              const blob = new Blob([VENUE_TEMPLATE], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = "venues_template.csv"; a.click(); URL.revokeObjectURL(url);
+            }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-dark border border-dark-border text-gray-400 text-sm font-medium rounded-xl hover:text-white hover:border-white/20 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Template
+          </button>
+          <button
+            onClick={() => { setShowImport(true); setImportRows([]); setImportFileError(null); setImportDone(null); }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-dark border border-dark-border text-gray-400 text-sm font-medium rounded-xl hover:text-white hover:border-white/20 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12l-4.5-4.5m0 0L7.5 12m4.5-4.5V21" />
+            </svg>
+            Import CSV
+          </button>
+          <button
+            onClick={() => { setEditingVenue(null); setForm(EMPTY_VENUE); setShowForm(true); }}
+            className="px-5 py-2.5 bg-gold text-black font-bold text-sm rounded-xl hover:bg-gold/90 transition-colors"
+          >
+            + Add Venue
+          </button>
+        </div>
       </div>
+
+      {/* ── CSV import modal ── */}
+      {showImport && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-dark border border-dark-border rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-dark-border">
+              <div>
+                <h2 className="text-white text-lg font-bold">Import Venues</h2>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  CSV columns: name, description, category, city, country, address, phone, menu_url, image_url, image_url_2, image_url_3, logo_url, tags (pipe-separated), latitude, longitude
+                </p>
+              </div>
+              <button onClick={() => setShowImport(false)} className="text-gray-500 hover:text-white transition-colors text-xl leading-none">✕</button>
+            </div>
+
+            <div className="p-6 flex-1 overflow-y-auto space-y-4">
+              {!importDone ? (
+                <>
+                  <label className="flex flex-col items-center justify-center border-2 border-dashed border-dark-border rounded-xl p-8 cursor-pointer hover:border-gold/40 transition-colors">
+                    <svg className="w-8 h-8 text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12l-4.5-4.5m0 0L7.5 12m4.5-4.5V21" />
+                    </svg>
+                    <span className="text-gray-400 text-sm">Click to select a CSV file</span>
+                    <input type="file" accept=".csv,text/csv" className="hidden" onChange={handleVenueFileChange} />
+                  </label>
+
+                  {importFileError && <p className="text-red-400 text-sm">{importFileError}</p>}
+
+                  {importRows.length > 0 && (
+                    <div>
+                      <p className="text-gray-400 text-sm mb-2">{importRows.length} row{importRows.length !== 1 ? "s" : ""} ready to import</p>
+                      <div className="overflow-x-auto rounded-xl border border-dark-border">
+                        <table className="w-full text-xs text-left">
+                          <thead className="bg-black/40">
+                            <tr>
+                              {["name","category","city","address","tags"].map((h) => (
+                                <th key={h} className="px-3 py-2 text-gray-500 font-medium">{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {importRows.slice(0, 8).map((row, i) => (
+                              <tr key={i} className={`border-t border-dark-border ${!row.name?.trim() || !row.address?.trim() ? "bg-red-900/10" : ""}`}>
+                                <td className="px-3 py-2 text-white max-w-[160px] truncate">{row.name || <span className="text-red-400">missing</span>}</td>
+                                <td className="px-3 py-2 text-gray-400">{row.category}</td>
+                                <td className="px-3 py-2 text-gray-400">{row.city}</td>
+                                <td className="px-3 py-2 text-gray-400 max-w-[160px] truncate">{row.address || <span className="text-red-400">missing</span>}</td>
+                                <td className="px-3 py-2 text-gray-400 max-w-[120px] truncate">{row.tags}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {importRows.length > 8 && <p className="text-gray-600 text-xs px-3 py-2">+{importRows.length - 8} more rows</p>}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-6 space-y-3">
+                  <div className="text-4xl">{importDone.skipped.length === 0 ? "✅" : "⚠️"}</div>
+                  <p className="text-white font-semibold">{importDone.success} venue{importDone.success !== 1 ? "s" : ""} imported successfully</p>
+                  {importDone.skipped.length > 0 && (
+                    <p className="text-red-400 text-sm">{importDone.skipped.length} skipped (missing name or address): {importDone.skipped.join(", ")}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-dark-border flex justify-end gap-3">
+              <button onClick={() => setShowImport(false)} className="px-5 py-2.5 text-gray-400 text-sm border border-dark-border rounded-xl hover:text-white transition-colors">
+                {importDone ? "Close" : "Cancel"}
+              </button>
+              {!importDone && (
+                <button
+                  onClick={handleImportVenues}
+                  disabled={importing || importRows.length === 0}
+                  className="px-5 py-2.5 bg-gold text-black font-bold text-sm rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {importing ? "Importing…" : `Import ${importRows.length} venue${importRows.length !== 1 ? "s" : ""}`}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Venue form modal ── */}
       {showForm && (
