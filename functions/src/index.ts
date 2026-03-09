@@ -817,6 +817,31 @@ export const onVouchReceived = onDocumentUpdated(
 );
 
 // ─────────────────────────────────────────────
+// getWebsiteContent
+// Public GET endpoint that returns Firestore website_content/main as JSON.
+// Consumed by the public website to hydrate CMS-managed copy and images.
+// Exposed via Firebase Hosting rewrite at /api/content.
+// ─────────────────────────────────────────────
+export const getWebsiteContent = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+  try {
+    const snap = await db.collection("website_content").doc("main").get();
+    if (!snap.exists) {
+      res.json({});
+      return;
+    }
+    res.set("Cache-Control", "public, max-age=60, s-maxage=60");
+    res.json(snap.data());
+  } catch (e) {
+    console.error("getWebsiteContent error:", e);
+    res.status(500).json({ error: "Failed to fetch content" });
+  }
+});
+
+// ─────────────────────────────────────────────
 // handleWebApplication
 // HTTP POST endpoint for the public website application form.
 // Saves the submission to open_applications/{id} and sends a
