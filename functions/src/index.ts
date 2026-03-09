@@ -22,6 +22,9 @@ import {
   friendAcceptedHtml, friendAcceptedText,
   inviteeAppliedHtml, inviteeAppliedText,
   webApplicationReceivedHtml, webApplicationReceivedText,
+  founderWelcomeText,
+  welcomeFeaturesTourHtml, welcomeFeaturesTourText,
+  welcomeDiscoverNudgeHtml, welcomeDiscoverNudgeText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -29,22 +32,27 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
 const FROM_EMAIL = "HomeQuarters <noreply@thehomequarters.com>";
+const FOUNDER_EMAIL = "Valentine Eluwasi <hello@thehomequarters.com>";
 
 async function sendEmail(opts: {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
   text: string;
   apiKey: string;
+  from?: string;
+  scheduledAt?: Date;
 }): Promise<void> {
   const resend = new Resend(opts.apiKey);
-  const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
+  const payload: Parameters<typeof resend.emails.send>[0] = {
+    from: opts.from ?? FROM_EMAIL,
     to: opts.to,
     subject: opts.subject,
-    html: opts.html,
     text: opts.text,
-  });
+    ...(opts.html ? { html: opts.html } : {}),
+    ...(opts.scheduledAt ? { scheduledAt: opts.scheduledAt.toISOString() } : {}),
+  };
+  const { error } = await resend.emails.send(payload);
   if (error) {
     console.error("Resend error:", error);
   }
@@ -334,6 +342,57 @@ export const onMemberApproved = onDocumentUpdated(
         });
       } catch (err) {
         console.error("Failed to send approval email:", err);
+      }
+    }
+
+    // ── Welcome journey: 3 emails scheduled over 10 days ──
+    if (after.email && typeof after.email === "string") {
+      const firstName = (after.first_name as string) ?? "there";
+      const now = Date.now();
+
+      // Email 1 — Day 1: Personal plain-text note from Valentine
+      const day1 = new Date(now + 1 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          from: FOUNDER_EMAIL,
+          to: after.email,
+          subject: "A personal welcome from me",
+          text: founderWelcomeText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day1,
+        });
+      } catch (err) {
+        console.error("Failed to schedule founder welcome email:", err);
+      }
+
+      // Email 2 — Day 4: Branded features tour
+      const day4 = new Date(now + 4 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Everything that comes with HQ",
+          html: welcomeFeaturesTourHtml({ firstName }),
+          text: welcomeFeaturesTourText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day4,
+        });
+      } catch (err) {
+        console.error("Failed to schedule features tour email:", err);
+      }
+
+      // Email 3 — Day 10: Discover nudge
+      const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Your community is waiting to hear from you",
+          html: welcomeDiscoverNudgeHtml({ firstName }),
+          text: welcomeDiscoverNudgeText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day10,
+        });
+      } catch (err) {
+        console.error("Failed to schedule discover nudge email:", err);
       }
     }
 

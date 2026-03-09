@@ -396,7 +396,176 @@ export function webApplicationReceivedText(opts: {
 }
 
 // ─────────────────────────────────────────────
-// 10. Password Reset
+// 10. Welcome Journey — Day 1: Personal note from Valentine
+// Plain text only. Warm, human, founder's voice.
+// ─────────────────────────────────────────────
+export function founderWelcomeText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+I wanted to drop you a quick note personally.
+
+Welcome to HomeQuarters.
+
+We built this community around a simple idea — that people who share a connection to a homeland, wherever they are in the world, deserve a place that feels like their own. Somewhere with a real sense of belonging, not just another app or membership card.
+
+I'm genuinely glad you're here.
+
+Take your time settling in. Explore the app, connect with a few members, and don't hesitate to reach out if you have any questions or feedback. I read everything.
+
+With warmth,
+
+Valentine Eluwasi
+Founder, HomeQuarters
+hello@thehomequarters.com`;
+}
+
+// ─────────────────────────────────────────────
+// 11. Welcome Journey — Day 4: Features tour
+// Branded. Introduces the key pillars of the community.
+// ─────────────────────────────────────────────
+export function welcomeFeaturesTourHtml(opts: { firstName: string }): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">YOUR MEMBERSHIP</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Everything that<br/>comes with HQ.</h1>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, now that you&rsquo;re settled in, here&rsquo;s a quick look at what your membership unlocks.
+    </p>
+
+    ${goldDivider()}
+
+    <!-- Feature: Venues & Deals -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="width:40px;vertical-align:top;padding-top:2px;">
+          <p style="margin:0;font-size:22px;line-height:1;">🏛</p>
+        </td>
+        <td style="padding-left:16px;vertical-align:top;">
+          <p style="margin:0 0 4px;color:#1C1C1E;font-size:14px;font-weight:700;letter-spacing:-0.2px;">Partner Venues &amp; Deals</p>
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Access exclusive offers at a curated selection of restaurants, bars, hotels, and cultural spaces. Present your member QR code to redeem.</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Feature: Discover -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="width:40px;vertical-align:top;padding-top:2px;">
+          <p style="margin:0;font-size:22px;line-height:1;">✦</p>
+        </td>
+        <td style="padding-left:16px;vertical-align:top;">
+          <p style="margin:0 0 4px;color:#1C1C1E;font-size:14px;font-weight:700;letter-spacing:-0.2px;">Discover</p>
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">The community feed. A space to share what you&rsquo;re up to, where you&rsquo;ve been, what you&rsquo;ve found. Think of it as a private journal that only your people can see.</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Feature: Connect -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      <tr>
+        <td style="width:40px;vertical-align:top;padding-top:2px;">
+          <p style="margin:0;font-size:22px;line-height:1;">◎</p>
+        </td>
+        <td style="padding-left:16px;vertical-align:top;">
+          <p style="margin:0 0 4px;color:#1C1C1E;font-size:14px;font-weight:700;letter-spacing:-0.2px;">Connect</p>
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Browse member profiles and send a direct message to anyone in the community. No cold introductions — everyone here was vouched for.</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Feature: Events -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0;">
+      <tr>
+        <td style="width:40px;vertical-align:top;padding-top:2px;">
+          <p style="margin:0;font-size:22px;line-height:1;">◈</p>
+        </td>
+        <td style="padding-left:16px;vertical-align:top;">
+          <p style="margin:0 0 4px;color:#1C1C1E;font-size:14px;font-weight:700;letter-spacing:-0.2px;">Events</p>
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Members-only gatherings, dinners, and cultural moments. Keep an eye on the Events tab — these fill up quickly.</p>
+        </td>
+      </tr>
+    </table>
+
+    ${goldDivider()}
+
+    ${ctaButton("Open the App", BASE_URL)}
+
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      If you ever have a question, a suggestion, or just want to share something — reply to this email. We&rsquo;re always listening.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function welcomeFeaturesTourText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+Here's a quick look at everything your HomeQuarters membership gives you.
+
+PARTNER VENUES & DEALS
+Exclusive offers at restaurants, bars, hotels, and cultural spaces. Show your member QR code to redeem.
+
+DISCOVER
+The community feed. Share what you're up to, where you've been, what you've found. Private — members only.
+
+CONNECT
+Browse member profiles and message anyone in the community directly. Everyone here was vouched for.
+
+EVENTS
+Members-only gatherings and cultural moments. Check the Events tab regularly — they fill up fast.
+
+Open the app to explore: ${BASE_URL}
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 12. Welcome Journey — Day 10: Discover nudge
+// Branded. Encourages first post on the community feed.
+// ─────────────────────────────────────────────
+export function welcomeDiscoverNudgeHtml(opts: { firstName: string }): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">COMMUNITY</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Say something,<br/>${opts.firstName}.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      The best communities are built by the people in them. Discover is your space — a private feed where members share the moments, places, and thoughts that make up their lives.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      It could be a restaurant you just tried, a city you&rsquo;re visiting, a thought you want to share with people who get it. There&rsquo;s no pressure — just a space that gets richer the more you put into it.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 20px;color:#1C1C1E;font-size:14px;font-weight:600;line-height:22px;">
+      Your first post is waiting.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:13px;line-height:21px;">
+      Open the app, tap <strong style="color:#1C1C1E;">Discover</strong>, and share something — anything. The community will be glad you did.
+    </p>
+    ${ctaButton("Post on Discover", BASE_URL)}
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Not sure what to post? Share a place you love, a photo from your travels, or simply introduce yourself. There&rsquo;s no wrong answer here.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function welcomeDiscoverNudgeText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+The best communities are built by the people in them.
+
+Discover is the HQ community feed — a private space where members share moments, places, and thoughts with people who get it.
+
+Your first post is waiting. Open the app, tap Discover, and share something. A place you love, a city you're visiting, an introduction. Anything.
+
+The community will be glad you did.
+
+${BASE_URL}
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 13. Password Reset
 // ─────────────────────────────────────────────
 export function passwordResetHtml(opts: {
   firstName?: string;
