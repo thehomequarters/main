@@ -304,7 +304,7 @@ export default function BillingScreen() {
             <Text style={styles.ctaBtnText}>
               {isActive ? "Change Plan" : "Get Membership"}
             </Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.white} />
+            <Ionicons name="arrow-forward" size={16} color={colors.dark} />
           </Pressable>
         )}
 
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ctaBtn: {
-    backgroundColor: colors.dark,
+    backgroundColor: colors.gold,
     borderRadius: 100,
     paddingVertical: 16,
     paddingHorizontal: 28,
@@ -517,7 +517,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ctaBtnText: {
-    color: colors.white,
+    color: colors.dark,
     fontSize: 15,
     fontWeight: "800",
     letterSpacing: 0.2,
