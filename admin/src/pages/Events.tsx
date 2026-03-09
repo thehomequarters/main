@@ -48,6 +48,27 @@ interface ProfileStub {
   email: string;
 }
 
+interface EventImport {
+  id: string;
+  title: string;
+  description: string;
+  venue: string;
+  venue_address?: string;
+  city?: string;
+  country?: string;
+  date: string;
+  time: string;
+  end_time: string;
+  image_url: string;
+  link_url: string;
+  category: string;
+  capacity: number;
+  source: string;
+  eventbrite_id?: string;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
+
 const CATEGORIES = ["social", "dining", "wellness", "music", "arts"];
 
 // ── CSV helpers ──────────────────────────────────────────────────────────────
@@ -108,7 +129,6 @@ export default function Events() {
   const [form, setForm] = useState(EMPTY_EVENT);
   const [saving, setSaving] = useState(false);
   const [attendeeEvent, setAttendeeEvent] = useState<HQEvent | null>(null);
-  const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [confirmState, setConfirmState] = useState<{
     open: boolean;
     title: string;
@@ -124,6 +144,15 @@ export default function Events() {
   const [importFileError, setImportFileError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importDone, setImportDone] = useState<{ success: number; skipped: string[] } | null>(null);
+
+  // Eventbrite import queue
+  const [eventImports, setEventImports] = useState<EventImport[]>([]);
+  const [pullingEventbrite, setPullingEventbrite] = useState(false);
+  const [reviewingImport, setReviewingImport] = useState<EventImport | null>(null);
+  const [importEditForm, setImportEditForm] = useState(EMPTY_EVENT);
+  const [approvingImport, setApprovingImport] = useState(false);
+  const [rejectingImportId, setRejectingImportId] = useState<string | null>(null);
+  const [showImportsQueue, setShowImportsQueue] = useState(true);
 
   useEffect(() => {
     let eventsReady = false, bookingsReady = false;
@@ -157,6 +186,21 @@ export default function Events() {
     });
 
     return () => { u1(); u2(); };
+  }, []);
+
+  // Subscribe to pending Eventbrite imports
+  useEffect(() => {
+    const q = query(
+      collection(db, "event_imports"),
+      where("status", "==", "pending")
+    );
+    return onSnapshot(q, (snap) => {
+      setEventImports(
+        snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }) as EventImport)
+          .sort((a, b) => a.date.localeCompare(b.date))
+      );
+    });
   }, []);
 
   const bookingCounts = useMemo(() => {
@@ -280,6 +324,85 @@ export default function Events() {
     setImportDone({ success, skipped });
     setImportRows([]);
   };
+
+  // ── Eventbrite handlers ──────────────────────────────────────────────────
+
+  const handlePullEventbrite = async () => {
+    setPullingEventbrite(true);
+    try {
+      const res = await fetch("/api/eventbrite", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to pull from Eventbrite");
+      if (data.staged === 0) {
+        toast("No new events found — all already in queue or none match.");
+      } else {
+        toast(`${data.staged} new event${data.staged !== 1 ? "s" : ""} added to review queue`);
+        setShowImportsQueue(true);
+      }
+    } catch (e: any) {
+      toast(e.message ?? "Failed to pull from Eventbrite", "error");
+    } finally {
+      setPullingEventbrite(false);
+    }
+  };
+
+  const openReview = (imp: EventImport) => {
+    setReviewingImport(imp);
+    setImportEditForm({
+      title: imp.title,
+      description: imp.description,
+      venue: imp.venue,
+      date: imp.date,
+      time: imp.time || "18:00",
+      end_time: imp.end_time || "21:00",
+      image_url: imp.image_url,
+      link_url: imp.link_url,
+      category: CATEGORIES.includes(imp.category) ? imp.category : "social",
+      capacity: imp.capacity || 50,
+    });
+  };
+
+  const handleApproveImport = async () => {
+    if (!reviewingImport || !importEditForm.title.trim() || !importEditForm.date || !importEditForm.venue.trim()) return;
+    setApprovingImport(true);
+    try {
+      await addDoc(collection(db, "events"), {
+        title: importEditForm.title.trim(),
+        description: importEditForm.description.trim(),
+        venue: importEditForm.venue.trim(),
+        date: importEditForm.date,
+        time: importEditForm.time,
+        end_time: importEditForm.end_time,
+        image_url: importEditForm.image_url.trim(),
+        link_url: importEditForm.link_url.trim() || null,
+        category: importEditForm.category,
+        capacity: Number(importEditForm.capacity) || 50,
+        is_active: true,
+        created_at: new Date().toISOString(),
+      });
+      await updateDoc(doc(db, "event_imports", reviewingImport.id), { status: "approved" });
+      setReviewingImport(null);
+      toast("Event approved and published to app");
+    } catch {
+      toast("Failed to approve event", "error");
+    } finally {
+      setApprovingImport(false);
+    }
+  };
+
+  const handleRejectImport = async (importId: string) => {
+    setRejectingImportId(importId);
+    try {
+      await updateDoc(doc(db, "event_imports", importId), { status: "rejected" });
+      toast("Import dismissed");
+    } catch {
+      toast("Failed to reject import", "error");
+    } finally {
+      setRejectingImportId(null);
+    }
+  };
+
+  // ── Other handlers ───────────────────────────────────────────────────────
 
   const openEdit = (event: HQEvent) => {
     setEditingEvent(event);
@@ -418,15 +541,204 @@ export default function Events() {
         </div>
       )}
 
+      {/* Eventbrite review modal */}
+      {reviewingImport && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-dark border border-dark-border rounded-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-dark-border">
+              <div>
+                <h2 className="text-white text-lg font-bold">Review Import</h2>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  Edit and approve to publish to the app
+                </p>
+              </div>
+              <button
+                onClick={() => setReviewingImport(null)}
+                className="text-gray-500 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-5 space-y-3">
+              {/* Eventbrite source link */}
+              {reviewingImport.link_url && (
+                <a
+                  href={reviewingImport.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  View on Eventbrite
+                </a>
+              )}
+
+              {/* Image preview + replacement */}
+              <div>
+                <label className="block text-gray-500 text-xs mb-1.5">Image URL</label>
+                {importEditForm.image_url && (
+                  <img
+                    src={importEditForm.image_url}
+                    alt="Event"
+                    className="w-full h-36 object-cover rounded-xl mb-2 border border-dark-border"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                )}
+                <input
+                  value={importEditForm.image_url}
+                  onChange={(e) => setImportEditForm({ ...importEditForm, image_url: e.target.value })}
+                  placeholder="https://… (replace with your own image)"
+                  className={`w-full bg-black border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50 ${
+                    importEditForm.image_url && !isValidImageUrl(importEditForm.image_url)
+                      ? "border-red-500/50"
+                      : "border-dark-border"
+                  }`}
+                />
+                {importEditForm.image_url && !isValidImageUrl(importEditForm.image_url) && (
+                  <p className="text-red-400 text-xs mt-1">Must be a valid https:// image URL</p>
+                )}
+              </div>
+
+              <input
+                value={importEditForm.title}
+                onChange={(e) => setImportEditForm({ ...importEditForm, title: e.target.value })}
+                placeholder="Event title"
+                className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+              />
+              <textarea
+                value={importEditForm.description}
+                onChange={(e) => setImportEditForm({ ...importEditForm, description: e.target.value })}
+                placeholder="Description"
+                rows={3}
+                className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50 resize-none"
+              />
+              <input
+                value={importEditForm.venue}
+                onChange={(e) => setImportEditForm({ ...importEditForm, venue: e.target.value })}
+                placeholder="Venue name"
+                className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+              />
+              {(reviewingImport.venue_address || reviewingImport.city) && (
+                <p className="text-gray-600 text-xs px-1">
+                  📍 {[reviewingImport.venue_address, reviewingImport.city, reviewingImport.country].filter(Boolean).join(", ")}
+                </p>
+              )}
+              <select
+                value={importEditForm.category}
+                onChange={(e) => setImportEditForm({ ...importEditForm, category: e.target.value })}
+                className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+              >
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                ))}
+              </select>
+              <div className="grid grid-cols-3 gap-3">
+                <input
+                  type="date"
+                  value={importEditForm.date}
+                  onChange={(e) => setImportEditForm({ ...importEditForm, date: e.target.value })}
+                  className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                />
+                <input
+                  type="time"
+                  value={importEditForm.time}
+                  onChange={(e) => setImportEditForm({ ...importEditForm, time: e.target.value })}
+                  className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                />
+                <input
+                  type="time"
+                  value={importEditForm.end_time}
+                  onChange={(e) => setImportEditForm({ ...importEditForm, end_time: e.target.value })}
+                  className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  value={importEditForm.capacity}
+                  onChange={(e) => setImportEditForm({ ...importEditForm, capacity: Number(e.target.value) })}
+                  placeholder="Capacity"
+                  className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                />
+                <input
+                  value={importEditForm.link_url}
+                  onChange={(e) => setImportEditForm({ ...importEditForm, link_url: e.target.value })}
+                  placeholder="Ticketing URL"
+                  className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                />
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-dark-border flex gap-3">
+              <button
+                onClick={() => {
+                  setReviewingImport(null);
+                  handleRejectImport(reviewingImport.id);
+                }}
+                disabled={approvingImport}
+                className="px-4 py-2.5 text-red-400 text-sm border border-red-500/25 rounded-xl hover:bg-red-500/10 transition-colors disabled:opacity-40"
+              >
+                Reject
+              </button>
+              <button
+                onClick={() => setReviewingImport(null)}
+                className="px-4 py-2.5 text-gray-400 text-sm border border-dark-border rounded-xl hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApproveImport}
+                disabled={approvingImport || !importEditForm.title.trim() || !importEditForm.date || !importEditForm.venue.trim()}
+                className="flex-1 px-4 py-2.5 bg-gold text-black font-bold text-sm rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {approvingImport ? "Publishing…" : "Approve & Publish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white">Events</h1>
             <p className="text-gray-500 text-sm mt-1">
               {events.length} event{events.length !== 1 ? "s" : ""}
+              {eventImports.length > 0 && (
+                <span className="ml-2 inline-flex items-center gap-1 bg-amber-500/10 border border-amber-500/25 text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full">
+                  {eventImports.length} pending review
+                </span>
+              )}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={handlePullEventbrite}
+              disabled={pullingEventbrite}
+              className="flex items-center gap-2 px-4 py-2.5 bg-dark border border-dark-border text-gray-400 text-sm font-medium rounded-xl hover:text-white hover:border-white/20 transition-colors disabled:opacity-50"
+            >
+              {pullingEventbrite ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Pulling…
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                  </svg>
+                  Eventbrite
+                </>
+              )}
+            </button>
             <button
               onClick={exportCSV}
               className="flex items-center gap-2 px-4 py-2.5 bg-dark border border-dark-border text-gray-400 text-sm font-medium rounded-xl hover:text-white hover:border-white/20 transition-colors"
@@ -594,6 +906,98 @@ export default function Events() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ── Eventbrite pending imports queue ── */}
+        {eventImports.length > 0 && (
+          <div className="mb-8">
+            <button
+              onClick={() => setShowImportsQueue((v) => !v)}
+              className="flex items-center gap-2 mb-3 group"
+            >
+              <span className="text-amber-400 font-semibold text-sm">
+                Pending Eventbrite Imports ({eventImports.length})
+              </span>
+              <svg
+                className={`w-4 h-4 text-gray-500 transition-transform ${showImportsQueue ? "rotate-180" : ""}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {showImportsQueue && (
+              <div className="space-y-2">
+                {eventImports.map((imp) => {
+                  const d = imp.date ? new Date(imp.date) : null;
+                  const day = d ? d.getDate() : "—";
+                  const month = d
+                    ? d.toLocaleDateString("en-GB", { month: "short" }).toUpperCase()
+                    : "";
+
+                  return (
+                    <div
+                      key={imp.id}
+                      className="bg-dark border border-amber-500/20 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4"
+                    >
+                      {/* Date badge */}
+                      <div className="w-14 h-16 rounded-xl bg-amber-500/10 border border-amber-500/20 flex flex-col items-center justify-center flex-shrink-0">
+                        <span className="text-amber-400 text-lg font-extrabold leading-none">{day}</span>
+                        <span className="text-amber-400 text-[10px] font-semibold tracking-widest">{month}</span>
+                      </div>
+
+                      {/* Thumbnail */}
+                      {imp.image_url && (
+                        <img
+                          src={imp.image_url}
+                          alt=""
+                          className="w-16 h-16 rounded-xl object-cover border border-dark-border flex-shrink-0"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      )}
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-white font-semibold text-sm">{imp.title || "(no title)"}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            Eventbrite
+                          </span>
+                        </div>
+                        <div className="text-gray-500 text-xs mt-0.5">
+                          {imp.venue}
+                          {imp.city ? ` · ${imp.city}` : ""}
+                          {imp.country ? `, ${imp.country}` : ""}
+                        </div>
+                        {imp.time && (
+                          <div className="text-gray-600 text-xs mt-0.5">
+                            {imp.time}{imp.end_time ? `–${imp.end_time}` : ""}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => openReview(imp)}
+                          className="px-4 py-2 text-gold text-xs border border-gold/25 rounded-xl hover:bg-gold-light transition-colors font-medium"
+                        >
+                          Review
+                        </button>
+                        <button
+                          onClick={() => handleRejectImport(imp.id)}
+                          disabled={rejectingImportId === imp.id}
+                          className="px-3 py-2 text-gray-500 text-xs border border-dark-border rounded-xl hover:text-red-400 hover:border-red-500/25 transition-colors disabled:opacity-40"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
