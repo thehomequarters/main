@@ -21,6 +21,12 @@ import { colors } from "@/constants/theme";
 // Payments are handled on the website (App Store compliant for digital subs).
 const MEMBERSHIP_URL = "https://homequarters-60838.web.app/membership";
 
+// Pricing (monthly base, annual = 15% off)
+const PRICES = {
+  gold:     { monthly: 5,  annual: 51  },  // £60/yr → £51/yr
+  platinum: { monthly: 15, annual: 153 },  // £180/yr → £153/yr
+};
+
 
 const GOLD_FEATURES = [
   { icon: "storefront-outline" as const, text: "Deals at 15+ partner venues across the UK" },
@@ -69,6 +75,7 @@ const SUB_STATUS_COLORS: Record<string, string> = {
 };
 
 type Plan = "gold" | "platinum";
+type BillingInterval = "monthly" | "annual";
 
 export default function BillingScreen() {
   const router = useRouter();
@@ -76,6 +83,9 @@ export default function BillingScreen() {
 
   const [selected, setSelected] = useState<Plan>(
     profile?.membership_tier === "platinum_card" ? "platinum" : "gold"
+  );
+  const [billingInterval, setBillingInterval] = useState<BillingInterval>(
+    (profile as any)?.billing_interval === "year" ? "annual" : "monthly"
   );
   const [loadingPortal, setLoadingPortal] = useState(false);
 
@@ -93,8 +103,9 @@ export default function BillingScreen() {
     : "Gold";
 
   const handleContinue = async () => {
+    const url = `${MEMBERSHIP_URL}?plan=${selected}&billing=${billingInterval}`;
     try {
-      await Linking.openURL(MEMBERSHIP_URL);
+      await Linking.openURL(url);
     } catch {
       /* dev/simulator */
     }
@@ -144,12 +155,48 @@ export default function BillingScreen() {
             : "Select the plan that fits how you use HomeQuarters."}
         </Text>
 
+        {/* ── Billing interval toggle ── */}
+        <View style={styles.intervalToggle}>
+          <Pressable
+            onPress={() => setBillingInterval("monthly")}
+            style={[
+              styles.intervalBtn,
+              billingInterval === "monthly" && styles.intervalBtnActive,
+            ]}
+          >
+            <Text style={[
+              styles.intervalBtnText,
+              billingInterval === "monthly" && styles.intervalBtnTextActive,
+            ]}>
+              Monthly
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => setBillingInterval("annual")}
+            style={[
+              styles.intervalBtn,
+              billingInterval === "annual" && styles.intervalBtnActive,
+            ]}
+          >
+            <Text style={[
+              styles.intervalBtnText,
+              billingInterval === "annual" && styles.intervalBtnTextActive,
+            ]}>
+              Annual
+            </Text>
+            <View style={styles.saveBadge}>
+              <Text style={styles.saveBadgeText}>Save 15%</Text>
+            </View>
+          </Pressable>
+        </View>
+
         {/* ── Subscription status chip (if has Stripe subscription) ── */}
         {hasSubscription && subStatus && (
           <View style={[styles.statusRow, { borderColor: (SUB_STATUS_COLORS[subStatus] ?? colors.stone) + "33" }]}>
             <View style={[styles.statusDot, { backgroundColor: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]} />
             <Text style={[styles.statusText, { color: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]}>
               {SUB_STATUS_LABELS[subStatus] ?? subStatus}
+              {(profile as any)?.billing_interval === "year" && " · Annual"}
               {subStatus === "past_due" && " · Please update your payment method"}
               {periodEnd && subStatus === "active" && (
                 ` · Renews ${new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
@@ -179,9 +226,20 @@ export default function BillingScreen() {
               <Text style={[styles.tierName, { color: G.title }]}>Gold</Text>
               <Text style={[styles.tierTag, { color: G.tag }]}>Your Diaspora Pass</Text>
             </View>
-            <View style={styles.priceWrap}>
-              <Text style={[styles.price, { color: G.price }]}>£5</Text>
-              <Text style={[styles.pricePer, { color: G.pricePer }]}>/mo</Text>
+            <View style={{ alignItems: "flex-end" }}>
+              <View style={styles.priceWrap}>
+                <Text style={[styles.price, { color: G.price }]}>
+                  £{billingInterval === "annual" ? PRICES.gold.annual : PRICES.gold.monthly}
+                </Text>
+                <Text style={[styles.pricePer, { color: G.pricePer }]}>
+                  {billingInterval === "annual" ? "/yr" : "/mo"}
+                </Text>
+              </View>
+              {billingInterval === "annual" && (
+                <Text style={[styles.annualEquiv, { color: G.pricePer }]}>
+                  £{(PRICES.gold.annual / 12).toFixed(2)}/mo
+                </Text>
+              )}
             </View>
           </View>
 
@@ -229,9 +287,20 @@ export default function BillingScreen() {
               <Text style={[styles.tierName, { color: "#FFFFFF" }]}>Platinum</Text>
               <Text style={[styles.tierTag, { color: "rgba(255,255,255,0.4)" }]}>Your Zimbabwe Pass</Text>
             </View>
-            <View style={styles.priceWrap}>
-              <Text style={[styles.price, { color: "#FFFFFF" }]}>£15</Text>
-              <Text style={[styles.pricePer, { color: "rgba(255,255,255,0.4)" }]}>/mo</Text>
+            <View style={{ alignItems: "flex-end" }}>
+              <View style={styles.priceWrap}>
+                <Text style={[styles.price, { color: "#FFFFFF" }]}>
+                  £{billingInterval === "annual" ? PRICES.platinum.annual : PRICES.platinum.monthly}
+                </Text>
+                <Text style={[styles.pricePer, { color: "rgba(255,255,255,0.4)" }]}>
+                  {billingInterval === "annual" ? "/yr" : "/mo"}
+                </Text>
+              </View>
+              {billingInterval === "annual" && (
+                <Text style={[styles.annualEquiv, { color: "rgba(255,255,255,0.4)" }]}>
+                  £{(PRICES.platinum.annual / 12).toFixed(2)}/mo
+                </Text>
+              )}
             </View>
           </View>
 
@@ -268,7 +337,9 @@ export default function BillingScreen() {
         </Pressable>
 
         <Text style={styles.billingNote}>
-          Cancel anytime · No lock-in
+          {billingInterval === "annual"
+            ? "Billed annually · Cancel anytime"
+            : "Billed monthly · Cancel anytime"}
         </Text>
       </ScrollView>
 
@@ -486,6 +557,57 @@ const styles = StyleSheet.create({
 
   selectedRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
   selectedText: { fontSize: 13, fontWeight: "600" },
+
+  // ── Billing interval toggle ──
+  intervalToggle: {
+    flexDirection: "row",
+    backgroundColor: colors.sand,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  intervalBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  intervalBtnActive: {
+    backgroundColor: colors.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  intervalBtnText: {
+    color: colors.stone,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  intervalBtnTextActive: {
+    color: colors.dark,
+  },
+  saveBadge: {
+    backgroundColor: colors.gold,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  saveBadgeText: {
+    color: colors.dark,
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  annualEquiv: {
+    fontSize: 10,
+    fontWeight: "500",
+    marginTop: 1,
+  },
 
   billingNote: {
     color: colors.stone,
