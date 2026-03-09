@@ -6,7 +6,6 @@ import {
   Pressable,
   StyleSheet,
   Platform,
-  Linking,
   ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -16,10 +15,6 @@ import { httpsCallable } from "firebase/functions";
 import { useAuth } from "@/lib/auth";
 import { functions } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
-
-// ── Membership website URL ──────────────────────────────────────────────────
-// Payments are handled on the website (App Store compliant for digital subs).
-const MEMBERSHIP_URL = "https://homequarters-60838.web.app/membership";
 
 // Pricing (monthly base, annual = 15% off)
 const PRICES = {
@@ -101,15 +96,6 @@ export default function BillingScreen() {
     : currentTier === "founding_member" ? "Founding Member"
     : currentTier === "committee_member" ? "Committee"
     : "Gold";
-
-  const handleContinue = async () => {
-    const url = `${MEMBERSHIP_URL}?plan=${selected}&billing=${billingInterval}`;
-    try {
-      await Linking.openURL(url);
-    } catch {
-      /* dev/simulator */
-    }
-  };
 
   const handleManageSubscription = async () => {
     setLoadingPortal(true);
@@ -367,16 +353,15 @@ export default function BillingScreen() {
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
         ) : (
-          // Not on this plan → open website to subscribe
-          <Pressable
-            onPress={handleContinue}
-            style={({ pressed }) => [styles.ctaBtn, { opacity: pressed ? 0.88 : 1 }]}
-          >
-            <Text style={styles.ctaBtnText}>
-              {isActive ? "Change Plan" : "Get Membership"}
+          // Not on this plan — direct user to website (App Store 3.1.1 compliant)
+          <View style={styles.websiteBox}>
+            <Ionicons name="globe-outline" size={15} color={colors.stone} style={{ marginTop: 1 }} />
+            <Text style={styles.websiteText}>
+              Subscribe at{" "}
+              <Text style={styles.websiteUrl}>thehomequarters.com</Text>
+              {" "}then return here to unlock your membership.
             </Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.dark} />
-          </Pressable>
+          </View>
         )}
 
         {/* Manage subscription link if on a different plan but has subscription */}
@@ -389,13 +374,7 @@ export default function BillingScreen() {
         )}
 
         <Text style={styles.footerNote}>
-          Opens thehomequarters.com · Questions?{" "}
-          <Text
-            style={{ textDecorationLine: "underline" }}
-            onPress={() => Linking.openURL("mailto:hello@thehomequarters.com")}
-          >
-            hello@thehomequarters.com
-          </Text>
+          Plans from £5/mo · hello@thehomequarters.com
         </Text>
       </View>
     </View>
@@ -677,4 +656,24 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   footerNote: { color: colors.stone, fontSize: 12, textAlign: "center" },
+  websiteBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: colors.sand,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+  },
+  websiteText: {
+    flex: 1,
+    color: colors.stone,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  websiteUrl: {
+    color: colors.dark,
+    fontWeight: "700",
+  },
 });

@@ -402,7 +402,6 @@ export const onMemberApproved = onDocumentUpdated(
     const vouchers = (after.vouchers as string[]) ?? [];
     if (vouchers.length > 0) {
       const db = getFirestore();
-      const newMemberName = `${after.first_name ?? ""} ${after.last_name ?? ""}`.trim();
       await Promise.allSettled(
         vouchers.map(async (voucherUid) => {
           try {

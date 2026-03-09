@@ -1,22 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
   Platform,
-  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "@/lib/auth";
-import { colors, fonts } from "@/constants/theme";
+import { colors } from "@/constants/theme";
 
 const GRACE_DAYS = 30;
 const GRACE_KEY = "hq_grace_entered";
-const MEMBERSHIP_URL = "https://homequarters-60838.web.app/membership";
+// NOTE: No external payment URL here — linking to external purchase flows
+// for digital goods is prohibited by App Store Review Guideline 3.1.1.
+// Members subscribe at thehomequarters.com independently.
 
 function daysRemaining(acceptedAt: string | null | undefined): number {
   if (!acceptedAt) return GRACE_DAYS;
@@ -33,12 +34,6 @@ export default function PaywallScreen() {
   const handleEnterGrace = async () => {
     await AsyncStorage.setItem(GRACE_KEY, "1");
     router.replace("/(tabs)");
-  };
-
-  const handleGetMembership = () => {
-    Linking.openURL(`${MEMBERSHIP_URL}?plan=gold&billing=monthly`).catch(() => {});
-    // Also navigate so they see billing in-app
-    router.replace("/billing");
   };
 
   return (
@@ -98,13 +93,15 @@ export default function PaywallScreen() {
 
       {/* Footer CTAs */}
       <View style={styles.footer}>
-        <Pressable
-          onPress={handleGetMembership}
-          style={({ pressed }) => [styles.primaryBtn, { opacity: pressed ? 0.88 : 1 }]}
-        >
-          <Text style={styles.primaryBtnText}>Choose a plan</Text>
-          <Ionicons name="arrow-forward" size={16} color={colors.dark} />
-        </Pressable>
+        {/* Membership website instruction — no tappable payment link (App Store 3.1.1) */}
+        <View style={styles.websiteBox}>
+          <Ionicons name="globe-outline" size={16} color={colors.stone} style={{ marginTop: 1 }} />
+          <Text style={styles.websiteText}>
+            Subscribe at{" "}
+            <Text style={styles.websiteUrl}>thehomequarters.com</Text>
+            {" "}then return here to access your membership.
+          </Text>
+        </View>
 
         {!graceExpired && (
           <Pressable
@@ -118,13 +115,7 @@ export default function PaywallScreen() {
         )}
 
         <Text style={styles.footnote}>
-          Starting from £5/mo · Cancel anytime ·{" "}
-          <Text
-            style={{ textDecorationLine: "underline" }}
-            onPress={() => Linking.openURL("mailto:hello@thehomequarters.com")}
-          >
-            Questions?
-          </Text>
+          Plans from £5/mo · Cancel anytime · hello@thehomequarters.com
         </Text>
       </View>
     </View>
@@ -238,21 +229,25 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
     backgroundColor: colors.bg,
   },
-  primaryBtn: {
-    backgroundColor: colors.gold,
-    borderRadius: 100,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
+  websiteBox: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+    alignItems: "flex-start",
+    gap: 10,
+    backgroundColor: colors.sand,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
   },
-  primaryBtnText: {
+  websiteText: {
+    flex: 1,
+    color: colors.stone,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  websiteUrl: {
     color: colors.dark,
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0.2,
+    fontWeight: "700",
   },
   ghostBtn: {
     borderRadius: 100,
