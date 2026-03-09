@@ -109,6 +109,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="saved"
+        options={{
+          tabBarLabel: "Saved",
+          tabBarIcon: ({ focused }) => (
+            <TabIcon focused={focused} name={focused ? "heart" : "heart-outline"} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="connect"
         options={{
           tabBarLabel: "Connect",
