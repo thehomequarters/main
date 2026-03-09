@@ -17,6 +17,7 @@ async function searchEventbrite(
   within: string
 ): Promise<any[]> {
   const params = new URLSearchParams({
+    token: EVENTBRITE_TOKEN,
     q,
     "location.address": locationAddress,
     "location.within": within,
@@ -27,7 +28,7 @@ async function searchEventbrite(
   });
 
   const response = await fetch(
-    `https://www.eventbriteapi.com/v3/events/search/?${params}`,
+    `https://www.eventbriteapi.com/v3/events/search?${params}`,
     { headers: { Authorization: `Bearer ${EVENTBRITE_TOKEN}` } }
   );
 
@@ -65,10 +66,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Fetch events from Zimbabwe and UK simultaneously
-    const [zimbabweEvents, ukEvents] = await Promise.all([
-      searchEventbrite("zimbabwe", "Zimbabwe", "1000km"),
-      searchEventbrite("zimbabwe", "United Kingdom", "500km"),
-    ]);
+    // Run sequentially so a failure in one gives a clearer error message
+    let zimbabweEvents: any[] = [];
+    let ukEvents: any[] = [];
+    try { zimbabweEvents = await searchEventbrite("zimbabwe", "Zimbabwe", "1000km"); }
+    catch (e: any) { console.error("Zimbabwe search failed:", e.message); }
+    try { ukEvents = await searchEventbrite("zimbabwe", "United Kingdom", "500km"); }
+    catch (e: any) { console.error("UK search failed:", e.message); }
 
     const allEvents = [...zimbabweEvents, ...ukEvents];
 

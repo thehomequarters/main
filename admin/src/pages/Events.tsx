@@ -433,7 +433,7 @@ export default function Events() {
         const p = profiles[b.user_id];
         return {
           ...b,
-          resolvedName: p ? `${p.first_name} ${p.last_name}` : b.member_name ?? b.user_id,
+          resolvedName: p ? `${p.first_name} ${p.last_name}` : b.member_name ?? b.user_id ?? "Unknown",
           resolvedCode: p?.member_code ?? b.member_code ?? "",
           resolvedEmail: p?.email ?? "",
         };
@@ -517,7 +517,7 @@ export default function Events() {
                       <span className="text-gray-600 text-xs w-5 text-right">{i + 1}</span>
                       <div className="w-8 h-8 rounded-full bg-gold-light border border-gold/25 flex items-center justify-center flex-shrink-0">
                         <span className="text-gold text-xs font-bold">
-                          {a.resolvedName.slice(0, 2).toUpperCase()}
+                          {(a.resolvedName ?? "?").slice(0, 2).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
