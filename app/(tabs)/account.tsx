@@ -408,6 +408,12 @@ export default function AccountTab() {
             onPress={() => router.push("/messages")}
           />
           <MenuItem
+            icon="people-outline"
+            label="My Connections"
+            subtitle="Members you're connected with"
+            onPress={() => router.push("/connections" as any)}
+          />
+          <MenuItem
             icon="calendar-outline"
             label="My Bookings"
             subtitle="View upcoming event bookings"

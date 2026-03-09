@@ -67,14 +67,23 @@ export default function HomeTab() {
   const isGrace = profile?.membership_status === "accepted";
 
   const fetchVenues = useCallback(async () => {
+    if (!user) return; // wait for auth to resolve before querying
     try {
-      const venuesQuery = query(
-        collection(db, "venues"),
-        where("is_active", "==", true)
-      );
-      const venuesSnap = await getDocs(venuesQuery);
-      const venueList: VenueWithDeal[] = [];
+      // Fetch venues, events, and likes in parallel so likes are ready
+      // before VenueCards mount (useState(initialLiked) only reads on first mount).
+      const [venuesSnap, eventsSnap, likesSnap] = await Promise.all([
+        getDocs(query(collection(db, "venues"), where("is_active", "==", true))),
+        getDocs(query(collection(db, "events"), where("is_active", "==", true))),
+        user.uid
+          ? getDocs(query(collection(db, "venue_likes"), where("member_id", "==", user.uid)))
+          : Promise.resolve(null),
+      ]);
 
+      const likedIds = new Set(
+        likesSnap?.docs.map((d) => d.data().venue_id as string) ?? []
+      );
+
+      const venueList: VenueWithDeal[] = [];
       for (const venueDoc of venuesSnap.docs) {
         const venueData = { id: venueDoc.id, ...venueDoc.data() } as Venue;
         const dealsQuery = query(
@@ -92,32 +101,22 @@ export default function HomeTab() {
       venueList.sort(
         (a, b) => (b.created_at || "").localeCompare(a.created_at || "")
       );
-      setVenues(venueList);
 
-      const eventsQuery = query(
-        collection(db, "events"),
-        where("is_active", "==", true)
-      );
-      const eventsSnap = await getDocs(eventsQuery);
       const eventList = eventsSnap.docs
         .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
         .sort((a, b) => a.date.localeCompare(b.date));
+
+      // Set likes and venues together so VenueCards mount with correct initialLiked.
+      setLikedVenueIds(likedIds);
+      setVenues(venueList);
       setAllEvents(eventList);
       setUpcomingEvents(eventList.slice(0, 4));
-
-      // Load liked venues for current user
-      if (user?.uid) {
-        const likesSnap = await getDocs(
-          query(collection(db, "venue_likes"), where("member_id", "==", user.uid))
-        );
-        setLikedVenueIds(new Set(likesSnap.docs.map((d) => d.data().venue_id as string)));
-      }
     } catch (e: any) {
       console.warn("Home screen load error:", e?.message ?? e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchVenues();

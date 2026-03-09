@@ -224,6 +224,12 @@ export default function DiscoverTab() {
     }
   };
 
+  const isAcceptedConnection = (memberId: string) =>
+    connections.some((c) => c.to_id === memberId && c.status === "accepted");
+
+  const isMasked = (member: Profile) =>
+    member.profile_visibility === "connections" && !isAcceptedConnection(member.id);
+
   const filteredMembers = selectedIndustry
     ? members.filter((m) => m.industry === selectedIndustry)
     : members;
@@ -695,8 +701,12 @@ export default function DiscoverTab() {
       {filteredMembers.map((member) => {
         const status = getConnectionStatus(member.id);
         const connected = status === "pending" || status === "accepted";
+        const masked = isMasked(member);
         const memberInitials =
           (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
+        const displayName = masked
+          ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
+          : `${member.first_name} ${member.last_name}`;
 
         return (
           <Pressable
@@ -713,33 +723,30 @@ export default function DiscoverTab() {
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              {/* Avatar */}
-              {member.avatar_url ? (
-                <Image
-                  source={{ uri: member.avatar_url }}
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                    borderWidth: 1.5,
-                    borderColor: colors.border,
-                    marginRight: 14,
-                  }}
-                />
-              ) : (
-                <View
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                    backgroundColor: colors.sand,
-                    borderWidth: 1.5,
-                    borderColor: colors.border,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginRight: 14,
-                  }}
-                >
+              {/* Avatar — hidden for masked profiles */}
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: colors.sand,
+                  borderWidth: 1.5,
+                  borderColor: colors.border,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  marginRight: 14,
+                }}
+              >
+                {!masked && member.avatar_url ? (
+                  <Image
+                    source={{ uri: member.avatar_url }}
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 26,
+                    }}
+                  />
+                ) : (
                   <Text
                     style={{
                       color: colors.dark,
@@ -750,78 +757,84 @@ export default function DiscoverTab() {
                   >
                     {memberInitials.toUpperCase()}
                   </Text>
-                </View>
-              )}
+                )}
+              </View>
 
               {/* Info */}
               <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    color: colors.dark,
-                    fontSize: 15,
-                    fontFamily: fonts.semibold,
-                    marginBottom: 2,
-                  }}
-                >
-                  {member.first_name} {member.last_name}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                  <Text
+                    style={{
+                      color: colors.dark,
+                      fontSize: 15,
+                      fontFamily: fonts.semibold,
+                    }}
+                  >
+                    {displayName}
+                  </Text>
+                  {masked && (
+                    <Ionicons name="lock-closed-outline" size={10} color={colors.stone} />
+                  )}
+                </View>
                 <Text
                   style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body, marginBottom: 6 }}
                   numberOfLines={1}
                 >
-                  {member.title || "HQ Member"}
+                  {masked ? "HQ Member" : (member.title || "HQ Member")}
                 </Text>
 
                 {/* Location + industry */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 10,
-                  }}
-                >
-                  {member.city && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 3,
-                      }}
-                    >
-                      <Ionicons
-                        name="location-outline"
-                        size={12}
-                        color={colors.stone}
-                      />
-                      <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.body }}>
-                        {member.city}
-                      </Text>
-                    </View>
-                  )}
-                  {member.industry && (
-                    <>
-                      <Text
-                        style={{ color: colors.border, fontSize: 11 }}
-                      >
-                        ·
-                      </Text>
-                      <Text
+                {!masked && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {member.city && !member.hide_city && (
+                      <View
                         style={{
-                          color: colors.stone,
-                          fontSize: 11,
-                          fontFamily: fonts.medium,
-                          textTransform: "capitalize",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 3,
                         }}
                       >
-                        {member.industry}
-                      </Text>
-                    </>
-                  )}
-                </View>
+                        <Ionicons
+                          name="location-outline"
+                          size={12}
+                          color={colors.stone}
+                        />
+                        <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.body }}>
+                          {member.city}
+                        </Text>
+                      </View>
+                    )}
+                    {member.industry && !member.hide_industry && (
+                      <>
+                        <Text
+                          style={{ color: colors.border, fontSize: 11 }}
+                        >
+                          ·
+                        </Text>
+                        <Text
+                          style={{
+                            color: colors.stone,
+                            fontSize: 11,
+                            fontFamily: fonts.medium,
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {member.industry}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                )}
 
-                {/* Interests — max 2 */}
-                {member.interests && member.interests.length > 0 && (
+                {/* Interests — max 2, hidden for masked profiles */}
+                {!masked && !member.hide_interests && member.interests && member.interests.length > 0 && (
                   <View
                     style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}
                   >

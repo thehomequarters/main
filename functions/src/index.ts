@@ -465,6 +465,9 @@ export const onMemberAccepted = onDocumentUpdated(
     const db = getFirestore();
     await db.doc(`profiles/${event.params.userId}`).update({ accepted_at: acceptedAt });
 
+    // Resend allows 2 req/s. Space the 4 email calls 600ms apart to stay within the limit.
+    const pause = () => new Promise<void>((r) => setTimeout(r, 600));
+
     // Immediate: acceptance email with 30-day grace period intro + payment CTA
     try {
       await sendEmail({
@@ -483,6 +486,7 @@ export const onMemberAccepted = onDocumentUpdated(
     const gracEmailIds: string[] = [];
 
     // Day 10 reminder — 20 days remaining
+    await pause();
     try {
       const id = await sendEmail({
         to: after.email,
@@ -498,6 +502,7 @@ export const onMemberAccepted = onDocumentUpdated(
     }
 
     // Day 20 reminder — 10 days remaining
+    await pause();
     try {
       const id = await sendEmail({
         to: after.email,
@@ -513,6 +518,7 @@ export const onMemberAccepted = onDocumentUpdated(
     }
 
     // Day 30 reminder — last day
+    await pause();
     try {
       const id = await sendEmail({
         to: after.email,
