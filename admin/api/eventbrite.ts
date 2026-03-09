@@ -12,23 +12,23 @@ const db = getFirestore();
 const EVENTBRITE_TOKEN = process.env.EVENTBRITE_API_KEY ?? "";
 
 async function searchEventbrite(
-  q: string,
   locationAddress: string,
-  within: string
+  within: string,
+  q?: string
 ): Promise<any[]> {
-  const params = new URLSearchParams({
+  const params: Record<string, string> = {
     token: EVENTBRITE_TOKEN,
-    q,
     "location.address": locationAddress,
     "location.within": within,
     expand: "venue,logo",
     "start_date.range_start":
       new Date().toISOString().slice(0, 10) + "T00:00:00",
     page_size: "50",
-  });
+  };
+  if (q) params.q = q;
 
   const response = await fetch(
-    `https://www.eventbriteapi.com/v3/events/search?${params}`,
+    `https://www.eventbriteapi.com/v3/events/search?${new URLSearchParams(params)}`,
     { headers: { Authorization: `Bearer ${EVENTBRITE_TOKEN}` } }
   );
 
@@ -65,16 +65,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .json({ error: "EVENTBRITE_API_KEY is not configured" });
 
   try {
-    // Fetch events from Zimbabwe and UK simultaneously
+    // Fetch events from Zimbabwe (all local events) and UK (zimbabwe diaspora events)
     // Run sequentially so a failure in one gives a clearer error message
     let zimbabweEvents: any[] = [];
+    let bulawayoEvents: any[] = [];
     let ukEvents: any[] = [];
-    try { zimbabweEvents = await searchEventbrite("zimbabwe", "Zimbabwe", "1000km"); }
-    catch (e: any) { console.error("Zimbabwe search failed:", e.message); }
-    try { ukEvents = await searchEventbrite("zimbabwe", "United Kingdom", "500km"); }
+    // No keyword filter for local Zimbabwe searches — find all events near Harare and Bulawayo
+    try { zimbabweEvents = await searchEventbrite("Harare, Zimbabwe", "100km"); }
+    catch (e: any) { console.error("Harare search failed:", e.message); }
+    try { bulawayoEvents = await searchEventbrite("Bulawayo, Zimbabwe", "80km"); }
+    catch (e: any) { console.error("Bulawayo search failed:", e.message); }
+    // UK search uses "zimbabwe" keyword to find diaspora events
+    try { ukEvents = await searchEventbrite("United Kingdom", "500km", "zimbabwe"); }
     catch (e: any) { console.error("UK search failed:", e.message); }
 
-    const allEvents = [...zimbabweEvents, ...ukEvents];
+    // Deduplicate by Eventbrite ID before writing (Harare/Bulawayo may overlap)
+    const seen = new Set<string>();
+    const allEvents = [...zimbabweEvents, ...bulawayoEvents, ...ukEvents].filter(e => {
+      if (!e.id || seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
 
     // Load existing eventbrite IDs to avoid duplicates
     const existingSnap = await db
