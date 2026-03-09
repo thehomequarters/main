@@ -25,6 +25,8 @@ import {
   founderWelcomeText,
   welcomeFeaturesTourHtml, welcomeFeaturesTourText,
   welcomeDiscoverNudgeHtml, welcomeDiscoverNudgeText,
+  membershipAcceptedHtml, membershipAcceptedText,
+  graceReminderHtml, graceReminderText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -400,7 +402,6 @@ export const onMemberApproved = onDocumentUpdated(
     const vouchers = (after.vouchers as string[]) ?? [];
     if (vouchers.length > 0) {
       const db = getFirestore();
-      const newMemberName = `${after.first_name ?? ""} ${after.last_name ?? ""}`.trim();
       await Promise.allSettled(
         vouchers.map(async (voucherUid) => {
           try {
@@ -427,6 +428,88 @@ export const onMemberApproved = onDocumentUpdated(
           }
         })
       );
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// onMemberAccepted
+// Fires when a profile document is updated.
+// If membership_status changed to "accepted":
+//   — Immediately sends a welcome + payment CTA email
+//   — Schedules 3 grace period payment reminders (day 10, 20, 30)
+// ─────────────────────────────────────────────
+export const onMemberAccepted = onDocumentUpdated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) return;
+    if (before.membership_status === after.membership_status) return;
+    if (after.membership_status !== "accepted") return;
+    if (!after.email || typeof after.email !== "string") return;
+
+    const firstName = (after.first_name as string) ?? "there";
+    const memberCode = (after.member_code as string) ?? "";
+    const now = Date.now();
+
+    // Immediate: acceptance email with 30-day grace period intro + payment CTA
+    try {
+      await sendEmail({
+        to: after.email,
+        subject: `You're in, ${firstName} — 30 days to explore HomeQuarters`,
+        html: membershipAcceptedHtml({ firstName, memberCode }),
+        text: membershipAcceptedText({ firstName, memberCode }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send acceptance email:", err);
+    }
+
+    // Day 10 reminder — 20 days remaining
+    const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
+    try {
+      await sendEmail({
+        to: after.email,
+        subject: `Your HomeQuarters membership is waiting, ${firstName}`,
+        html: graceReminderHtml({ firstName, daysRemaining: 20, reminderNumber: 1 }),
+        text: graceReminderText({ firstName, daysRemaining: 20, reminderNumber: 1 }),
+        apiKey: resendApiKey.value(),
+        scheduledAt: day10,
+      });
+    } catch (err) {
+      console.error("Failed to schedule day 10 grace reminder:", err);
+    }
+
+    // Day 20 reminder — 10 days remaining
+    const day20 = new Date(now + 20 * 24 * 60 * 60 * 1000);
+    try {
+      await sendEmail({
+        to: after.email,
+        subject: `10 days left on your free trial — keep the momentum going`,
+        html: graceReminderHtml({ firstName, daysRemaining: 10, reminderNumber: 2 }),
+        text: graceReminderText({ firstName, daysRemaining: 10, reminderNumber: 2 }),
+        apiKey: resendApiKey.value(),
+        scheduledAt: day20,
+      });
+    } catch (err) {
+      console.error("Failed to schedule day 20 grace reminder:", err);
+    }
+
+    // Day 30 reminder — last day
+    const day30 = new Date(now + 30 * 24 * 60 * 60 * 1000);
+    try {
+      await sendEmail({
+        to: after.email,
+        subject: "Today is the last day of your HomeQuarters free trial",
+        html: graceReminderHtml({ firstName, daysRemaining: 0, reminderNumber: 3 }),
+        text: graceReminderText({ firstName, daysRemaining: 0, reminderNumber: 3 }),
+        apiKey: resendApiKey.value(),
+        scheduledAt: day30,
+      });
+    } catch (err) {
+      console.error("Failed to schedule day 30 grace reminder:", err);
     }
   }
 );
