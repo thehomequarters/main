@@ -597,3 +597,223 @@ export function passwordResetText(opts: {
   const greeting = opts.firstName ? `Hi ${opts.firstName},` : "Hello,";
   return `${greeting}\n\nReset your HomeQuarters password using the link below. It expires in 1 hour.\n\n${opts.resetLink}\n\nIf you didn't request this, ignore this email.\n\nHomeQuarters`;
 }
+
+// ─────────────────────────────────────────────
+// 14. Membership Accepted (grace period begins)
+// Sent immediately when admin sets status → "accepted".
+// Introduces the grace period and prompts the member to choose a plan.
+// ─────────────────────────────────────────────
+export function membershipAcceptedHtml(opts: {
+  firstName: string;
+  memberCode: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">YOU'RE IN</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Welcome to<br/>HomeQuarters, ${opts.firstName}.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Your application has been approved by the membership committee. You are now part of the HomeQuarters community.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      You have <strong style="color:#1C1C1E;">30 free days</strong> to explore the app before your membership begins. When you're ready, choose a plan to unlock the full experience — and to help keep this community going.
+    </p>
+
+    <!-- Membership CTA -->
+    ${ctaButton("Choose your plan", `${BASE_URL}/membership`, "#C9A84C")}
+
+    ${goldDivider()}
+
+    <!-- Why your membership matters -->
+    <p style="margin:0 0 16px;color:#1C1C1E;font-size:13px;font-weight:700;letter-spacing:-0.1px;">Why your membership matters</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">🌍 &nbsp;Supports our growing member community</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">🔧 &nbsp;Keeps the app running and well maintained</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">✨ &nbsp;Funds new features and product improvements</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">🏡 &nbsp;Brings more partner venues on board for you</p>
+        </td>
+      </tr>
+    </table>
+
+    ${goldDivider()}
+
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Your membership details</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${infoRow("MEMBER CODE", opts.memberCode)}
+      ${infoRow("STATUS", "ACCEPTED — 30 DAY TRIAL")}
+      ${infoRow("PLANS FROM", "£5 / MONTH")}
+    </table>
+
+    ${goldDivider()}
+
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Questions about plans or billing? Reply to this email — we&rsquo;re happy to help. Your member code is your identity within the community. Keep it private — it&rsquo;s used to verify your membership at partner venues.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function membershipAcceptedText(opts: {
+  firstName: string;
+  memberCode: string;
+}): string {
+  return `Hi ${opts.firstName},
+
+Welcome to HomeQuarters. Your application has been approved.
+
+You have 30 free days to explore the app before your membership begins. When you're ready, choose a plan — your support is what keeps this community, the app, and our partner venues growing.
+
+Choose your plan: ${BASE_URL}/membership
+
+WHY YOUR MEMBERSHIP MATTERS
+- Supports our growing member community
+- Keeps the app running and well maintained
+- Funds new features and product improvements
+- Brings more partner venues on board for you
+
+Plans start from £5/month.
+
+Your member code: ${opts.memberCode}
+Keep this private — it's used to verify your membership at partner venues.
+
+Any questions? Reply to this email.
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 15. Grace Period Payment Reminders
+// Sent at day 10, day 20, and day 30 after acceptance.
+// Each has a different subject and value angle, but always
+// mentions remaining days and the four community pillars.
+// ─────────────────────────────────────────────
+
+const GRACE_VALUE_BLOCK = `
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid #F0E8DC;">
+        <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">🌍 &nbsp;Supports our growing member community</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid #F0E8DC;">
+        <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">🔧 &nbsp;Keeps the app running and well maintained</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;border-bottom:1px solid #F0E8DC;">
+        <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">✨ &nbsp;Funds new features and product improvements</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;">
+        <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">🏡 &nbsp;Brings more partner venues on board for you</p>
+      </td>
+    </tr>
+  </table>
+`;
+
+export function graceReminderHtml(opts: {
+  firstName: string;
+  daysRemaining: number;
+  reminderNumber: 1 | 2 | 3;
+}): string {
+  const { firstName, daysRemaining, reminderNumber } = opts;
+
+  const tagline = reminderNumber === 1
+    ? "A gentle nudge"
+    : reminderNumber === 2
+    ? "Still time"
+    : "Last chance";
+
+  const headline = reminderNumber === 1
+    ? `Your membership is waiting,<br/>${firstName}.`
+    : reminderNumber === 2
+    ? `${daysRemaining} days left on<br/>your free trial.`
+    : `Today's the last day<br/>of your free trial.`;
+
+  const intro = reminderNumber === 1
+    ? `You've been exploring HomeQuarters for 10 days now. We hope it's been worth it. You still have <strong style="color:#1C1C1E;">${daysRemaining} days</strong> before you'll need a plan to keep access.`
+    : reminderNumber === 2
+    ? `Your free trial is almost up. You have <strong style="color:#1C1C1E;">${daysRemaining} days</strong> left before you'll need a plan to stay in the community.`
+    : `Your 30-day free trial ends today. After today, you'll need an active membership to continue using HomeQuarters.`;
+
+  const valueIntro = reminderNumber === 1
+    ? `Choosing a plan is more than unlocking features — it's what makes this whole thing work.`
+    : reminderNumber === 2
+    ? `Your membership directly supports everything you've been enjoying. Here's what it goes towards:`
+    : `Every membership counts. Here's what yours would support:`;
+
+  const closingNote = reminderNumber === 1
+    ? `Plans start from <strong style="color:#1C1C1E;">£5/month</strong>. No pressure — you've got ${daysRemaining} days. But when you're ready, we'd love to have you as a full member.`
+    : reminderNumber === 2
+    ? `Plans from <strong style="color:#1C1C1E;">£5/month</strong>. Annual plans save you 15%. Take a look — it only takes a minute.`
+    : `Plans from <strong style="color:#1C1C1E;">£5/month</strong>. Thank you for being part of this community — we hope you'll stick around.`;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">${tagline.toUpperCase()}</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">${headline}</h1>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">${intro}</p>
+
+    ${goldDivider()}
+
+    <p style="margin:0 0 16px;color:#1C1C1E;font-size:13px;font-weight:700;letter-spacing:-0.1px;">${valueIntro}</p>
+
+    ${GRACE_VALUE_BLOCK}
+
+    ${ctaButton("Choose your plan", `${BASE_URL}/membership`, "#C9A84C")}
+
+    ${goldDivider()}
+
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">${closingNote}</p>
+  `;
+  return wrap(body);
+}
+
+export function graceReminderText(opts: {
+  firstName: string;
+  daysRemaining: number;
+  reminderNumber: 1 | 2 | 3;
+}): string {
+  const { firstName, daysRemaining, reminderNumber } = opts;
+
+  const intro = reminderNumber === 1
+    ? `You've been exploring HomeQuarters for 10 days. We hope you've been enjoying it. You still have ${daysRemaining} days left on your free trial.`
+    : reminderNumber === 2
+    ? `Your free trial is nearly up. You have ${daysRemaining} days left before you'll need a plan to stay in the community.`
+    : `Your 30-day free trial ends today. After today, an active membership is required to continue using HomeQuarters.`;
+
+  const closing = reminderNumber === 1
+    ? `No rush — you have ${daysRemaining} days. But when you're ready, we'd love to have you as a full member.`
+    : reminderNumber === 2
+    ? `Plans start from £5/month. Annual plans save 15%. Takes a minute to set up.`
+    : `Plans start from £5/month. Thank you for being part of this — we hope you'll stay.`;
+
+  return `Hi ${firstName},
+
+${intro}
+
+Your membership supports:
+- Our growing member community
+- Keeping the app running and maintained
+- New features and product improvements
+- Bringing more partner venues on board
+
+Choose your plan: ${BASE_URL}/membership
+
+${closing}
+
+HomeQuarters`;
+}
