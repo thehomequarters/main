@@ -130,8 +130,10 @@ export default function OnboardingScreen() {
               style={styles.image}
               resizeMode="cover"
             />
-            {/* Deep gradient vignette at bottom */}
+            {/* Very subtle full-screen tint */}
             <View style={styles.vignette} />
+            {/* Dark scrim for bottom copy legibility */}
+            <View style={styles.scrim} />
 
             {/* HQ wordmark — top left */}
             <View style={styles.logoWrap}>
@@ -201,10 +203,19 @@ const styles = StyleSheet.create({
     width: W,
     height: H,
   },
-  // Full-screen dark overlay for legibility across all images
+  // Very subtle global tint — image breathes freely
   vignette: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.45)",
+    backgroundColor: "rgba(0,0,0,0.15)",
+  },
+  // Dark scrim only at bottom for text legibility
+  scrim: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: H * 0.26,
+    backgroundColor: "rgba(0,0,0,0.58)",
   },
   logoWrap: {
     position: "absolute",
@@ -216,35 +227,30 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontFamily: fonts.semibold,
     letterSpacing: 8,
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 8,
-  },
-  textBlock: {
-    position: "absolute",
-    bottom: 210,
-    left: 28,
-    right: 60,
-  },
-  eyebrow: {
-    color: colors.gold,
-    fontSize: 10,
-    fontFamily: fonts.semibold,
-    letterSpacing: 4,
-    marginBottom: 16,
-    textShadowColor: "rgba(0,0,0,0.8)",
+    textShadowColor: "rgba(0,0,0,0.4)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
+  // Text sits at the top edge of the bottom 20% zone
+  textBlock: {
+    position: "absolute",
+    bottom: 130,
+    left: 28,
+    right: 28,
+  },
+  eyebrow: {
+    color: colors.gold,
+    fontSize: 9,
+    fontFamily: fonts.semibold,
+    letterSpacing: 3.5,
+    marginBottom: 6,
+  },
   title: {
     color: colors.white,
-    fontSize: 52,
+    fontSize: 28,
     fontFamily: fonts.display,
-    lineHeight: 58,
-    letterSpacing: -0.5,
-    textShadowColor: "rgba(0,0,0,0.6)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 16,
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
   controls: {
     position: "absolute",
@@ -252,8 +258,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 28,
-    paddingBottom: 38,
-    paddingTop: 12,
+    paddingBottom: 36,
+    paddingTop: 6,
     alignItems: "center",
   },
   dots: {
@@ -261,48 +267,46 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    marginBottom: 24,
+    marginBottom: 12,
   },
   dot: {
     height: 1.5,
     borderRadius: 1,
   },
   dotActive: {
-    width: 32,
+    width: 28,
     backgroundColor: colors.white,
   },
   dotInactive: {
-    width: 14,
+    width: 12,
     backgroundColor: "rgba(255,255,255,0.3)",
   },
   btn: {
     backgroundColor: colors.bg,
     borderRadius: 100,
-    paddingVertical: 17,
+    paddingVertical: 11,
     paddingHorizontal: 40,
     alignItems: "center",
     alignSelf: "stretch",
-    marginBottom: 14,
+    marginBottom: 8,
     overflow: "hidden",
   },
   btnText: {
     color: colors.ink,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: fonts.semibold,
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
   signInBtn: {
-    backgroundColor: colors.sand,
-    borderRadius: 100,
-    paddingVertical: 15,
+    paddingVertical: 10,
     paddingHorizontal: 40,
     alignItems: "center",
     alignSelf: "stretch",
   },
   signInText: {
-    color: colors.dark,
-    fontSize: 14,
+    color: "rgba(255,255,255,0.55)",
+    fontSize: 13,
     fontFamily: fonts.body,
     letterSpacing: 0.3,
   },
