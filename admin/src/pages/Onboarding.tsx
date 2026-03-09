@@ -434,20 +434,20 @@ export default function Onboarding() {
 
                       {/* Primary pill */}
                       <div
-                        className="rounded-full flex items-center justify-center py-3"
+                        className="rounded-full flex items-center justify-center py-1.5"
                         style={{ background: "#F2EBE0" }}
                       >
-                        <span className="text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: "#0A0A0A" }}>
+                        <span className="text-[10px] font-bold uppercase tracking-[1.5px]" style={{ color: "#0A0A0A" }}>
                           {isLast ? "Join HomeQuarters" : "Next"}
                         </span>
                       </div>
 
                       {/* Sign in pill */}
                       <div
-                        className="rounded-full flex items-center justify-center py-3"
-                        style={{ background: "#EAE0D3" }}
+                        className="rounded-full flex items-center justify-center py-1.5"
+                        style={{ border: "1px solid rgba(255,255,255,0.2)" }}
                       >
-                        <span className="text-[11px]" style={{ color: "#1C1C1E" }}>
+                        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
                           Already a member? Sign in
                         </span>
                       </div>
