@@ -41,6 +41,7 @@ export default function Onboarding() {
     open: boolean; title: string; message: string; onConfirm: () => void;
   }>({ open: false, title: "", message: "", onConfirm: () => {} });
   const closeConfirm = () => setConfirmState((s) => ({ ...s, open: false }));
+  const [previewIndex, setPreviewIndex] = useState(0);
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -287,18 +288,26 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Slide list */}
+        {/* Slide list + phone preview */}
         {slides.length === 0 ? (
           <div className="bg-dark border border-dark-border rounded-2xl p-10 text-center">
             <p className="text-gray-500 text-sm">No slides yet. Add one to override the app defaults.</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {slides.map((slide) => (
+          <div className="flex flex-col xl:flex-row gap-6 items-start">
+
+            {/* Slide list */}
+            <div className="flex-1 space-y-3 min-w-0">
+            {slides.map((slide, idx) => (
               <div
                 key={slide.id}
-                className={`bg-dark border rounded-2xl overflow-hidden flex flex-col md:flex-row gap-0 ${
-                  slide.is_active ? "border-dark-border" : "border-red-500/20 opacity-60"
+                onClick={() => setPreviewIndex(idx)}
+                className={`bg-dark border rounded-2xl overflow-hidden flex flex-col md:flex-row gap-0 cursor-pointer transition-colors ${
+                  previewIndex === idx
+                    ? "border-gold/40"
+                    : slide.is_active
+                    ? "border-dark-border hover:border-white/15"
+                    : "border-red-500/20 opacity-60"
                 }`}
               >
                 {/* Thumbnail */}
@@ -361,6 +370,111 @@ export default function Onboarding() {
                 </div>
               </div>
             ))}
+            </div>
+
+            {/* Phone mockup */}
+            {(() => {
+              const slide = slides[previewIndex] ?? slides[0];
+              const isLast = previewIndex === slides.length - 1;
+              const title = slide.title.replace(/\\n/g, "\n");
+              return (
+                <div className="xl:sticky xl:top-6 flex-shrink-0 flex flex-col items-center gap-3">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                    Preview — slide {previewIndex + 1} of {slides.length}
+                  </p>
+
+                  {/* Phone shell */}
+                  <div
+                    className="relative rounded-[40px] overflow-hidden border-[3px] border-white/10"
+                    style={{ width: 260, height: 520 }}
+                  >
+                    {/* Background image */}
+                    <img
+                      src={slide.image_url}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.45)" }} />
+
+                    {/* HQ wordmark */}
+                    <div className="absolute top-8 left-6">
+                      <span className="text-white font-bold text-sm tracking-[6px]">HQ</span>
+                    </div>
+
+                    {/* Text block */}
+                    <div className="absolute left-6 right-10" style={{ bottom: 148 }}>
+                      {slide.eyebrow && (
+                        <p className="text-[10px] font-bold uppercase tracking-[3px] mb-3" style={{ color: "#C9A84C" }}>
+                          {slide.eyebrow}
+                        </p>
+                      )}
+                      <p className="text-white font-bold leading-tight whitespace-pre-line" style={{ fontSize: 32, lineHeight: "38px" }}>
+                        {title}
+                      </p>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="absolute bottom-0 left-0 right-0 px-5 pb-7 pt-3 flex flex-col items-stretch gap-2.5">
+                      {/* Dot indicators */}
+                      <div className="flex justify-center gap-1.5 mb-1">
+                        {slides.map((_, i) => (
+                          <div
+                            key={i}
+                            className="rounded-full transition-all"
+                            style={{
+                              height: 1.5,
+                              width: i === previewIndex ? 22 : 10,
+                              background: i === previewIndex ? "#fff" : "rgba(255,255,255,0.3)",
+                            }}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Primary pill */}
+                      <div
+                        className="rounded-full flex items-center justify-center py-3"
+                        style={{ background: "#F2EBE0" }}
+                      >
+                        <span className="text-[11px] font-bold uppercase tracking-[1.5px]" style={{ color: "#0A0A0A" }}>
+                          {isLast ? "Join HomeQuarters" : "Next"}
+                        </span>
+                      </div>
+
+                      {/* Sign in pill */}
+                      <div
+                        className="rounded-full flex items-center justify-center py-3"
+                        style={{ background: "#EAE0D3" }}
+                      >
+                        <span className="text-[11px]" style={{ color: "#1C1C1E" }}>
+                          Already a member? Sign in
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Prev / Next nav */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPreviewIndex((i) => Math.max(0, i - 1))}
+                      disabled={previewIndex === 0}
+                      className="px-4 py-2 bg-dark border border-dark-border text-gray-400 rounded-xl text-xs font-semibold hover:text-white transition-colors disabled:opacity-30"
+                    >
+                      ← Prev
+                    </button>
+                    <button
+                      onClick={() => setPreviewIndex((i) => Math.min(slides.length - 1, i + 1))}
+                      disabled={previewIndex === slides.length - 1}
+                      className="px-4 py-2 bg-dark border border-dark-border text-gray-400 rounded-xl text-xs font-semibold hover:text-white transition-colors disabled:opacity-30"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
           </div>
         )}
       </div>
