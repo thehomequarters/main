@@ -224,6 +224,32 @@ export default function Events() {
       });
   }, [attendeeEvent, bookings, profiles]);
 
+  const exportCSV = () => {
+    const headers = ["Title", "Venue", "Date", "Start Time", "End Time", "Category", "Capacity", "Bookings", "Active", "Created At"];
+    const rows = events.map((e) => [
+      e.title,
+      e.venue,
+      e.date,
+      e.time,
+      e.end_time,
+      e.category,
+      e.capacity,
+      bookingCounts[e.id] ?? 0,
+      e.is_active ? "Yes" : "No",
+      e.created_at ? new Date(e.created_at).toLocaleDateString("en-GB") : "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hq-events-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -307,12 +333,23 @@ export default function Events() {
               {events.length} event{events.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <button
-            onClick={() => { setEditingEvent(null); setForm(EMPTY_EVENT); setShowForm(true); }}
-            className="px-5 py-2.5 bg-gold text-black font-bold text-sm rounded-xl hover:bg-gold/90 transition-colors"
-          >
-            + Add Event
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-2 px-4 py-2.5 bg-dark border border-dark-border text-gray-400 text-sm font-medium rounded-xl hover:text-white hover:border-white/20 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export CSV
+            </button>
+            <button
+              onClick={() => { setEditingEvent(null); setForm(EMPTY_EVENT); setShowForm(true); }}
+              className="px-5 py-2.5 bg-gold text-black font-bold text-sm rounded-xl hover:bg-gold/90 transition-colors"
+            >
+              + Add Event
+            </button>
+          </div>
         </div>
 
         {/* Event form modal */}

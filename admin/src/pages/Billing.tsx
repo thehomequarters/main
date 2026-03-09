@@ -324,6 +324,44 @@ export default function Billing() {
         </div>
       </div>
 
+      {/* Revenue forecast */}
+      {(() => {
+        // Monthly growth rate based on new MRR added in last 30 days vs current MRR
+        const monthlyGrowthRate = mrr > 0 ? mrrSparkTotal / mrr : 0;
+        const mrr3mo = Math.round(mrr * Math.pow(1 + monthlyGrowthRate, 3));
+        const arr3mo = mrr3mo * 12;
+        const mrrDelta = mrr3mo - mrr;
+        return (
+          <div className="bg-dark border border-gold/15 rounded-2xl p-5 md:p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-white font-semibold text-sm">90-Day Forecast</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gold/10 text-gold">Projected</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-2xl font-extrabold text-gold">£{mrr3mo.toLocaleString()}</div>
+                <div className="text-gray-400 text-xs font-medium mt-0.5">Projected MRR</div>
+                <div className="text-gray-600 text-xs mt-0.5">
+                  {mrrDelta >= 0 ? "+" : ""}£{mrrDelta.toLocaleString()} vs today
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-extrabold text-green-400">£{arr3mo.toLocaleString()}</div>
+                <div className="text-gray-400 text-xs font-medium mt-0.5">Projected ARR</div>
+                <div className="text-gray-600 text-xs mt-0.5">at 90-day run rate</div>
+              </div>
+              <div className="col-span-2 md:col-span-1">
+                <div className="text-2xl font-extrabold text-white">
+                  {monthlyGrowthRate > 0 ? `+${(monthlyGrowthRate * 100).toFixed(1)}%` : "0%"}
+                </div>
+                <div className="text-gray-400 text-xs font-medium mt-0.5">Monthly Growth Rate</div>
+                <div className="text-gray-600 text-xs mt-0.5">based on last 30 days</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* MRR growth sparkline */}
       <div className="bg-dark border border-dark-border rounded-2xl p-5 md:p-6 mb-6">
         <div className="flex items-center justify-between mb-1">
