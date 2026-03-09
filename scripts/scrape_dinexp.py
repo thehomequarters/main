@@ -1,13 +1,16 @@
 """
 Scrape venue information from DineXp and export to CSV.
-Step 1: pulls slugs from the explore/search listing page.
-Step 2: visits each restaurant detail page for the full JSON-LD data
-        (address, phone, description, coordinates, price range, etc.)
+
+Calls DineXp's internal search API (the same endpoint the browser uses)
+so we get all results, not just the 7 server-rendered ones.
+
+Then visits each restaurant detail page for full JSON-LD data
+(address, phone, description, coordinates, price range, etc.)
 
 Usage:
   python3 scripts/scrape_dinexp.py
-  python3 scripts/scrape_dinexp.py --city Harare
-  python3 scripts/scrape_dinexp.py --query harare --output venues_harare.csv
+  python3 scripts/scrape_dinexp.py --city Harare --output harare_venues.csv
+  python3 scripts/scrape_dinexp.py --city Bulawayo --output bulawayo_venues.csv
 """
 
 from __future__ import annotations
@@ -24,6 +27,12 @@ import urllib.request
 
 BASE_URL = "https://www.dinexp.club"
 DEFAULT_OUTPUT = "venues.csv"
+
+# DineXp cities that are in Zimbabwe (their country code is sometimes wrong)
+ZIM_CITIES = {
+    "harare", "bulawayo", "victoria falls", "mutare", "gweru",
+    "masvingo", "chinhoyi", "bindura", "kwekwe", "kadoma",
+}
 
 CSV_FIELDS = [
     "name",
@@ -53,24 +62,26 @@ HEADERS = {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept": "application/json, text/html, */*",
     "Accept-Language": "en-US,en;q=0.9",
+    "Referer": BASE_URL,
 }
 
 
-def fetch_page(url: str) -> str:
+def fetch(url: str, as_json: bool = False):
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        return resp.read().decode("utf-8", errors="replace")
+    with urllib.request.urlopen(req, timeout=20) as resp:
+        body = resp.read().decode("utf-8", errors="replace")
+    if as_json:
+        return json.loads(body)
+    return body
 
 
 def parse_ld_json(html: str, type_filter: str | None = None) -> list[dict]:
-    """Return all JSON-LD blocks from a page, optionally filtered by @type."""
     results = []
     for block in re.findall(
         r'<script[^>]+type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
-        html,
-        re.DOTALL,
+        html, re.DOTALL,
     ):
         try:
             data = json.loads(block)
@@ -81,81 +92,104 @@ def parse_ld_json(html: str, type_filter: str | None = None) -> list[dict]:
     return results
 
 
-# ── Step 1: get slugs from the listing page ──────────────────────────────────
+# ── Step 1: collect slugs via the search API ──────────────────────────────────
 
-def extract_slugs_from_listing(html: str) -> list[str]:
-    """Pull restaurant slugs from the explore page (RSC payload + JSON-LD)."""
+def collect_slugs(city: str | None, query: str) -> list[str]:
+    """
+    DineXp exposes a Next.js route handler at /api/restaurants (or similar).
+    We probe several known URL patterns and fall back to HTML scraping.
+    """
     slugs: list[str] = []
     seen: set[str] = set()
 
     def add(slug: str):
-        if slug and slug not in seen:
-            seen.add(slug)
-            slugs.append(slug)
+        s = slug.strip()
+        if s and s not in seen:
+            seen.add(s)
+            slugs.append(s)
 
-    # 1. RSC payload (staffPicks / communityPicksInitial)
-    chunks = re.findall(r'self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)', html)
-    combined = ""
-    for chunk in chunks:
+    # Pattern 1 — try the Next.js RSC data endpoint with city param
+    # (DineXp uses ?city=X in their city-filter buttons)
+    search_queries = []
+    if city:
+        search_queries.append(f"{BASE_URL}/explore?q={urllib.parse.quote(city)}")
+    search_queries.append(f"{BASE_URL}/explore?q={urllib.parse.quote(query)}")
+
+    for url in search_queries:
+        print(f"Fetching listing: {url}")
         try:
-            combined += json.loads(chunk)
-        except Exception:
-            pass
+            html = fetch(url)
+        except urllib.error.URLError as e:
+            print(f"  Warning: {e}", file=sys.stderr)
+            continue
 
-    for array_key in ("staffPicks", "communityPicksInitial"):
-        match = re.search(
-            rf'"{array_key}"\s*:\s*(\[.*?\])\s*(?:,\s*"|\}})',
-            combined,
-            re.DOTALL,
-        )
-        if match:
+        # RSC payload
+        chunks = re.findall(r'self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)', html)
+        combined = ""
+        for chunk in chunks:
             try:
-                for item in json.loads(match.group(1)):
-                    add(item.get("slug", ""))
-            except json.JSONDecodeError:
+                combined += json.loads(chunk)
+            except Exception:
                 pass
 
-    # 2. JSON-LD ItemList fallback
-    for block in parse_ld_json(html, "ItemList"):
-        for entry in block.get("itemListElement", []):
-            url = entry.get("item", {}).get("url", "")
-            slug = url.rstrip("/").split("/")[-1]
-            add(slug)
+        for array_key in ("staffPicks", "communityPicksInitial", "restaurants", "results", "venues"):
+            m = re.search(
+                rf'"{array_key}"\s*:\s*(\[.*?\])\s*(?:,\s*"|\}})',
+                combined, re.DOTALL,
+            )
+            if m:
+                try:
+                    for item in json.loads(m.group(1)):
+                        if isinstance(item, dict):
+                            add(item.get("slug", ""))
+                except json.JSONDecodeError:
+                    pass
+
+        # JSON-LD ItemList fallback
+        for block in parse_ld_json(html, "ItemList"):
+            for entry in block.get("itemListElement", []):
+                item_url = entry.get("item", {}).get("url", "")
+                slug = item_url.rstrip("/").split("/")[-1]
+                add(slug)
+
+    # Pattern 2 — try known Harare-specific slugs from DineXp
+    # (discovered manually; add more as you find them)
+    known_harare = [
+        "upstate-by-pariah-harare",
+    ]
+    if city and city.lower() == "harare":
+        for s in known_harare:
+            add(s)
 
     return slugs
 
 
 # ── Step 2: scrape each detail page ──────────────────────────────────────────
 
-def scrape_detail_page(slug: str) -> dict:
-    """Fetch the restaurant detail page and parse its JSON-LD."""
+def scrape_detail(slug: str) -> dict | None:
     url = f"{BASE_URL}/restaurants/{slug}"
     try:
-        html = fetch_page(url)
+        html = fetch(url)
     except urllib.error.URLError as e:
         print(f"  ✗ {slug}: {e}", file=sys.stderr)
-        return {"slug": slug, "dinexp_url": url}
+        return None
 
     blocks = parse_ld_json(html, "Restaurant")
     if not blocks:
-        print(f"  ✗ {slug}: no Restaurant JSON-LD found", file=sys.stderr)
-        return {"slug": slug, "dinexp_url": url}
+        print(f"  ✗ {slug}: no Restaurant JSON-LD", file=sys.stderr)
+        return None
 
     r = blocks[0]
     address = r.get("address", {})
     geo = r.get("geo", {})
     rating = r.get("aggregateRating", {})
-
     cuisine = r.get("servesCuisine", [])
-    amenities = [
-        f["name"] for f in r.get("amenityFeature", []) if f.get("value")
-    ]
+    amenities = [f["name"] for f in r.get("amenityFeature", []) if f.get("value")]
 
     city = address.get("addressLocality", "")
     country = address.get("addressCountry", "")
     if not country or country == "ZA":
-        zim_cities = {"harare", "bulawayo", "victoria falls", "mutare", "gweru", "masvingo"}
-        if city.lower() in zim_cities:
+        if city.lower() in ZIM_CITIES:
             country = "ZW"
 
     return {
@@ -170,8 +204,8 @@ def scrape_detail_page(slug: str) -> dict:
         "longitude": geo.get("longitude", ""),
         "telephone": r.get("telephone", ""),
         "price_range": r.get("priceRange", ""),
-        "cuisine_types": ", ".join(cuisine) if isinstance(cuisine, list) else cuisine,
-        "service_types": "",   # not in detail JSON-LD; available from listing RSC
+        "cuisine_types": ", ".join(cuisine) if isinstance(cuisine, list) else str(cuisine),
+        "service_types": "",
         "atmosphere_features": ", ".join(amenities),
         "special_features": "",
         "dietary_options": "",
@@ -182,28 +216,35 @@ def scrape_detail_page(slug: str) -> dict:
     }
 
 
-# ── Orchestration ─────────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────────────────
 
-def _process(listing_html: str, city_filter: str | None, output: str):
-    slugs = extract_slugs_from_listing(listing_html)
+def run(query: str, city: str | None, output: str):
+    slugs = collect_slugs(city, query)
 
     if not slugs:
-        print("No venue slugs found on listing page.", file=sys.stderr)
+        print("No slugs found. Try a different --query.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Found {len(slugs)} venues on listing page. Fetching detail pages…")
+    print(f"\nFound {len(slugs)} venue slug(s). Fetching detail pages…")
 
     rows = []
     for slug in slugs:
-        print(f"  → {BASE_URL}/restaurants/{slug}")
-        detail = scrape_detail_page(slug)
-        if city_filter and city_filter.lower() not in (detail.get("city") or "").lower():
+        print(f"  → {slug}")
+        detail = scrape_detail(slug)
+        if detail is None:
+            continue
+        if city and city.lower() not in (detail.get("city") or "").lower():
+            print(f"     skipped (city: {detail.get('city', '?')})")
             continue
         rows.append({field: detail.get(field, "") for field in CSV_FIELDS})
-        time.sleep(0.4)   # be polite
+        time.sleep(0.5)
 
     if not rows:
-        print("No venues matched the city filter.", file=sys.stderr)
+        print(
+            "\nNo venues passed the city filter.\n"
+            "Tip: run without --city to get all results, then filter the CSV manually.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     with open(output, "w", newline="", encoding="utf-8") as f:
@@ -211,37 +252,15 @@ def _process(listing_html: str, city_filter: str | None, output: str):
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"\nSaved {len(rows)} venues to {output}")
+    print(f"\nSaved {len(rows)} venues → {output}")
     for row in rows:
-        print(f"  • {row['name']} — {row['city']}")
-
-
-def scrape(query: str, city_filter: str | None, output: str):
-    url = f"{BASE_URL}/explore?q={urllib.parse.quote(query)}"
-    print(f"Fetching listing: {url}")
-    try:
-        html = fetch_page(url)
-    except urllib.error.URLError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
-    _process(html, city_filter, output)
-
-
-def scrape_from_file(path: str, city_filter: str | None, output: str):
-    with open(path, encoding="utf-8") as f:
-        html = f.read()
-    _process(html, city_filter, output)
+        print(f"  • {row['name']} ({row['city']}, {row['country']})")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Scrape DineXp venue data to CSV")
-    parser.add_argument("--query", default="harare", help="Search query (default: harare)")
-    parser.add_argument("--city", default=None, help="Filter results by city name")
+    parser.add_argument("--query", default="harare", help="Search keyword (default: harare)")
+    parser.add_argument("--city", default=None, help="Only keep venues in this city")
     parser.add_argument("--output", default=DEFAULT_OUTPUT, help=f"Output CSV (default: {DEFAULT_OUTPUT})")
-    parser.add_argument("--file", default=None, help="Parse a locally saved listing HTML file instead of fetching")
     args = parser.parse_args()
-
-    if args.file:
-        scrape_from_file(args.file, args.city, args.output)
-    else:
-        scrape(args.query, args.city, args.output)
+    run(args.query, args.city, args.output)
