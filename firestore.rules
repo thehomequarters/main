@@ -167,6 +167,16 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ──── Venue Likes ────
+    match /venue_likes/{likeId} {
+      allow read: if isAuth();
+      allow create: if isAuth() &&
+        request.resource.data.member_id == request.auth.uid;
+      allow delete: if isAuth() &&
+        resource.data.member_id == request.auth.uid;
+      allow update: if false;
+    }
+
     // ──── Redemptions ────
     match /redemptions/{redemptionId} {
       allow read: if isAuth();
