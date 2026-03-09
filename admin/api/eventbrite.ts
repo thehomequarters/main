@@ -17,6 +17,7 @@ async function searchEventbrite(
   within: string
 ): Promise<any[]> {
   const params = new URLSearchParams({
+    token: EVENTBRITE_TOKEN,
     q,
     "location.address": locationAddress,
     "location.within": within,
@@ -27,7 +28,7 @@ async function searchEventbrite(
   });
 
   const response = await fetch(
-    `https://www.eventbriteapi.com/v3/events/search/?${params}`,
+    `https://www.eventbriteapi.com/v3/events/search?${params}`,
     { headers: { Authorization: `Bearer ${EVENTBRITE_TOKEN}` } }
   );
 
