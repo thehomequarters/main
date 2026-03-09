@@ -40,7 +40,7 @@ const TYPE_CONFIG: Record<ToastType, { icon: keyof typeof Ionicons.glyphMap; col
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets() ?? { bottom: 0, top: 0, left: 0, right: 0 };
   const translateY = useRef(new Animated.Value(120)).current;
   const opacity    = useRef(new Animated.Value(0)).current;
   const timer      = useRef<ReturnType<typeof setTimeout> | null>(null);

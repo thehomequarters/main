@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ToastProvider } from "@/components/Toast";
 import { colors } from "@/constants/theme";
@@ -17,6 +17,8 @@ import {
   DMSans_700Bold,
 } from "@expo-google-fonts/dm-sans";
 import "../global.css";
+
+SplashScreen.preventAutoHideAsync();
 
 /** Watches auth state inside the router tree and redirects on sign-out. */
 function AuthGuard() {
@@ -46,10 +48,12 @@ export default function RootLayout() {
     DMSans_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
-  }
+  useEffect(() => {
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
 
+  // Always render the Stack so navigation state is never unmounted.
+  // The splash screen keeps the app invisible until fonts are ready.
   return (
     <AuthProvider>
       <ToastProvider>
