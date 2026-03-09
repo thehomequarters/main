@@ -1,4 +1,5 @@
 import { onCall, onRequest, HttpsError } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as crypto from "crypto";
 import {
   onDocumentUpdated,
@@ -44,7 +45,7 @@ async function sendEmail(opts: {
   apiKey: string;
   from?: string;
   scheduledAt?: Date;
-}): Promise<void> {
+}): Promise<string | null> {
   const resend = new Resend(opts.apiKey);
   const payload: Parameters<typeof resend.emails.send>[0] = {
     from: opts.from ?? FROM_EMAIL,
@@ -54,10 +55,12 @@ async function sendEmail(opts: {
     ...(opts.html ? { html: opts.html } : {}),
     ...(opts.scheduledAt ? { scheduledAt: opts.scheduledAt.toISOString() } : {}),
   };
-  const { error } = await resend.emails.send(payload);
+  const { data, error } = await resend.emails.send(payload);
   if (error) {
     console.error("Resend error:", error);
+    return null;
   }
+  return data?.id ?? null;
 }
 
 initializeApp();
@@ -436,8 +439,11 @@ export const onMemberApproved = onDocumentUpdated(
 // onMemberAccepted
 // Fires when a profile document is updated.
 // If membership_status changed to "accepted":
+//   — Stamps accepted_at on the profile (used by push notification scheduler)
 //   — Immediately sends a welcome + payment CTA email
-//   — Schedules 3 grace period payment reminders (day 10, 20, 30)
+//   — Schedules 3 grace period reminder emails (day 10, 20, 30)
+//   — Stores the 3 Resend email IDs in grace_email_ids so they can be
+//     cancelled by onPaymentActivated if the member pays before they fire
 // ─────────────────────────────────────────────
 export const onMemberAccepted = onDocumentUpdated(
   { document: "profiles/{userId}", secrets: [resendApiKey] },
@@ -453,6 +459,11 @@ export const onMemberAccepted = onDocumentUpdated(
     const firstName = (after.first_name as string) ?? "there";
     const memberCode = (after.member_code as string) ?? "";
     const now = Date.now();
+    const acceptedAt = new Date(now).toISOString();
+
+    // Stamp accepted_at on the profile so the push scheduler can calculate timing
+    const db = getFirestore();
+    await db.doc(`profiles/${event.params.userId}`).update({ accepted_at: acceptedAt });
 
     // Immediate: acceptance email with 30-day grace period intro + payment CTA
     try {
@@ -467,52 +478,168 @@ export const onMemberAccepted = onDocumentUpdated(
       console.error("Failed to send acceptance email:", err);
     }
 
+    // Schedule grace reminder emails and collect their Resend IDs.
+    // IDs are stored on the profile so onPaymentActivated can cancel them.
+    const gracEmailIds: string[] = [];
+
     // Day 10 reminder — 20 days remaining
-    const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
     try {
-      await sendEmail({
+      const id = await sendEmail({
         to: after.email,
         subject: `Your HomeQuarters membership is waiting, ${firstName}`,
         html: graceReminderHtml({ firstName, daysRemaining: 20, reminderNumber: 1 }),
         text: graceReminderText({ firstName, daysRemaining: 20, reminderNumber: 1 }),
         apiKey: resendApiKey.value(),
-        scheduledAt: day10,
+        scheduledAt: new Date(now + 10 * 24 * 60 * 60 * 1000),
       });
+      if (id) gracEmailIds.push(id);
     } catch (err) {
       console.error("Failed to schedule day 10 grace reminder:", err);
     }
 
     // Day 20 reminder — 10 days remaining
-    const day20 = new Date(now + 20 * 24 * 60 * 60 * 1000);
     try {
-      await sendEmail({
+      const id = await sendEmail({
         to: after.email,
         subject: `10 days left on your free trial — keep the momentum going`,
         html: graceReminderHtml({ firstName, daysRemaining: 10, reminderNumber: 2 }),
         text: graceReminderText({ firstName, daysRemaining: 10, reminderNumber: 2 }),
         apiKey: resendApiKey.value(),
-        scheduledAt: day20,
+        scheduledAt: new Date(now + 20 * 24 * 60 * 60 * 1000),
       });
+      if (id) gracEmailIds.push(id);
     } catch (err) {
       console.error("Failed to schedule day 20 grace reminder:", err);
     }
 
     // Day 30 reminder — last day
-    const day30 = new Date(now + 30 * 24 * 60 * 60 * 1000);
     try {
-      await sendEmail({
+      const id = await sendEmail({
         to: after.email,
         subject: "Today is the last day of your HomeQuarters free trial",
         html: graceReminderHtml({ firstName, daysRemaining: 0, reminderNumber: 3 }),
         text: graceReminderText({ firstName, daysRemaining: 0, reminderNumber: 3 }),
         apiKey: resendApiKey.value(),
-        scheduledAt: day30,
+        scheduledAt: new Date(now + 30 * 24 * 60 * 60 * 1000),
       });
+      if (id) gracEmailIds.push(id);
     } catch (err) {
       console.error("Failed to schedule day 30 grace reminder:", err);
     }
+
+    if (gracEmailIds.length > 0) {
+      await db.doc(`profiles/${event.params.userId}`).update({
+        grace_email_ids: gracEmailIds,
+      });
+    }
   }
 );
+
+// ─────────────────────────────────────────────
+// onPaymentActivated
+// Fires when a profile document is updated.
+// If stripe_customer_id is newly set (member just paid), cancel any
+// pending Resend grace-period reminder emails stored in grace_email_ids.
+// Also clears the IDs so the field doesn't linger.
+// ─────────────────────────────────────────────
+export const onPaymentActivated = onDocumentUpdated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) return;
+    // Only fire when stripe_customer_id is newly written (i.e. first payment)
+    if (before.stripe_customer_id || !after.stripe_customer_id) return;
+
+    const emailIds = (after.grace_email_ids as string[] | undefined) ?? [];
+    if (emailIds.length === 0) return;
+
+    const resend = new Resend(resendApiKey.value());
+    await Promise.allSettled(
+      emailIds.map(async (id) => {
+        try {
+          await resend.emails.cancel(id);
+          console.log(`Cancelled grace email ${id} for ${event.params.userId}`);
+        } catch (err) {
+          console.error(`Failed to cancel grace email ${id}:`, err);
+        }
+      })
+    );
+
+    // Clear stored IDs — no longer needed
+    await event.data?.after.ref.update({ grace_email_ids: [] });
+  }
+);
+
+// ─────────────────────────────────────────────
+// sendGracePushNotifications
+// Runs daily. Finds accepted members who haven't paid and sends
+// push notifications at day 2 (welcome nudge) and day 28 (last chance).
+// Tracks sent notifications in grace_push_sent to avoid duplicates.
+// ─────────────────────────────────────────────
+export const sendGracePushNotifications = onSchedule("every 24 hours", async () => {
+  const db = getFirestore();
+  const now = Date.now();
+
+  const snap = await db
+    .collection("profiles")
+    .where("membership_status", "==", "accepted")
+    .get();
+
+  for (const doc of snap.docs) {
+    const profile = doc.data();
+
+    // Skip if already paid
+    if (profile.stripe_customer_id) continue;
+    // Skip if no push token
+    if (!profile.push_token) continue;
+    // Skip if no accepted_at timestamp
+    if (!profile.accepted_at) continue;
+
+    const acceptedAt = new Date(profile.accepted_at as string).getTime();
+    const daysSince = (now - acceptedAt) / (1000 * 60 * 60 * 24);
+    const pushSent = (profile.grace_push_sent as number[] | undefined) ?? [];
+    const firstName = (profile.first_name as string) ?? "there";
+
+    // Day 2: "Your membership is waiting" nudge (28 days remaining)
+    if (daysSince >= 2 && daysSince < 3 && !pushSent.includes(2)) {
+      try {
+        await getMessaging().send({
+          token: profile.push_token as string,
+          notification: {
+            title: "Your HQ membership is waiting",
+            body: "You have 28 days to explore HomeQuarters free. Take a look whenever you're ready.",
+          },
+          data: { route: "/billing" },
+        });
+        await doc.ref.update({ grace_push_sent: [...pushSent, 2] });
+        console.log(`Sent day-2 push to ${doc.id} (${firstName})`);
+      } catch (err) {
+        console.error(`Day-2 push failed for ${doc.id}:`, err);
+      }
+    }
+
+    // Day 28: last-chance push (2 days remaining)
+    const pushSentAfterDay2 = pushSent.includes(2) ? pushSent : [...pushSent, 2];
+    if (daysSince >= 28 && daysSince < 29 && !pushSent.includes(28)) {
+      try {
+        await getMessaging().send({
+          token: profile.push_token as string,
+          notification: {
+            title: "2 days left on your free trial",
+            body: "Your HomeQuarters trial ends in 2 days. Choose a plan to keep access.",
+          },
+          data: { route: "/billing" },
+        });
+        await doc.ref.update({ grace_push_sent: [...pushSentAfterDay2, 28] });
+        console.log(`Sent day-28 push to ${doc.id} (${firstName})`);
+      } catch (err) {
+        console.error(`Day-28 push failed for ${doc.id}:`, err);
+      }
+    }
+  }
+});
 
 // ─────────────────────────────────────────────
 // onMemberSuspended

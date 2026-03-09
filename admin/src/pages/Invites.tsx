@@ -29,6 +29,7 @@ interface ProfileStub {
   first_name: string;
   last_name: string;
   email: string;
+  membership_status?: string;
 }
 
 function generateCode(): string {
@@ -65,7 +66,7 @@ export default function Invites() {
       }
     );
 
-    // Load profiles once for used_by name resolution
+    // Load profiles once for used_by name resolution and funnel stats
     getDocs(collection(db, "profiles")).then((snap) => {
       const map: Record<string, ProfileStub> = {};
       snap.docs.forEach((d) => {
@@ -74,6 +75,7 @@ export default function Invites() {
           first_name: data.first_name ?? "",
           last_name: data.last_name ?? "",
           email: data.email ?? "",
+          membership_status: data.membership_status ?? "",
         };
       });
       setProfiles(map);
@@ -183,6 +185,41 @@ export default function Invites() {
             + Generate Invite
           </button>
         </div>
+
+        {/* Conversion funnel */}
+        {invites.length > 0 && (() => {
+          const totalSent = invites.length;
+          const totalUsed = used.length;
+          const usageRate = totalSent > 0 ? Math.round((totalUsed / totalSent) * 100) : 0;
+          const acceptedOrActive = used.filter((inv) => {
+            const profile = inv.used_by ? profiles[inv.used_by] : null;
+            return profile?.membership_status === "accepted" || profile?.membership_status === "active";
+          }).length;
+          const conversionRate = totalUsed > 0 ? Math.round((acceptedOrActive / totalUsed) * 100) : 0;
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              <div className="bg-dark border border-dark-border rounded-2xl p-4">
+                <div className="text-2xl font-extrabold text-white">{totalSent}</div>
+                <div className="text-gray-500 text-xs mt-0.5">Invites Sent</div>
+              </div>
+              <div className="bg-dark border border-dark-border rounded-2xl p-4">
+                <div className="text-2xl font-extrabold text-gold">{totalUsed}</div>
+                <div className="text-gray-500 text-xs mt-0.5">Invites Used</div>
+                <div className="text-gray-600 text-xs">{usageRate}% usage rate</div>
+              </div>
+              <div className="bg-dark border border-dark-border rounded-2xl p-4">
+                <div className="text-2xl font-extrabold text-amber-400">{acceptedOrActive}</div>
+                <div className="text-gray-500 text-xs mt-0.5">Accepted / Active</div>
+                <div className="text-gray-600 text-xs">{conversionRate}% of applicants</div>
+              </div>
+              <div className="bg-dark border border-dark-border rounded-2xl p-4">
+                <div className="text-2xl font-extrabold text-green-400">{unused.length}</div>
+                <div className="text-gray-500 text-xs mt-0.5">Still Active</div>
+                <div className="text-gray-600 text-xs">awaiting use</div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Create form */}
         {showForm && (

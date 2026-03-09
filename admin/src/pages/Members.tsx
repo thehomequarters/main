@@ -292,6 +292,33 @@ export default function Members() {
     }
   };
 
+  const exportCSV = () => {
+    const headers = ["Member Code", "First Name", "Last Name", "Email", "Phone", "City", "Industry", "Title", "Status", "Created At", "Accepted At"];
+    const rows = filtered.map((m) => [
+      m.member_code,
+      m.first_name,
+      m.last_name,
+      m.email,
+      m.phone ?? "",
+      m.city ?? "",
+      m.industry ?? "",
+      m.title ?? "",
+      m.membership_status,
+      m.created_at ? new Date(m.created_at).toLocaleDateString("en-GB") : "",
+      m.accepted_at ? new Date(m.accepted_at).toLocaleDateString("en-GB") : "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hq-members-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -318,20 +345,31 @@ export default function Members() {
       <div className="flex gap-6">
         {/* Main list */}
         <div className="flex-1 min-w-0">
-          <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-white">Members</h1>
-            <p className="text-gray-500 text-sm mt-1">
-              {members.length} total
-              {counts.pending > 0 && (
-                <span className="text-yellow-400"> · {counts.pending} pending review</span>
-              )}
-              {counts.open_application > 0 && (
-                <span className="text-blue-400"> · {counts.open_application} open applications</span>
-              )}
-              {counts.accepted > 0 && (
-                <span className="text-amber-400"> · {counts.accepted} in grace period</span>
-              )}
-            </p>
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white">Members</h1>
+              <p className="text-gray-500 text-sm mt-1">
+                {members.length} total
+                {counts.pending > 0 && (
+                  <span className="text-yellow-400"> · {counts.pending} pending review</span>
+                )}
+                {counts.open_application > 0 && (
+                  <span className="text-blue-400"> · {counts.open_application} open applications</span>
+                )}
+                {counts.accepted > 0 && (
+                  <span className="text-amber-400"> · {counts.accepted} in grace period</span>
+                )}
+              </p>
+            </div>
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-dark border border-dark-border text-gray-400 text-sm font-medium rounded-xl hover:text-white hover:border-white/20 transition-colors whitespace-nowrap flex-shrink-0"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              Export CSV
+            </button>
           </div>
 
           {/* Search */}

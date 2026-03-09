@@ -17,6 +17,7 @@ import Billing from "./pages/Billing";
 import Notifications from "./pages/Notifications";
 import Emails from "./pages/Emails";
 import Verify from "./pages/Verify";
+import Pipeline from "./pages/Pipeline";
 
 function ProtectedRoutes() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -61,6 +62,7 @@ function ProtectedRoutes() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/members" element={<Members />} />
+        <Route path="/pipeline" element={<Pipeline />} />
         <Route path="/venues" element={<Venues />} />
         <Route path="/events" element={<Events />} />
         <Route path="/posts" element={<Posts />} />
