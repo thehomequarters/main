@@ -22,16 +22,16 @@ const DEFAULT_SLIDES = [
     image: {
       uri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90",
     },
-    eyebrow: "WELCOME TO",
-    title: "Home\nQuarters",
+    eyebrow: "BY INVITATION ONLY",
+    title: "Your Card.\nYour Table.",
   },
   {
     id: "2",
     image: {
       uri: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=90",
     },
-    eyebrow: "DEALS & PERKS",
-    title: "15+ Venues.\nAll Yours.",
+    eyebrow: "EXCLUSIVE ACCESS",
+    title: "The City's\nFinest Tables.",
   },
   {
     id: "3",
