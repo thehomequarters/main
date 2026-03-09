@@ -48,6 +48,11 @@ HEADERS = {
 # GeoDirectory REST API — faster and less bot-sensitive than HTML scraping
 API_BASE = f"{BASE_URL}/wp-json/geodir/v2"
 
+# Wayback Machine — last-resort fallback when the live site is unreachable
+WAYBACK_CDX = "https://web.archive.org/cdx/search/cdx"
+WAYBACK_BASE = "https://web.archive.org/web"
+_WB_HREF_RE = re.compile(r'^(?:https?://web\.archive\.org)?/web/\d+[a-z]?/(https?://.*)')
+
 CSV_FIELDS = [
     "name",
     "description",
@@ -84,7 +89,7 @@ def fetch(url: str, retries: int = 4) -> BeautifulSoup | None:
     delay = 3
     for attempt in range(retries + 1):
         try:
-            resp = session.get(url, timeout=40)
+            resp = session.get(url, timeout=10)
             if resp.status_code == 503:
                 if attempt < retries:
                     print(f"  503 on {url} (attempt {attempt+1}), retrying in {delay}s…", file=sys.stderr)
@@ -114,7 +119,7 @@ def fetch_json(url: str, params: dict | None = None, retries: int = 4) -> dict |
     delay = 3
     for attempt in range(retries + 1):
         try:
-            resp = session.get(url, params=params, timeout=40)
+            resp = session.get(url, params=params, timeout=10)
             if resp.status_code in (503, 429):
                 if attempt < retries:
                     wait = int(resp.headers.get("Retry-After", delay))
@@ -138,6 +143,45 @@ def fetch_json(url: str, params: dict | None = None, retries: int = 4) -> dict |
             print(f"  Warning fetching {url}: {e}", file=sys.stderr)
             return None
     return None
+
+
+def _cdx_latest(url: str) -> str | None:
+    """Return the timestamp of the most recent successful Wayback snapshot."""
+    try:
+        resp = requests.get(
+            WAYBACK_CDX,
+            params={"url": url, "output": "json", "limit": "1", "fl": "timestamp",
+                    "filter": "statuscode:200", "from": "20230101"},
+            timeout=15,
+        )
+        data = resp.json()
+        if len(data) > 1:
+            return data[1][0]
+    except Exception:
+        pass
+    return None
+
+
+def fetch_wayback(url: str) -> BeautifulSoup | None:
+    """Fetch a URL via the Wayback Machine (most recent snapshot)."""
+    ts = _cdx_latest(url)
+    if not ts:
+        print(f"  No Wayback snapshot for {url}", file=sys.stderr)
+        return None
+    wb_url = f"{WAYBACK_BASE}/{ts}/{url}"
+    try:
+        resp = requests.get(wb_url, timeout=30, headers={"User-Agent": HEADERS["User-Agent"]})
+        resp.raise_for_status()
+        return BeautifulSoup(resp.text, "lxml")
+    except Exception as e:
+        print(f"  Wayback fetch failed for {url}: {e}", file=sys.stderr)
+        return None
+
+
+def _unwrap_wayback(href: str) -> str:
+    """Strip the Wayback Machine URL prefix to recover the original URL."""
+    m = _WB_HREF_RE.match(href or "")
+    return m.group(1) if m else href
 
 
 def page_url(page_num: int) -> str:
@@ -379,11 +423,12 @@ def _extract_gallery(soup: BeautifulSoup) -> list[str]:
     return [u for u in (get_image(i) for i in imgs) if u]
 
 
-def parse_detail_page(url: str) -> dict:
+def parse_detail_page(url: str, fetch_fn=None) -> dict:
     """
     Fetch the individual listing detail page for complete info.
+    fetch_fn defaults to the live fetch(); pass fetch_wayback for archive mode.
     """
-    soup = fetch(url)
+    soup = (fetch_fn or fetch)(url)
     if not soup:
         return {}
 
@@ -522,8 +567,48 @@ def parse_detail_page(url: str) -> dict:
     }
 
 
+def _collect_html_pages(fetch_fn, limit: int | None, use_wayback: bool = False) -> list[dict]:
+    """Walk listing pages using fetch_fn; return deduplicated card list."""
+    all_cards: list[dict] = []
+    seen_urls: set[str] = set()
+    page_num = 1
+
+    while True:
+        url = page_url(page_num)
+        print(f"  Listing page {page_num}: {url}")
+        soup = fetch_fn(url)
+        if not soup:
+            print(f"  Could not fetch page {page_num} — stopping.", file=sys.stderr)
+            break
+
+        articles = soup.select("article.geodir-category-listing")
+        cards = [parse_card(a) for a in articles]
+        print(f"  Found {len(cards)} listing(s)")
+
+        if not cards:
+            break
+
+        for card in cards:
+            if use_wayback:
+                card["listing_url"] = _unwrap_wayback(card["listing_url"])
+            u = card["listing_url"]
+            if u and u not in seen_urls:
+                seen_urls.add(u)
+                all_cards.append(card)
+
+        if limit and len(all_cards) >= limit:
+            all_cards = all_cards[:limit]
+            break
+
+        page_num += 1
+        time.sleep(1 if not use_wayback else 0.5)
+
+    return all_cards
+
+
 def run(output: str, limit: int | None, skip_detail: bool = False):
     all_cards: list[dict] = []
+    detail_fetch_fn = fetch  # which fetch function to use for detail pages
 
     _warm_up_session()
 
@@ -533,43 +618,24 @@ def run(output: str, limit: int | None, skip_detail: bool = False):
 
     if api_cards is not None:
         all_cards = api_cards
-        # API already returns full data; skip HTML detail pass unless forced
-        skip_detail = True
+        skip_detail = True  # API already returns full data
         print(f"  API returned {len(all_cards)} listing(s).")
     else:
-        # --- Strategy 2: HTML pagination fallback ---
-        print("REST API unavailable — falling back to HTML scraping.")
-        seen_urls: set[str] = set()
-        page_num = 1
+        # --- Strategy 2: Live HTML scraping ---
+        print("REST API unavailable — trying live HTML scraping.")
+        all_cards = _collect_html_pages(fetch, limit)
 
-        while True:
-            url = page_url(page_num)
-            print(f"Fetching listing page {page_num}: {url}")
-            cards = scrape_listing_page(url)
-            print(f"  Found {len(cards)} listing(s)")
-
-            if not cards:
-                print(f"  No listings on page {page_num} — stopping pagination.")
-                break
-
-            for card in cards:
-                u = card["listing_url"]
-                if u and u not in seen_urls:
-                    seen_urls.add(u)
-                    all_cards.append(card)
-
-            if limit and len(all_cards) >= limit:
-                all_cards = all_cards[:limit]
-                break
-
-            page_num += 1
-            time.sleep(1.5)
+        if not all_cards:
+            # --- Strategy 3: Wayback Machine archive ---
+            print("Live site unreachable — falling back to Wayback Machine archive.")
+            all_cards = _collect_html_pages(fetch_wayback, limit, use_wayback=True)
+            detail_fetch_fn = fetch_wayback
 
     if not all_cards:
-        print("No listings found. The site structure may have changed.", file=sys.stderr)
+        print("No listings found via any strategy. The site may be completely unavailable.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"\nCollected {len(all_cards)} listing(s) across {page_num} page(s).")
+    print(f"\nCollected {len(all_cards)} listing(s).")
 
     # Pass 2: enrich with detail page data
     if not skip_detail:
@@ -578,15 +644,13 @@ def run(output: str, limit: int | None, skip_detail: bool = False):
             if not card["listing_url"]:
                 continue
             print(f"  [{i}/{len(all_cards)}] {card['listing_url']}")
-            detail = parse_detail_page(card["listing_url"])
+            detail = parse_detail_page(card["listing_url"], fetch_fn=detail_fetch_fn)
             for key, val in detail.items():
-                # Prefer longer description; otherwise take detail value if card has none
                 if key == "description":
                     if len(val) > len(card.get("description", "")):
                         card[key] = val
                 elif val and not card.get(key):
                     card[key] = val
-            # Default city/country if still blank
             if not card.get("city"):
                 card["city"] = "Harare"
             if not card.get("country"):
