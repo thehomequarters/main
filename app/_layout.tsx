@@ -27,7 +27,8 @@ function AuthGuard() {
   useEffect(() => {
     if (loading) return;
     const inTabs = segments[0] === "(tabs)";
-    if (!user && inTabs) {
+    const inPending = segments[0] === "pending";
+    if (!user && (inTabs || inPending)) {
       router.replace("/onboarding");
     }
   }, [user, loading, segments]);
