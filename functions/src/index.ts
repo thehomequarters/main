@@ -692,11 +692,15 @@ export const handleWebApplication = onRequest(
 // ─────────────────────────────────────────────
 
 // Map Stripe Price ID → membership tier (configured in functions/.env)
+// Covers both monthly and annual price IDs — tier is the same regardless of interval.
 function tierFromPriceId(
   priceId: string
 ): "gold_card" | "platinum_card" | null {
-  if (priceId && priceId === process.env.STRIPE_GOLD_PRICE_ID) return "gold_card";
-  if (priceId && priceId === process.env.STRIPE_PLATINUM_PRICE_ID) return "platinum_card";
+  if (!priceId) return null;
+  if (priceId === process.env.STRIPE_GOLD_PRICE_ID) return "gold_card";
+  if (priceId === process.env.STRIPE_PLATINUM_PRICE_ID) return "platinum_card";
+  if (priceId === process.env.STRIPE_GOLD_ANNUAL_PRICE_ID) return "gold_card";
+  if (priceId === process.env.STRIPE_PLATINUM_ANNUAL_PRICE_ID) return "platinum_card";
   return null;
 }
 
@@ -752,13 +756,15 @@ export const stripeWebhook = onRequest(
           const priceId = expanded.line_items?.data[0]?.price?.id ?? "";
           const tier = tierFromPriceId(priceId);
 
-          // Get current_period_end from subscription
+          // Get current_period_end and billing interval from subscription
           let periodEnd: string | null = null;
+          let billingInterval: string = "month";
           if (session.subscription) {
             const sub = await stripe.subscriptions.retrieve(
               session.subscription as string
             );
             periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+            billingInterval = sub.items.data[0]?.plan?.interval ?? "month";
           }
 
           const update: Record<string, unknown> = {
@@ -766,12 +772,12 @@ export const stripeWebhook = onRequest(
             stripe_subscription_id: session.subscription ?? null,
             subscription_status: "active",
             current_period_end: periodEnd,
+            billing_interval: billingInterval,
             membership_status: "active",
           };
           if (tier) update.membership_tier = tier;
 
           await db.doc(`profiles/${uid}`).update(update);
-          console.log(`Activated subscription for uid=${uid} tier=${tier}`);
           break;
         }
 
@@ -791,10 +797,12 @@ export const stripeWebhook = onRequest(
           const priceId = sub.items.data[0]?.price?.id ?? "";
           const tier = tierFromPriceId(priceId);
           const periodEnd = new Date(sub.current_period_end * 1000).toISOString();
+          const billingInterval = sub.items.data[0]?.plan?.interval ?? "month";
 
           const update: Record<string, unknown> = {
             subscription_status: sub.status,
             current_period_end: periodEnd,
+            billing_interval: billingInterval,
           };
           if (tier) update.membership_tier = tier;
           if (sub.status === "active") update.membership_status = "active";

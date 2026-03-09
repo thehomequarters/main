@@ -50,50 +50,56 @@ export default function DiscoverTab() {
     useState<MemberIndustry | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
   const fetchMembers = useCallback(async () => {
-    // Get all active member profiles (excluding self)
-    const profilesQuery = query(
-      collection(db, "profiles"),
-      where("membership_status", "==", "active")
-    );
-    const profilesSnap = await getDocs(profilesQuery);
-    const memberList = profilesSnap.docs
-      .map((d) => ({ id: d.id, ...d.data() }) as Profile)
-      .filter((m) => m.id !== user?.uid);
-    setMembers(memberList);
+    try {
+      setError(false);
+      // Get all active member profiles (excluding self)
+      const profilesQuery = query(
+        collection(db, "profiles"),
+        where("membership_status", "==", "active")
+      );
+      const profilesSnap = await getDocs(profilesQuery);
+      const memberList = profilesSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as Profile)
+        .filter((m) => m.id !== user?.uid);
+      setMembers(memberList);
 
-    // Fetch existing connections (outbound)
-    if (user?.uid) {
-      const connQuery = query(
-        collection(db, "connections"),
-        where("from_id", "==", user.uid)
-      );
-      const connSnap = await getDocs(connQuery);
-      setConnections(
-        connSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Connection)
-      );
+      // Fetch existing connections (outbound)
+      if (user?.uid) {
+        const connQuery = query(
+          collection(db, "connections"),
+          where("from_id", "==", user.uid)
+        );
+        const connSnap = await getDocs(connQuery);
+        setConnections(
+          connSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Connection)
+        );
 
-      // Fetch inbound pending requests
-      const inboundQuery = query(
-        collection(db, "connections"),
-        where("to_id", "==", user.uid),
-        where("status", "==", "pending")
-      );
-      const inboundSnap = await getDocs(inboundQuery);
-      const inbound = inboundSnap.docs.map(
-        (d) => ({ id: d.id, ...d.data() }) as Connection
-      );
+        // Fetch inbound pending requests
+        const inboundQuery = query(
+          collection(db, "connections"),
+          where("to_id", "==", user.uid),
+          where("status", "==", "pending")
+        );
+        const inboundSnap = await getDocs(inboundQuery);
+        const inbound = inboundSnap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Connection
+        );
 
-      // Attach sender profile info
-      const enriched = inbound.map((conn) => {
-        const fromProfile = memberList.find((m) => m.id === conn.from_id);
-        return { ...conn, fromProfile };
-      });
-      setInboundRequests(enriched);
+        // Attach sender profile info
+        const enriched = inbound.map((conn) => {
+          const fromProfile = memberList.find((m) => m.id === conn.from_id);
+          return { ...conn, fromProfile };
+        });
+        setInboundRequests(enriched);
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [user?.uid]);
 
   useEffect(() => {
@@ -252,6 +258,26 @@ export default function DiscoverTab() {
           borderRadius={16}
           style={{ marginBottom: 14 }}
         />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 }}>
+        <Ionicons name="wifi-outline" size={48} color={colors.border} />
+        <Text style={{ color: colors.dark, fontSize: 17, fontWeight: "700", marginTop: 16, marginBottom: 8 }}>
+          Couldn't load members
+        </Text>
+        <Text style={{ color: colors.stone, fontSize: 14, textAlign: "center", lineHeight: 21, marginBottom: 24 }}>
+          Check your connection and try again.
+        </Text>
+        <Pressable
+          onPress={() => { setLoading(true); fetchMembers(); }}
+          style={{ backgroundColor: colors.dark, borderRadius: 100, paddingVertical: 14, paddingHorizontal: 32 }}
+        >
+          <Text style={{ color: colors.white, fontSize: 14, fontWeight: "700" }}>Try Again</Text>
+        </Pressable>
       </View>
     );
   }

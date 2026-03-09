@@ -51,41 +51,47 @@ export default function EventsTab() {
     useState<EventCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
   const fetchEvents = useCallback(async () => {
-    // Fetch all active events
-    const eventsQuery = query(
-      collection(db, "events"),
-      where("is_active", "==", true)
-    );
-    const eventsSnap = await getDocs(eventsQuery);
-    const eventList = eventsSnap.docs
-      .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
-      .sort((a, b) => a.date.localeCompare(b.date));
-    setEvents(eventList);
+    try {
+      setError(false);
+      // Fetch all active events
+      const eventsQuery = query(
+        collection(db, "events"),
+        where("is_active", "==", true)
+      );
+      const eventsSnap = await getDocs(eventsQuery);
+      const eventList = eventsSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      setEvents(eventList);
 
-    // Fetch current user's bookings
-    if (user?.uid) {
-      const bookingsQuery = query(
-        collection(db, "bookings"),
-        where("member_id", "==", user.uid)
-      );
-      const bookingsSnap = await getDocs(bookingsQuery);
-      setBookings(
-        bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking)
-      );
+      // Fetch current user's bookings
+      if (user?.uid) {
+        const bookingsQuery = query(
+          collection(db, "bookings"),
+          where("member_id", "==", user.uid)
+        );
+        const bookingsSnap = await getDocs(bookingsQuery);
+        setBookings(
+          bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking)
+        );
+      }
+
+      // Fetch booking counts per event
+      const allBookingsSnap = await getDocs(collection(db, "bookings"));
+      const counts: Record<string, number> = {};
+      allBookingsSnap.docs.forEach((d) => {
+        const eventId = d.data().event_id;
+        counts[eventId] = (counts[eventId] || 0) + 1;
+      });
+      setBookingCounts(counts);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-
-    // Fetch booking counts per event
-    const allBookingsSnap = await getDocs(collection(db, "bookings"));
-    const counts: Record<string, number> = {};
-    allBookingsSnap.docs.forEach((d) => {
-      const eventId = d.data().event_id;
-      counts[eventId] = (counts[eventId] || 0) + 1;
-    });
-    setBookingCounts(counts);
-
-    setLoading(false);
   }, [user?.uid]);
 
   useEffect(() => {
@@ -199,6 +205,26 @@ export default function EventsTab() {
           borderRadius={16}
           style={{ marginBottom: 20 }}
         />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 }}>
+        <Ionicons name="wifi-outline" size={48} color={colors.border} />
+        <Text style={{ color: colors.dark, fontSize: 17, fontWeight: "700", marginTop: 16, marginBottom: 8 }}>
+          Couldn't load events
+        </Text>
+        <Text style={{ color: colors.stone, fontSize: 14, textAlign: "center", lineHeight: 21, marginBottom: 24 }}>
+          Check your connection and try again.
+        </Text>
+        <Pressable
+          onPress={() => { setLoading(true); fetchEvents(); }}
+          style={{ backgroundColor: colors.dark, borderRadius: 100, paddingVertical: 14, paddingHorizontal: 32 }}
+        >
+          <Text style={{ color: colors.white, fontSize: 14, fontWeight: "700" }}>Try Again</Text>
+        </Pressable>
       </View>
     );
   }
