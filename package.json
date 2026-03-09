@@ -36,6 +36,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "axios": "^1.13.6",
+    "cheerio": "^1.2.0",
     "patch-package": "^8.0.1",
     "typescript": "~5.8.0"
   },
