@@ -571,10 +571,7 @@
     <div class="contact-inner">
       <h2>Request consideration.</h2>
       <p class="sub">HomeQuarters is by invitation only. On special occasions, outstanding applications without a code are reviewed. Share your details and we'll be in touch if there's a fit.</p>
-      <form id="applyForm" action="https://formsubmit.co/hello@thehomequarters.com" method="POST">
-        <input type="hidden" name="_subject" value="Open Application — HomeQuarters">
-        <input type="hidden" name="_template" value="table">
-        <input type="hidden" name="_captcha" value="false">
+      <form id="applyForm">
         <div class="form-row">
           <input type="text" name="first_name" placeholder="First name" required />
           <input type="text" name="last_name" placeholder="Last name" required />
@@ -583,13 +580,60 @@
         <input type="text" name="instagram" placeholder="Instagram handle (@username)" style="width:100%; margin-bottom:12px;" />
         <input type="text" name="linkedin" placeholder="LinkedIn URL or handle" style="width:100%; margin-bottom:12px;" />
         <textarea name="about" placeholder="Tell us about yourself — who you are, what you do, and why HomeQuarters."></textarea>
-        <button type="submit" class="contact-submit">Submit Application</button>
+        <button type="submit" class="contact-submit" id="applySubmitBtn">Submit Application</button>
+        <p id="applyError" style="display:none;margin-top:12px;color:#c0392b;font-size:13px;text-align:center;"></p>
       </form>
+      <div id="applySuccess" style="display:none;text-align:center;padding:32px 0;">
+        <p style="color:var(--gold);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">APPLICATION RECEIVED</p>
+        <p style="color:var(--dark);font-size:20px;font-weight:800;margin:0 0 12px;">Thank you.</p>
+        <p style="color:var(--stone);font-size:14px;line-height:22px;margin:0;">We've received your application and sent a confirmation to your email. We'll be in touch if there's a match.</p>
+      </div>
       <p style="font-size:12px; color:var(--stone); margin-top:16px; text-align:center;">
         Have an invitation code? <a href="#" style="color:var(--dark); font-weight:600; text-decoration:underline;">Download the app</a> to apply directly.
       </p>
     </div>
   </section>
+  <script>
+    document.getElementById('applyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('applySubmitBtn');
+      var errEl = document.getElementById('applyError');
+      var form = e.target;
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      errEl.style.display = 'none';
+      var data = {
+        first_name: form.first_name.value,
+        last_name: form.last_name.value,
+        email: form.email.value,
+        instagram: form.instagram.value,
+        linkedin: form.linkedin.value,
+        about: form.about.value,
+      };
+      try {
+        var res = await fetch('/api/webApplication', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          form.style.display = 'none';
+          document.getElementById('applySuccess').style.display = 'block';
+        } else {
+          var json = await res.json().catch(function() { return {}; });
+          errEl.textContent = json.error || 'Something went wrong. Please try again.';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Submit Application';
+        }
+      } catch (err) {
+        errEl.textContent = 'Network error. Please check your connection and try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Submit Application';
+      }
+    });
+  </script>
 
   <!-- FOOTER -->
   <footer>

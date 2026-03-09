@@ -210,7 +210,193 @@ export function membershipSuspendedText(opts: { firstName: string }): string {
 }
 
 // ─────────────────────────────────────────────
-// 5. Password Reset
+// 5. Vouch Received
+// ─────────────────────────────────────────────
+export function vouchReceivedHtml(opts: {
+  firstName: string;
+  voucherName: string;
+  voucherCount: number;
+  requiredVouches: number;
+  applicationCode: string;
+}): string {
+  const remaining = Math.max(0, opts.requiredVouches - opts.voucherCount);
+  const isComplete = remaining === 0;
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">VOUCH RECEIVED</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">${opts.voucherName}<br/>vouched for you.</h1>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, a member of the HomeQuarters community has vouched for your application. Every vouch brings you one step closer to membership.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Your application progress</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${infoRow("VOUCHES RECEIVED", `${opts.voucherCount} / ${opts.requiredVouches}`)}
+      ${infoRow("APPLICATION CODE", opts.applicationCode)}
+      ${infoRow("STATUS", isComplete ? "COMPLETE — UNDER REVIEW" : "IN PROGRESS")}
+    </table>
+    ${goldDivider()}
+    ${isComplete
+      ? `<p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">Your application is now complete and has been passed to the membership committee for review. We&rsquo;ll be in touch soon.</p>`
+      : `<p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">You need <strong style="color:#1C1C1E;">${remaining} more ${remaining === 1 ? "vouch" : "vouches"}</strong> to complete your application. Share your code — <strong style="color:#1C1C1E;font-family:monospace;">${opts.applicationCode}</strong> — with other members who know you.</p>`
+    }
+  `;
+  return wrap(body);
+}
+
+export function vouchReceivedText(opts: {
+  firstName: string;
+  voucherName: string;
+  voucherCount: number;
+  requiredVouches: number;
+  applicationCode: string;
+}): string {
+  const remaining = Math.max(0, opts.requiredVouches - opts.voucherCount);
+  const isComplete = remaining === 0;
+  return `Hi ${opts.firstName},\n\n${opts.voucherName} has vouched for your HomeQuarters application.\n\nVouches: ${opts.voucherCount}/${opts.requiredVouches}\n\n${isComplete ? "Your application is now complete and under committee review." : `You need ${remaining} more ${remaining === 1 ? "vouch" : "vouches"}. Share your code (${opts.applicationCode}) with members who know you.`}\n\nHomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 6. Application Complete
+// ─────────────────────────────────────────────
+export function applicationCompleteHtml(opts: {
+  firstName: string;
+  applicationCode: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">APPLICATION COMPLETE</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Your application<br/>is now complete.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, you&rsquo;ve received all the vouches needed. Your application has been passed to the HomeQuarters membership committee for review.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      The committee reviews applications carefully. We&rsquo;ll notify you by email as soon as a decision has been made — usually within a few days.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Your application details</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${infoRow("APPLICATION CODE", opts.applicationCode)}
+      ${infoRow("STATUS", "WITH COMMITTEE")}
+    </table>
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      You can check your status at any time by opening the HomeQuarters app and signing in with your email and password.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function applicationCompleteText(opts: {
+  firstName: string;
+  applicationCode: string;
+}): string {
+  return `Hi ${opts.firstName},\n\nYour HomeQuarters application is now complete and has been passed to the membership committee.\n\nApplication code: ${opts.applicationCode}\n\nWe'll be in touch once a decision has been made. You can check your status by opening the app and signing in with your email.\n\nHomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 7. Friend Accepted (to the voucher)
+// ─────────────────────────────────────────────
+export function friendAcceptedHtml(opts: {
+  firstName: string;
+  friendFirstName: string;
+  friendLastName: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">GREAT NEWS</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">${opts.friendFirstName} has<br/>joined HQ.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, the membership committee has approved the application of <strong style="color:#1C1C1E;">${opts.friendFirstName} ${opts.friendLastName}</strong> — someone you vouched for.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      They&rsquo;re now a full member of HomeQuarters. Thank you for your recommendation — the quality of our community is built on the trust of people like you.
+    </p>
+    ${ctaButton("Open HomeQuarters", BASE_URL)}
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Your vouching record reflects the strength and character of your network. We appreciate your contribution to the community.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function friendAcceptedText(opts: {
+  firstName: string;
+  friendFirstName: string;
+  friendLastName: string;
+}): string {
+  return `Hi ${opts.firstName},\n\n${opts.friendFirstName} ${opts.friendLastName}, someone you vouched for, has been accepted into HomeQuarters.\n\nThank you for your recommendation — it means a great deal to the community.\n\nHomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 8. Invitee Applied (to the person who sent the invite)
+// ─────────────────────────────────────────────
+export function inviteeAppliedHtml(opts: {
+  firstName: string;
+  inviteeName: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">INVITATION UPDATE</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">${opts.inviteeName}<br/>has applied.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, someone you invited — <strong style="color:#1C1C1E;">${opts.inviteeName}</strong> — has used your invitation code and submitted their application to HomeQuarters.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Their application is now with the membership committee. You&rsquo;ve already counted as one of their vouches by virtue of your invitation. You can also vouch for them directly in the app using their application code.
+    </p>
+    ${ctaButton("Open HomeQuarters", BASE_URL)}
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Thank you for introducing great people to the community. Your invitation reflects your trust in this person.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function inviteeAppliedText(opts: {
+  firstName: string;
+  inviteeName: string;
+}): string {
+  return `Hi ${opts.firstName},\n\n${opts.inviteeName}, someone you invited, has submitted their application to HomeQuarters.\n\nYou already count as one of their vouches. You can also vouch for them directly in the app.\n\nHomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 9. Web Application Received (open application via website)
+// ─────────────────────────────────────────────
+export function webApplicationReceivedHtml(opts: {
+  firstName: string;
+  email: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#9A8E82;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">OPEN APPLICATION</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">We&rsquo;ve received<br/>your application.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, thank you for your interest in HomeQuarters. Your application has been received and is on file with our membership committee.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      We review open applications on a rolling basis, typically when new membership places become available. If there is a strong match, we will reach out to you directly at this address.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Application on file</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${infoRow("EMAIL", opts.email)}
+      ${infoRow("STATUS", "ON FILE")}
+    </table>
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      If you receive an invitation code from a current member in the meantime, download the HomeQuarters app and apply directly — invited applications are reviewed with priority.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function webApplicationReceivedText(opts: {
+  firstName: string;
+  email: string;
+}): string {
+  return `Hi ${opts.firstName},\n\nThank you for your interest in HomeQuarters. Your open application has been received and is on file.\n\nWe review applications on a rolling basis and will reach out to ${opts.email} if there's a match.\n\nIf you receive an invitation code from a member, download the app to apply with priority.\n\nHomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 10. Password Reset
 // ─────────────────────────────────────────────
 export function passwordResetHtml(opts: {
   firstName?: string;
