@@ -276,13 +276,13 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.3)",
   },
   btn: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.bg,
     borderRadius: 100,
     paddingVertical: 17,
     paddingHorizontal: 40,
     alignItems: "center",
     alignSelf: "stretch",
-    marginBottom: 18,
+    marginBottom: 14,
     overflow: "hidden",
   },
   btnText: {
@@ -293,8 +293,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   signInBtn: {
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.55)",
+    backgroundColor: colors.sand,
     borderRadius: 100,
     paddingVertical: 15,
     paddingHorizontal: 40,
@@ -302,7 +301,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   signInText: {
-    color: "rgba(255,255,255,0.9)",
+    color: colors.dark,
     fontSize: 14,
     fontFamily: fonts.body,
     letterSpacing: 0.3,
