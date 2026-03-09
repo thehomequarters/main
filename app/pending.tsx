@@ -10,13 +10,11 @@ import {
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 
 const REQUIRED_VOUCHERS = 2;
 
 export default function PendingScreen() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
 
   const isOpenApplication = profile?.membership_status === "open_application";
   const vouchers = profile?.voucher_count ?? 0;
@@ -39,7 +37,7 @@ export default function PendingScreen() {
   };
 
   const handleSignOut = async () => {
-    await signOut(auth);
+    await signOut();
   };
 
   return (

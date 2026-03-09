@@ -16,6 +16,7 @@ interface VenueCardProps {
   variant?: "featured" | "list";
   venueId?: string;
   initialLiked?: boolean;
+  onLikeChange?: (liked: boolean) => void;
 }
 
 const PLACEHOLDER_IMAGES: Record<string, string> = {
@@ -37,6 +38,7 @@ export function VenueCard({
   variant = "list",
   venueId,
   initialLiked = false,
+  onLikeChange,
 }: VenueCardProps) {
   const { user } = useAuth();
   const [liked, setLiked] = useState(initialLiked);
@@ -72,6 +74,7 @@ export function VenueCard({
           await deleteDoc(doc(db, "venue_likes", d.id));
         }
       }
+      onLikeChange?.(newLiked);
     } catch {
       setLiked(!newLiked); // revert on error
     }

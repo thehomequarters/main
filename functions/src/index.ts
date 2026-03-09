@@ -17,6 +17,14 @@ import {
   applicationRejectedHtml, applicationRejectedText,
   membershipSuspendedHtml, membershipSuspendedText,
   passwordResetHtml, passwordResetText,
+  vouchReceivedHtml, vouchReceivedText,
+  applicationCompleteHtml, applicationCompleteText,
+  friendAcceptedHtml, friendAcceptedText,
+  inviteeAppliedHtml, inviteeAppliedText,
+  webApplicationReceivedHtml, webApplicationReceivedText,
+  founderWelcomeText,
+  welcomeFeaturesTourHtml, welcomeFeaturesTourText,
+  welcomeDiscoverNudgeHtml, welcomeDiscoverNudgeText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -24,22 +32,27 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
 const FROM_EMAIL = "HomeQuarters <noreply@thehomequarters.com>";
+const FOUNDER_EMAIL = "Valentine Eluwasi <hello@thehomequarters.com>";
 
 async function sendEmail(opts: {
   to: string;
   subject: string;
-  html: string;
+  html?: string;
   text: string;
   apiKey: string;
+  from?: string;
+  scheduledAt?: Date;
 }): Promise<void> {
   const resend = new Resend(opts.apiKey);
-  const { error } = await resend.emails.send({
-    from: FROM_EMAIL,
+  const payload: Parameters<typeof resend.emails.send>[0] = {
+    from: opts.from ?? FROM_EMAIL,
     to: opts.to,
     subject: opts.subject,
-    html: opts.html,
     text: opts.text,
-  });
+    ...(opts.html ? { html: opts.html } : {}),
+    ...(opts.scheduledAt ? { scheduledAt: opts.scheduledAt.toISOString() } : {}),
+  };
+  const { error } = await resend.emails.send(payload);
   if (error) {
     console.error("Resend error:", error);
   }
@@ -51,6 +64,7 @@ initializeApp();
 // onApplicationReceived
 // Fires when a new profile document is created (i.e. someone submits
 // an application). Sends a branded confirmation email with their code.
+// Also notifies the inviter if the applicant used an invitation code.
 // ─────────────────────────────────────────────
 export const onApplicationReceived = onDocumentCreated(
   { document: "profiles/{userId}", secrets: [resendApiKey] },
@@ -58,25 +72,64 @@ export const onApplicationReceived = onDocumentCreated(
     const profile = event.data?.data();
     if (!profile) return;
     if (!profile.email || typeof profile.email !== "string") return;
-    if (profile.membership_status !== "pending") return;
 
+    const status = profile.membership_status as string;
+    if (status !== "pending" && status !== "open_application") return;
+
+    const db = getFirestore();
+    const firstName = (profile.first_name as string) ?? "there";
+    const applicationCode = (profile.application_code as string) ?? "";
+    const applicationType = (profile.application_type as "invited" | "open") ?? "open";
+
+    // Send confirmation to the applicant
     try {
       await sendEmail({
         to: profile.email,
         subject: "Your HomeQuarters application is with us",
-        html: applicationReceivedHtml({
-          firstName: profile.first_name as string ?? "there",
-          applicationCode: profile.application_code as string ?? "",
-          applicationType: (profile.application_type as "invited" | "open") ?? "open",
-        }),
-        text: applicationReceivedText({
-          firstName: profile.first_name as string ?? "there",
-          applicationCode: profile.application_code as string ?? "",
-        }),
+        html: applicationReceivedHtml({ firstName, applicationCode, applicationType }),
+        text: applicationReceivedText({ firstName, applicationCode }),
         apiKey: resendApiKey.value(),
       });
     } catch (err) {
       console.error("Failed to send application received email:", err);
+    }
+
+    // If invited, notify the person who sent the invite code
+    if (applicationType === "invited" && applicationCode) {
+      try {
+        // Find the invite record to get the inviter's UID
+        const inviteSnap = await db
+          .collection("invites")
+          .where("used_by", "==", event.params.userId)
+          .limit(1)
+          .get();
+
+        const inviteDoc = inviteSnap.empty ? null : inviteSnap.docs[0].data();
+        const inviterUid = inviteDoc?.created_by as string | undefined;
+
+        if (inviterUid) {
+          const inviterDoc = await db.doc(`profiles/${inviterUid}`).get();
+          const inviter = inviterDoc.data();
+          if (inviter?.email && typeof inviter.email === "string") {
+            const inviteeName = `${firstName} ${(profile.last_name as string) ?? ""}`.trim();
+            await sendEmail({
+              to: inviter.email,
+              subject: `${firstName} has applied to HomeQuarters`,
+              html: inviteeAppliedHtml({
+                firstName: (inviter.first_name as string) ?? "there",
+                inviteeName,
+              }),
+              text: inviteeAppliedText({
+                firstName: (inviter.first_name as string) ?? "there",
+                inviteeName,
+              }),
+              apiKey: resendApiKey.value(),
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to send invitee-applied email to inviter:", err);
+      }
     }
   }
 );
@@ -271,7 +324,7 @@ export const onMemberApproved = onDocumentUpdated(
       }
     }
 
-    // Email
+    // Email the new member
     if (after.email && typeof after.email === "string") {
       try {
         await sendEmail({
@@ -290,6 +343,90 @@ export const onMemberApproved = onDocumentUpdated(
       } catch (err) {
         console.error("Failed to send approval email:", err);
       }
+    }
+
+    // ── Welcome journey: 3 emails scheduled over 10 days ──
+    if (after.email && typeof after.email === "string") {
+      const firstName = (after.first_name as string) ?? "there";
+      const now = Date.now();
+
+      // Email 1 — Day 1: Personal plain-text note from Valentine
+      const day1 = new Date(now + 1 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          from: FOUNDER_EMAIL,
+          to: after.email,
+          subject: "A personal welcome from me",
+          text: founderWelcomeText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day1,
+        });
+      } catch (err) {
+        console.error("Failed to schedule founder welcome email:", err);
+      }
+
+      // Email 2 — Day 4: Branded features tour
+      const day4 = new Date(now + 4 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Everything that comes with HQ",
+          html: welcomeFeaturesTourHtml({ firstName }),
+          text: welcomeFeaturesTourText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day4,
+        });
+      } catch (err) {
+        console.error("Failed to schedule features tour email:", err);
+      }
+
+      // Email 3 — Day 10: Discover nudge
+      const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Your community is waiting to hear from you",
+          html: welcomeDiscoverNudgeHtml({ firstName }),
+          text: welcomeDiscoverNudgeText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day10,
+        });
+      } catch (err) {
+        console.error("Failed to schedule discover nudge email:", err);
+      }
+    }
+
+    // Notify all vouchers that their friend was accepted
+    const vouchers = (after.vouchers as string[]) ?? [];
+    if (vouchers.length > 0) {
+      const db = getFirestore();
+      const newMemberName = `${after.first_name ?? ""} ${after.last_name ?? ""}`.trim();
+      await Promise.allSettled(
+        vouchers.map(async (voucherUid) => {
+          try {
+            const voucherDoc = await db.doc(`profiles/${voucherUid}`).get();
+            const voucher = voucherDoc.data();
+            if (!voucher?.email || typeof voucher.email !== "string") return;
+            await sendEmail({
+              to: voucher.email,
+              subject: `${after.first_name ?? "Your friend"} has been accepted to HomeQuarters`,
+              html: friendAcceptedHtml({
+                firstName: (voucher.first_name as string) ?? "there",
+                friendFirstName: (after.first_name as string) ?? "",
+                friendLastName: (after.last_name as string) ?? "",
+              }),
+              text: friendAcceptedText({
+                firstName: (voucher.first_name as string) ?? "there",
+                friendFirstName: (after.first_name as string) ?? "",
+                friendLastName: (after.last_name as string) ?? "",
+              }),
+              apiKey: resendApiKey.value(),
+            });
+          } catch (err) {
+            console.error(`Failed to send friend-accepted email to voucher ${voucherUid}:`, err);
+          }
+        })
+      );
     }
   }
 );
@@ -391,6 +528,157 @@ export const onNewMessage = onDocumentCreated(
     } catch (err) {
       console.error("Failed to send message notification:", err);
     }
+  }
+);
+
+// ─────────────────────────────────────────────
+// onVouchReceived
+// Fires when a profile is updated. Detects a voucher_count increase and:
+//  - Notifies the applicant who just received a vouch (including voucher name)
+//  - If voucher_count just reached 2, also sends an "application complete" email
+// ─────────────────────────────────────────────
+const REQUIRED_VOUCHES = 2;
+
+export const onVouchReceived = onDocumentUpdated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    const prevCount = (before.voucher_count as number) ?? 0;
+    const newCount = (after.voucher_count as number) ?? 0;
+    if (newCount <= prevCount) return; // no new vouch
+
+    // Only notify pending applicants, not active members
+    if (after.membership_status !== "pending" && after.membership_status !== "open_application") return;
+    if (!after.email || typeof after.email !== "string") return;
+
+    const db = getFirestore();
+    const firstName = (after.first_name as string) ?? "there";
+    const applicationCode = (after.application_code as string) ?? "";
+
+    // Find which voucher was just added by diffing the arrays
+    const prevVouchers = (before.vouchers as string[]) ?? [];
+    const newVouchers = (after.vouchers as string[]) ?? [];
+    const addedUid = newVouchers.find((uid) => !prevVouchers.includes(uid));
+
+    let voucherName = "A HomeQuarters member";
+    if (addedUid) {
+      try {
+        const voucherDoc = await db.doc(`profiles/${addedUid}`).get();
+        const voucherData = voucherDoc.data();
+        if (voucherData) {
+          voucherName = `${voucherData.first_name ?? ""} ${voucherData.last_name ?? ""}`.trim() || voucherName;
+        }
+      } catch {
+        // Non-fatal — use default name
+      }
+    }
+
+    // Send vouch notification
+    try {
+      await sendEmail({
+        to: after.email,
+        subject: `${voucherName} vouched for your HomeQuarters application`,
+        html: vouchReceivedHtml({ firstName, voucherName, voucherCount: newCount, requiredVouches: REQUIRED_VOUCHES, applicationCode }),
+        text: vouchReceivedText({ firstName, voucherName, voucherCount: newCount, requiredVouches: REQUIRED_VOUCHES, applicationCode }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send vouch-received email:", err);
+    }
+
+    // If just crossed the threshold, also send "application complete" email
+    if (prevCount < REQUIRED_VOUCHES && newCount >= REQUIRED_VOUCHES) {
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Your HomeQuarters application is now complete",
+          html: applicationCompleteHtml({ firstName, applicationCode }),
+          text: applicationCompleteText({ firstName, applicationCode }),
+          apiKey: resendApiKey.value(),
+        });
+      } catch (err) {
+        console.error("Failed to send application-complete email:", err);
+      }
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// handleWebApplication
+// HTTP POST endpoint for the public website application form.
+// Saves the submission to open_applications/{id} and sends a
+// branded confirmation email to the applicant via Resend.
+// Exposed via Firebase Hosting rewrite at /api/webApplication.
+// ─────────────────────────────────────────────
+export const handleWebApplication = onRequest(
+  { cors: true, secrets: [resendApiKey] },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    const {
+      first_name,
+      last_name,
+      email,
+      instagram,
+      linkedin,
+      about,
+    } = req.body as Record<string, string | undefined>;
+
+    // Validate required fields
+    if (!first_name?.trim() || !last_name?.trim()) {
+      res.status(400).json({ error: "First and last name are required." });
+      return;
+    }
+    if (!email?.trim() || !email.includes("@")) {
+      res.status(400).json({ error: "A valid email address is required." });
+      return;
+    }
+
+    const db = getFirestore();
+    const firstName = first_name.trim();
+    const lastName = last_name.trim();
+    const sanitizedEmail = email.trim().toLowerCase();
+
+    // Save to Firestore
+    try {
+      await db.collection("open_applications").add({
+        first_name: firstName,
+        last_name: lastName,
+        email: sanitizedEmail,
+        instagram: instagram?.trim() ?? null,
+        linkedin: linkedin?.trim() ?? null,
+        about: about?.trim() ?? null,
+        source: "website",
+        submitted_at: new Date().toISOString(),
+        status: "received",
+      });
+    } catch (err) {
+      console.error("Failed to save web application:", err);
+      res.status(500).json({ error: "Could not save application." });
+      return;
+    }
+
+    // Send confirmation email to applicant
+    try {
+      await sendEmail({
+        to: sanitizedEmail,
+        subject: "Your HomeQuarters application has been received",
+        html: webApplicationReceivedHtml({ firstName, email: sanitizedEmail }),
+        text: webApplicationReceivedText({ firstName, email: sanitizedEmail }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send web application confirmation email:", err);
+      // Non-fatal — application was already saved
+    }
+
+    res.json({ ok: true });
   }
 );
 
