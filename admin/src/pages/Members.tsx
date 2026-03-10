@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   collection,
   getDocs,
@@ -31,6 +31,7 @@ export default function Members() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [updating, setUpdating] = useState<string | null>(null);
+  const processingRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -57,6 +58,8 @@ export default function Members() {
     memberId: string,
     newStatus: "active" | "rejected"
   ) => {
+    if (processingRef.current.has(memberId)) return;
+    processingRef.current.add(memberId);
     setUpdating(memberId);
     try {
       await updateDoc(doc(db, "profiles", memberId), {
@@ -82,6 +85,7 @@ export default function Members() {
     } catch (e) {
       console.error("Failed to update status:", e);
     } finally {
+      processingRef.current.delete(memberId);
       setUpdating(null);
     }
   };
