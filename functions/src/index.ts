@@ -35,7 +35,7 @@ const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
 const FROM_EMAIL = "HomeQuarters <noreply@thehomequarters.com>";
-const FOUNDER_EMAIL = "Valentine Eluwasi <hello@thehomequarters.com>";
+const FOUNDER_EMAIL = "Valentine Eluwasi <hello@email.thehomequarters.com>";
 
 async function sendEmail(opts: {
   to: string;
