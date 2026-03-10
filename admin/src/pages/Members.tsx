@@ -8,6 +8,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { sendApprovalEmail, sendRejectionEmail } from "../lib/emails";
 
 interface Profile {
   id: string;
@@ -61,6 +62,18 @@ export default function Members() {
       await updateDoc(doc(db, "profiles", memberId), {
         membership_status: newStatus,
       });
+      const member = members.find((m) => m.id === memberId);
+      if (member) {
+        if (newStatus === "active") {
+          await sendApprovalEmail(member.email, member.first_name).catch((e) =>
+            console.error("Failed to send approval email:", e)
+          );
+        } else if (newStatus === "rejected") {
+          await sendRejectionEmail(member.email, member.first_name).catch(
+            (e) => console.error("Failed to send rejection email:", e)
+          );
+        }
+      }
       setMembers((prev) =>
         prev.map((m) =>
           m.id === memberId ? { ...m, membership_status: newStatus } : m
