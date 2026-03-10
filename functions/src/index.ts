@@ -875,7 +875,8 @@ export const handleWebApplication = onRequest(
       instagram,
       linkedin,
       about,
-    } = req.body as Record<string, string | undefined>;
+      marketing_opt_in,
+    } = req.body as Record<string, string | boolean | undefined>;
 
     // Validate required fields
     if (!first_name?.trim() || !last_name?.trim()) {
@@ -898,9 +899,10 @@ export const handleWebApplication = onRequest(
         first_name: firstName,
         last_name: lastName,
         email: sanitizedEmail,
-        instagram: instagram?.trim() ?? null,
-        linkedin: linkedin?.trim() ?? null,
-        about: about?.trim() ?? null,
+        instagram: (instagram as string)?.trim() ?? null,
+        linkedin: (linkedin as string)?.trim() ?? null,
+        about: (about as string)?.trim() ?? null,
+        marketing_opt_in: marketing_opt_in === true || marketing_opt_in === "true",
         source: "website",
         submitted_at: new Date().toISOString(),
         status: "received",
@@ -928,6 +930,38 @@ export const handleWebApplication = onRequest(
     res.json({ ok: true });
   }
 );
+
+// ─────────────────────────────────────────────
+// handleSubscribe
+// HTTP POST — newsletter sign-up from the website popup.
+// Saves the email to newsletter_subscribers/{email} (idempotent upsert).
+// Exposed via Firebase Hosting rewrite at /api/subscribe.
+// ─────────────────────────────────────────────
+export const handleSubscribe = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+  const { email } = req.body as Record<string, string | undefined>;
+  if (!email?.trim() || !email.includes("@")) {
+    res.status(400).json({ error: "A valid email address is required." });
+    return;
+  }
+  const sanitized = email.trim().toLowerCase();
+  try {
+    const db = getFirestore();
+    // Use email as doc ID so duplicate sign-ups are idempotent
+    await db.collection("newsletter_subscribers").doc(sanitized).set({
+      email: sanitized,
+      subscribed_at: new Date().toISOString(),
+      source: "website_popup",
+    }, { merge: true });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("handleSubscribe error:", err);
+    res.status(500).json({ error: "Could not save subscription." });
+  }
+});
 
 // ─────────────────────────────────────────────
 // stripeWebhook

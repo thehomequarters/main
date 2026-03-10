@@ -32,6 +32,10 @@
       {
         "source": "/api/webApplication",
         "function": "handleWebApplication"
+      },
+      {
+        "source": "/api/subscribe",
+        "function": "handleSubscribe"
       }
     ]
   }
