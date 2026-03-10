@@ -613,6 +613,10 @@
         <input type="text" name="instagram" placeholder="Instagram handle (@username)" style="width:100%; margin-bottom:12px;" />
         <input type="text" name="linkedin" placeholder="LinkedIn URL or handle" style="width:100%; margin-bottom:12px;" />
         <textarea name="about" placeholder="Tell us about yourself — who you are, what you do, and why HomeQuarters."></textarea>
+        <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer;">
+          <input type="checkbox" name="marketing_opt_in" style="margin-top:3px;accent-color:var(--gold);flex-shrink:0;" />
+          <span style="font-size:12px;color:var(--stone);line-height:18px;">Keep me updated on HomeQuarters events, news, and announcements.</span>
+        </label>
         <button type="submit" class="contact-submit" id="applySubmitBtn">Submit Application</button>
         <p id="applyError" style="display:none;margin-top:12px;color:#c0392b;font-size:13px;text-align:center;"></p>
       </form>
@@ -642,6 +646,7 @@
         instagram: form.instagram.value,
         linkedin: form.linkedin.value,
         about: form.about.value,
+        marketing_opt_in: form.marketing_opt_in.checked,
       };
       try {
         var res = await fetch('/api/webApplication', {
@@ -740,6 +745,158 @@
     </div>
     <div class="footer-copy">© 2026 HomeQuarters. All rights reserved.</div>
   </footer>
+
+  <!-- SUBSCRIBE POPUP -->
+  <style>
+    #hq-subscribe-popup {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      width: 320px;
+      background: #1A1A1A;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+      pointer-events: none;
+    }
+    #hq-subscribe-popup.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #hq-subscribe-popup .sp-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.3); font-size: 18px; line-height: 1;
+      transition: color 0.2s;
+    }
+    #hq-subscribe-popup .sp-close:hover { color: rgba(255,255,255,0.7); }
+    #hq-subscribe-popup .sp-eyebrow {
+      font-size: 9px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+    }
+    #hq-subscribe-popup .sp-title {
+      font-size: 16px; font-weight: 800; color: #FFFFFF;
+      line-height: 22px; margin-bottom: 6px;
+    }
+    #hq-subscribe-popup .sp-sub {
+      font-size: 12px; color: rgba(255,255,255,0.45);
+      line-height: 18px; margin-bottom: 16px;
+    }
+    #hq-subscribe-popup .sp-row {
+      display: flex; gap: 8px;
+    }
+    #hq-subscribe-popup input[type="email"] {
+      flex: 1; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 100px; padding: 10px 14px;
+      font-size: 13px; color: #fff; outline: none;
+      transition: border-color 0.2s;
+    }
+    #hq-subscribe-popup input[type="email"]:focus {
+      border-color: rgba(201,168,76,0.5);
+    }
+    #hq-subscribe-popup input[type="email"]::placeholder { color: rgba(255,255,255,0.3); }
+    #hq-subscribe-popup .sp-btn {
+      background: var(--gold); color: #111; border: none;
+      border-radius: 100px; padding: 10px 16px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: opacity 0.2s;
+    }
+    #hq-subscribe-popup .sp-btn:hover { opacity: 0.85; }
+    #hq-subscribe-popup .sp-btn:disabled { opacity: 0.5; cursor: default; }
+    #hq-subscribe-popup .sp-msg {
+      display: none; text-align: center; padding: 8px 0 0;
+      font-size: 12px; color: rgba(255,255,255,0.5); line-height: 18px;
+    }
+    #hq-subscribe-popup .sp-msg strong { color: var(--gold); display: block; font-size: 14px; margin-bottom: 2px; }
+    @media (max-width: 400px) {
+      #hq-subscribe-popup { left: 12px; right: 12px; width: auto; bottom: 16px; }
+    }
+  </style>
+
+  <div id="hq-subscribe-popup" role="dialog" aria-label="Stay in the loop">
+    <button class="sp-close" id="spClose" aria-label="Dismiss">&times;</button>
+    <p class="sp-eyebrow">✦ Stay in the loop</p>
+    <p class="sp-title">News &amp; open events.</p>
+    <p class="sp-sub">Sign up to hear about what&rsquo;s on and when applications open.</p>
+    <div id="spForm">
+      <div class="sp-row">
+        <input type="email" id="spEmail" placeholder="Your email address" autocomplete="email" />
+        <button class="sp-btn" id="spBtn">Sign up</button>
+      </div>
+      <p id="spError" style="display:none;margin-top:8px;font-size:11px;color:#e57373;"></p>
+    </div>
+    <div class="sp-msg" id="spSuccess">
+      <strong>You&rsquo;re on the list.</strong>
+      We&rsquo;ll be in touch with news and upcoming events.
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var STORAGE_KEY = 'hq_sub_dismissed';
+      if (localStorage.getItem(STORAGE_KEY)) return;
+
+      var popup = document.getElementById('hq-subscribe-popup');
+      var closeBtn = document.getElementById('spClose');
+      var emailInput = document.getElementById('spEmail');
+      var submitBtn = document.getElementById('spBtn');
+      var errorEl = document.getElementById('spError');
+      var successEl = document.getElementById('spSuccess');
+      var formEl = document.getElementById('spForm');
+
+      function dismiss() {
+        popup.classList.remove('visible');
+        localStorage.setItem(STORAGE_KEY, '1');
+      }
+
+      closeBtn.addEventListener('click', dismiss);
+
+      setTimeout(function() { popup.classList.add('visible'); }, 4000);
+
+      submitBtn.addEventListener('click', async function() {
+        var email = emailInput.value.trim();
+        if (!email || !email.includes('@')) {
+          errorEl.textContent = 'Please enter a valid email address.';
+          errorEl.style.display = 'block';
+          return;
+        }
+        errorEl.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.textContent = '…';
+        try {
+          var res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          });
+          if (res.ok) {
+            formEl.style.display = 'none';
+            successEl.style.display = 'block';
+            localStorage.setItem(STORAGE_KEY, '1');
+            setTimeout(function() { popup.classList.remove('visible'); }, 4000);
+          } else {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign up';
+            errorEl.textContent = 'Something went wrong. Please try again.';
+            errorEl.style.display = 'block';
+          }
+        } catch (e) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign up';
+          errorEl.textContent = 'Network error. Please try again.';
+          errorEl.style.display = 'block';
+        }
+      });
+
+      emailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') submitBtn.click();
+      });
+    })();
+  </script>
 
 </body>
 </html>
