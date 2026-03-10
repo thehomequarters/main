@@ -351,11 +351,14 @@ export const onMemberApproved = onDocumentUpdated(
     }
 
     // ── Welcome journey: 3 emails scheduled over 10 days ──
+    // Resend allows 2 req/s — space calls 600ms apart to stay within the limit.
     if (after.email && typeof after.email === "string") {
       const firstName = (after.first_name as string) ?? "there";
       const now = Date.now();
+      const pause = () => new Promise<void>((r) => setTimeout(r, 600));
 
       // Email 1 — Day 1: Personal plain-text note from Valentine
+      await pause();
       const day1 = new Date(now + 1 * 24 * 60 * 60 * 1000);
       try {
         await sendEmail({
@@ -371,6 +374,7 @@ export const onMemberApproved = onDocumentUpdated(
       }
 
       // Email 2 — Day 4: Branded features tour
+      await pause();
       const day4 = new Date(now + 4 * 24 * 60 * 60 * 1000);
       try {
         await sendEmail({
@@ -386,6 +390,7 @@ export const onMemberApproved = onDocumentUpdated(
       }
 
       // Email 3 — Day 10: Discover nudge
+      await pause();
       const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
       try {
         await sendEmail({
@@ -401,36 +406,36 @@ export const onMemberApproved = onDocumentUpdated(
       }
     }
 
-    // Notify all vouchers that their friend was accepted
+    // Notify all vouchers that their friend was accepted — serialised to respect rate limit
     const vouchers = (after.vouchers as string[]) ?? [];
     if (vouchers.length > 0) {
       const db = getFirestore();
-      await Promise.allSettled(
-        vouchers.map(async (voucherUid) => {
-          try {
-            const voucherDoc = await db.doc(`profiles/${voucherUid}`).get();
-            const voucher = voucherDoc.data();
-            if (!voucher?.email || typeof voucher.email !== "string") return;
-            await sendEmail({
-              to: voucher.email,
-              subject: `${after.first_name ?? "Your friend"} has been accepted to HomeQuarters`,
-              html: friendAcceptedHtml({
-                firstName: (voucher.first_name as string) ?? "there",
-                friendFirstName: (after.first_name as string) ?? "",
-                friendLastName: (after.last_name as string) ?? "",
-              }),
-              text: friendAcceptedText({
-                firstName: (voucher.first_name as string) ?? "there",
-                friendFirstName: (after.first_name as string) ?? "",
-                friendLastName: (after.last_name as string) ?? "",
-              }),
-              apiKey: resendApiKey.value(),
-            });
-          } catch (err) {
-            console.error(`Failed to send friend-accepted email to voucher ${voucherUid}:`, err);
-          }
-        })
-      );
+      const pause = () => new Promise<void>((r) => setTimeout(r, 600));
+      for (const voucherUid of vouchers) {
+        await pause();
+        try {
+          const voucherDoc = await db.doc(`profiles/${voucherUid}`).get();
+          const voucher = voucherDoc.data();
+          if (!voucher?.email || typeof voucher.email !== "string") continue;
+          await sendEmail({
+            to: voucher.email,
+            subject: `${after.first_name ?? "Your friend"} has been accepted to HomeQuarters`,
+            html: friendAcceptedHtml({
+              firstName: (voucher.first_name as string) ?? "there",
+              friendFirstName: (after.first_name as string) ?? "",
+              friendLastName: (after.last_name as string) ?? "",
+            }),
+            text: friendAcceptedText({
+              firstName: (voucher.first_name as string) ?? "there",
+              friendFirstName: (after.first_name as string) ?? "",
+              friendLastName: (after.last_name as string) ?? "",
+            }),
+            apiKey: resendApiKey.value(),
+          });
+        } catch (err) {
+          console.error(`Failed to send friend-accepted email to voucher ${voucherUid}:`, err);
+        }
+      }
     }
   }
 );
