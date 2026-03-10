@@ -18,14 +18,14 @@ export default function PendingScreen() {
 
   const isOpenApplication = profile?.membership_status === "open_application";
   const vouchers = profile?.voucher_count ?? 0;
-  const appCode = profile?.application_code ?? "—";
+  const appCode = profile?.application_code ?? "-";
   const hasEnough = vouchers >= REQUIRED_VOUCHERS;
 
   const handleShare = async () => {
     try {
       await Share.share({
         message:
-          `I've applied to HomeQuarters — a private members' community for the diaspora. ` +
+          `I've applied to HomeQuarters - a private members' community for the diaspora. ` +
           `I need one more nomination to complete my application.\n\n` +
           `If you're an HQ member, please vouch for me using my application code:\n\n` +
           `${appCode}\n\n` +
@@ -75,7 +75,7 @@ export default function PendingScreen() {
           : "Every HomeQuarters member must be nominated by at least two existing members before their application can be reviewed."}
       </Text>
 
-      {/* Nomination progress — only for invited applicants */}
+      {/* Nomination progress - only for invited applicants */}
       {!isOpenApplication && (
         <>
           <View style={styles.card}>
@@ -115,7 +115,7 @@ export default function PendingScreen() {
             </View>
           </View>
 
-          {/* Application code — share to collect second voucher */}
+          {/* Application code - share to collect second voucher */}
           {!hasEnough && (
             <View style={styles.codeCard}>
               <View style={styles.codeCardHeader}>

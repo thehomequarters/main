@@ -14,7 +14,7 @@ const RULES = [
   {
     title: "Honour the Space",
     description:
-      "Our partner venues open their doors to us — treat them as you would your own home. Leave spaces as you found them, respect venue rules, and tip generously.",
+      "Our partner venues open their doors to us - treat them as you would your own home. Leave spaces as you found them, respect venue rules, and tip generously.",
     icon: "home-outline" as const,
   },
   {
@@ -26,7 +26,7 @@ const RULES = [
   {
     title: "Friendship First, Always",
     description:
-      "HQ is not a networking platform. Do not cold-message members for jobs, business opportunities, or unsolicited pitches. We are here because of a shared passion for our homelands — let genuine friendship be the foundation of every connection.",
+      "HQ is not a networking platform. Do not cold-message members for jobs, business opportunities, or unsolicited pitches. We are here because of a shared passion for our homelands - let genuine friendship be the foundation of every connection.",
     icon: "people-outline" as const,
   },
   {
@@ -50,7 +50,7 @@ const RULES = [
   {
     title: "Membership Can Be Revoked",
     description:
-      "Violation of these rules may result in the immediate suspension or permanent revocation of your HomeQuarters membership — regardless of tier. Your access is a privilege upheld by your conduct, not a right guaranteed by your subscription.",
+      "Violation of these rules may result in the immediate suspension or permanent revocation of your HomeQuarters membership - regardless of tier. Your access is a privilege upheld by your conduct, not a right guaranteed by your subscription.",
     icon: "ban-outline" as const,
   },
 ];
@@ -122,7 +122,7 @@ export default function HouseRulesScreen() {
             fontWeight: "500",
           }}
         >
-          HomeQuarters is more than an app — it's a community. These rules exist
+          HomeQuarters is more than an app - it's a community. These rules exist
           to protect the culture we're building together. By being a member, you
           agree to uphold them.
         </Text>
@@ -205,7 +205,7 @@ export default function HouseRulesScreen() {
           opacity: 0.7,
         }}
       >
-        These rules apply equally to all membership tiers — Gold Card, Platinum
+        These rules apply equally to all membership tiers - Gold Card, Platinum
         Card, Founding Member, and Committee Member. Last updated March 2026.
       </Text>
     </ScrollView>

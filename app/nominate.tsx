@@ -114,7 +114,7 @@ export default function NominateScreen() {
       // Share the code
       await Share.share({
         message:
-          `You have been nominated for HomeQuarters — a private members' community.\n\n` +
+          `You have been nominated for HomeQuarters - a private members' community.\n\n` +
           `Your invitation code is:\n\n${code}\n\n` +
           `Download the HomeQuarters app and enter your code to begin your application.\n\n` +
           `This invitation is personal and non-transferable.`,
@@ -332,7 +332,7 @@ export default function NominateScreen() {
                   <View key={invite.id} style={styles.inviteRow}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.inviteEmail}>
-                        {invite.invited_email ?? "—"}
+                        {invite.invited_email ?? "-"}
                       </Text>
                       <Text style={styles.inviteCode}>{invite.id}</Text>
                     </View>

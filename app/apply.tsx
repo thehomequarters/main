@@ -261,7 +261,7 @@ export default function ApplyScreen() {
 
             <Pressable onPress={() => setNoCode(false)} style={styles.signinRow}>
               <Text style={styles.signinText}>
-                ← Back — I have a code
+                ← Back - I have a code
               </Text>
             </Pressable>
           </>
@@ -444,7 +444,7 @@ export default function ApplyScreen() {
               onPress={() => { setVerified(false); setNoCode(false); setUsedInviteCode(false); setInviteData(null); setInviteCode(""); }}
               style={[styles.signinRow, { marginTop: 16 }]}
             >
-              <Text style={styles.signinText}>← Back — I have an invitation code</Text>
+              <Text style={styles.signinText}>← Back - I have an invitation code</Text>
             </Pressable>
 
             <Pressable

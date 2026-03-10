@@ -86,7 +86,7 @@ export default function PrivacyScreen() {
       <View style={styles.infoBanner}>
         <Ionicons name="eye-outline" size={16} color={colors.stone} />
         <Text style={styles.infoBannerText}>
-          Set to "Connections only" to appear anonymously in Discover — only your
+          Set to "Connections only" to appear anonymously in Discover - only your
           initials and first name are shown until someone connects with you.
         </Text>
       </View>

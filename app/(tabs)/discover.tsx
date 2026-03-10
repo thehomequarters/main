@@ -405,7 +405,7 @@ export default function DiscoverTab() {
           <Text
             style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
-            {industryCount || "—"}
+            {industryCount || "-"}
           </Text>
           <Text
             style={{
@@ -434,7 +434,7 @@ export default function DiscoverTab() {
           <Text
             style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
-            {cityCount || "—"}
+            {cityCount || "-"}
           </Text>
           <Text
             style={{
@@ -723,7 +723,7 @@ export default function DiscoverTab() {
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              {/* Avatar — hidden for masked profiles */}
+              {/* Avatar - hidden for masked profiles */}
               <View
                 style={{
                   width: 52,
@@ -833,7 +833,7 @@ export default function DiscoverTab() {
                   </View>
                 )}
 
-                {/* Interests — max 2, hidden for masked profiles */}
+                {/* Interests - max 2, hidden for masked profiles */}
                 {!masked && !member.hide_interests && member.interests && member.interests.length > 0 && (
                   <View
                     style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}

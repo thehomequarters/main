@@ -13,7 +13,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
-// MapView removed — use static map image (works in Expo Go)
+// MapView removed - use static map image (works in Expo Go)
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   doc,
@@ -531,7 +531,7 @@ export default function VenueDetailScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600", marginBottom: 3 }}>
-                  Reservations — mention HomeQuarters
+                  Reservations - mention HomeQuarters
                 </Text>
                 <Text style={{ color: colors.stone, fontSize: 13, lineHeight: 20 }}>
                   Call ahead to book your table. Always mention HomeQuarters to ensure your member benefit is applied.
@@ -568,7 +568,7 @@ export default function VenueDetailScreen() {
             <Pressable
               onPress={() =>
                 Share.share({
-                  message: `Check out ${venue.name} on HomeQuarters — ${venue.address}, ${venue.city}`,
+                  message: `Check out ${venue.name} on HomeQuarters - ${venue.address}, ${venue.city}`,
                 })
               }
               style={{

@@ -11,7 +11,7 @@ const SECTIONS = [
   },
   {
     title: "2. Content Standards",
-    body: "HomeQuarters is not an adult-content platform. All content shared within the app — including profile photos, messages, and any community contributions — must be suitable for a professional social setting. Sexually explicit material, graphic violence, hate speech, and harassment are strictly prohibited and will result in immediate permanent removal. No exceptions.",
+    body: "HomeQuarters is not an adult-content platform. All content shared within the app - including profile photos, messages, and any community contributions - must be suitable for a professional social setting. Sexually explicit material, graphic violence, hate speech, and harassment are strictly prohibited and will result in immediate permanent removal. No exceptions.",
   },
   {
     title: "3. Invitation & Application",
@@ -23,7 +23,7 @@ const SECTIONS = [
   },
   {
     title: "5. Benefits & Redemption",
-    body: "Membership benefits — including venue deals, event access, and the Telecel Zimbabwe eSIM — are for your personal use only. Benefits may not be resold, gifted, or shared. One redemption per benefit per visit unless the specific benefit states otherwise. HQ partner venues and benefit offerings may change at any time without prior notice.",
+    body: "Membership benefits - including venue deals, event access, and the Telecel Zimbabwe eSIM - are for your personal use only. Benefits may not be resold, gifted, or shared. One redemption per benefit per visit unless the specific benefit states otherwise. HQ partner venues and benefit offerings may change at any time without prior notice.",
   },
   {
     title: "6. Acceptable Use",
@@ -31,7 +31,7 @@ const SECTIONS = [
   },
   {
     title: "7. Termination",
-    body: "HQ may suspend or permanently revoke your membership at any time for breach of these Terms, the House Rules, or conduct deemed detrimental to the community — at HQ's sole discretion. Upon termination you will lose access to all membership benefits immediately. No refund is due for the remaining days of a billing period where termination results from a breach.",
+    body: "HQ may suspend or permanently revoke your membership at any time for breach of these Terms, the House Rules, or conduct deemed detrimental to the community - at HQ's sole discretion. Upon termination you will lose access to all membership benefits immediately. No refund is due for the remaining days of a billing period where termination results from a breach.",
   },
   {
     title: "8. Intellectual Property",

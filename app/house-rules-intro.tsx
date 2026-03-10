@@ -37,7 +37,7 @@ const SLIDES = [
     icon: "lock-closed" as const,
     eyebrow: "RULE 3 & 4",
     title: "Confidence &\nAuthenticity",
-    body: "What happens at HQ stays at HQ. Never share another member's personal information, conversations, or photos without their consent.\n\nShow up authentically. We are here for genuine connection — no spam, no hustling, no unsolicited pitches.",
+    body: "What happens at HQ stays at HQ. Never share another member's personal information, conversations, or photos without their consent.\n\nShow up authentically. We are here for genuine connection - no spam, no hustling, no unsolicited pitches.",
     isWarning: false,
   },
   {
@@ -45,7 +45,7 @@ const SLIDES = [
     icon: "qr-code" as const,
     eyebrow: "RULE 5, 6 & 7",
     title: "Redeem, Represent\n& Report",
-    body: "Benefits are for personal use only — do not share or resell your QR codes. One redemption per benefit per visit.\n\nAs a member you represent our community. Carry yourself with pride everywhere you go. Report violations to the HQ team — never retaliate.",
+    body: "Benefits are for personal use only - do not share or resell your QR codes. One redemption per benefit per visit.\n\nAs a member you represent our community. Carry yourself with pride everywhere you go. Report violations to the HQ team - never retaliate.",
     isWarning: false,
   },
   {
