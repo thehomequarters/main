@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY);
 
-const FROM = "HomeQuarters <noreply@thehomequarters.com>";
+const FROM = "HomeQuarters <noreply@email.thehomequarters.com>";
 const SUPPORT_EMAIL = "hello@thehomequarters.com";
 const APP_URL = "https://thehomequarters.com";
 
