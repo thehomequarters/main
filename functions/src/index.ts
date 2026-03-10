@@ -357,9 +357,9 @@ export const onMemberApproved = onDocumentUpdated(
       const now = Date.now();
       const pause = () => new Promise<void>((r) => setTimeout(r, 600));
 
-      // Email 1 — Day 1: Personal plain-text note from Valentine
+      // Email 1 — 6 hours after acceptance: Personal plain-text note from Valentine
       await pause();
-      const day1 = new Date(now + 1 * 24 * 60 * 60 * 1000);
+      const day1 = new Date(now + 6 * 60 * 60 * 1000);
       try {
         await sendEmail({
           from: FOUNDER_EMAIL,
@@ -389,9 +389,9 @@ export const onMemberApproved = onDocumentUpdated(
         console.error("Failed to schedule features tour email:", err);
       }
 
-      // Email 3 — Day 10: Discover nudge
+      // Email 3 — Day 8: Discover nudge
       await pause();
-      const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
+      const day10 = new Date(now + 8 * 24 * 60 * 60 * 1000);
       try {
         await sendEmail({
           to: after.email,
