@@ -4,8 +4,8 @@ import {
   Text,
   ScrollView,
   Pressable,
-  Alert,
   RefreshControl,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -20,9 +20,11 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
+import { useToast } from "@/components/Toast";
 import type { Profile, Connection, MemberIndustry } from "@/lib/database.types";
 
 const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
@@ -38,6 +40,7 @@ const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
 export default function DiscoverTab() {
   const { user, profile: myProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [members, setMembers] = useState<Profile[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const [inboundRequests, setInboundRequests] = useState<
@@ -47,50 +50,56 @@ export default function DiscoverTab() {
     useState<MemberIndustry | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(false);
 
   const fetchMembers = useCallback(async () => {
-    // Get all active member profiles (excluding self)
-    const profilesQuery = query(
-      collection(db, "profiles"),
-      where("membership_status", "==", "active")
-    );
-    const profilesSnap = await getDocs(profilesQuery);
-    const memberList = profilesSnap.docs
-      .map((d) => ({ id: d.id, ...d.data() }) as Profile)
-      .filter((m) => m.id !== user?.uid);
-    setMembers(memberList);
+    try {
+      setError(false);
+      // Get all active member profiles (excluding self)
+      const profilesQuery = query(
+        collection(db, "profiles"),
+        where("membership_status", "==", "active")
+      );
+      const profilesSnap = await getDocs(profilesQuery);
+      const memberList = profilesSnap.docs
+        .map((d) => ({ id: d.id, ...d.data() }) as Profile)
+        .filter((m) => m.id !== user?.uid);
+      setMembers(memberList);
 
-    // Fetch existing connections (outbound)
-    if (user?.uid) {
-      const connQuery = query(
-        collection(db, "connections"),
-        where("from_id", "==", user.uid)
-      );
-      const connSnap = await getDocs(connQuery);
-      setConnections(
-        connSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Connection)
-      );
+      // Fetch existing connections (outbound)
+      if (user?.uid) {
+        const connQuery = query(
+          collection(db, "connections"),
+          where("from_id", "==", user.uid)
+        );
+        const connSnap = await getDocs(connQuery);
+        setConnections(
+          connSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Connection)
+        );
 
-      // Fetch inbound pending requests
-      const inboundQuery = query(
-        collection(db, "connections"),
-        where("to_id", "==", user.uid),
-        where("status", "==", "pending")
-      );
-      const inboundSnap = await getDocs(inboundQuery);
-      const inbound = inboundSnap.docs.map(
-        (d) => ({ id: d.id, ...d.data() }) as Connection
-      );
+        // Fetch inbound pending requests
+        const inboundQuery = query(
+          collection(db, "connections"),
+          where("to_id", "==", user.uid),
+          where("status", "==", "pending")
+        );
+        const inboundSnap = await getDocs(inboundQuery);
+        const inbound = inboundSnap.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Connection
+        );
 
-      // Attach sender profile info
-      const enriched = inbound.map((conn) => {
-        const fromProfile = memberList.find((m) => m.id === conn.from_id);
-        return { ...conn, fromProfile };
-      });
-      setInboundRequests(enriched);
+        // Attach sender profile info
+        const enriched = inbound.map((conn) => {
+          const fromProfile = memberList.find((m) => m.id === conn.from_id);
+          return { ...conn, fromProfile };
+        });
+        setInboundRequests(enriched);
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [user?.uid]);
 
   useEffect(() => {
@@ -113,6 +122,7 @@ export default function DiscoverTab() {
 
     const existing = connections.find((c) => c.to_id === member.id);
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (existing) {
       // Remove connection
       await deleteDoc(doc(db, "connections", existing.id));
@@ -196,8 +206,9 @@ export default function DiscoverTab() {
       });
       setInboundRequests((prev) => prev.filter((r) => r.id !== conn.id));
       await fetchMembers();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     }
   };
 
@@ -207,10 +218,17 @@ export default function DiscoverTab() {
         status: "rejected",
       });
       setInboundRequests((prev) => prev.filter((r) => r.id !== conn.id));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Something went wrong. Please try again.", "error");
     }
   };
+
+  const isAcceptedConnection = (memberId: string) =>
+    connections.some((c) => c.to_id === memberId && c.status === "accepted");
+
+  const isMasked = (member: Profile) =>
+    member.profile_visibility === "connections" && !isAcceptedConnection(member.id);
 
   const filteredMembers = selectedIndustry
     ? members.filter((m) => m.industry === selectedIndustry)
@@ -227,7 +245,7 @@ export default function DiscoverTab() {
       <View
         style={{
           flex: 1,
-          backgroundColor: colors.black,
+          backgroundColor: colors.bg,
           paddingTop: 80,
           paddingHorizontal: 20,
         }}
@@ -250,15 +268,35 @@ export default function DiscoverTab() {
     );
   }
 
+  if (error) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 }}>
+        <Ionicons name="wifi-outline" size={48} color={colors.border} />
+        <Text style={{ color: colors.dark, fontSize: 17, fontWeight: "700", marginTop: 16, marginBottom: 8 }}>
+          Couldn't load members
+        </Text>
+        <Text style={{ color: colors.stone, fontSize: 14, textAlign: "center", lineHeight: 21, marginBottom: 24 }}>
+          Check your connection and try again.
+        </Text>
+        <Pressable
+          onPress={() => { setLoading(true); fetchMembers(); }}
+          style={{ backgroundColor: colors.dark, borderRadius: 100, paddingVertical: 14, paddingHorizontal: 32 }}
+        >
+          <Text style={{ color: colors.white, fontSize: 14, fontWeight: "700" }}>Try Again</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.black }}
+      style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingBottom: 30 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -268,27 +306,50 @@ export default function DiscoverTab() {
           paddingTop: 66,
           paddingHorizontal: 20,
           paddingBottom: 8,
+          flexDirection: "row",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
-        <Text
+        <View>
+          <Text
+            style={{
+              color: colors.ink,
+              fontSize: 34,
+              fontFamily: fonts.display,
+            }}
+          >
+            Discover
+          </Text>
+          <Text
+            style={{
+              color: colors.stone,
+              fontSize: 14,
+              fontFamily: fonts.body,
+              marginTop: 4,
+            }}
+          >
+            Find and connect with fellow members
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push("/(tabs)/account" as any)}
           style={{
-            color: colors.white,
-            fontSize: 30,
-            fontWeight: "700",
-            letterSpacing: 0.3,
-          }}
-        >
-          Discover
-        </Text>
-        <Text
-          style={{
-            color: colors.grey,
-            fontSize: 14,
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            backgroundColor: colors.sand,
+            borderWidth: 1,
+            borderColor: colors.border,
+            justifyContent: "center",
+            alignItems: "center",
             marginTop: 4,
           }}
         >
-          Find and connect with fellow members
-        </Text>
+          <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
+            {(myProfile?.first_name?.[0] ?? "")}{(myProfile?.last_name?.[0] ?? "")}
+          </Text>
+        </Pressable>
       </View>
 
       {/* Stats row */}
@@ -304,25 +365,27 @@ export default function DiscoverTab() {
         <View
           style={{
             flex: 1,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             padding: 16,
             alignItems: "center",
           }}
         >
           <Text
-            style={{ color: colors.gold, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
             {members.length}
           </Text>
           <Text
             style={{
-              color: colors.grey,
-              fontSize: 11,
+              color: colors.stone,
+              fontSize: 10,
               marginTop: 2,
-              fontWeight: "500",
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
             }}
           >
             Members
@@ -331,25 +394,27 @@ export default function DiscoverTab() {
         <View
           style={{
             flex: 1,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             padding: 16,
             alignItems: "center",
           }}
         >
           <Text
-            style={{ color: colors.white, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
             {industryCount || "—"}
           </Text>
           <Text
             style={{
-              color: colors.grey,
-              fontSize: 11,
+              color: colors.stone,
+              fontSize: 10,
               marginTop: 2,
-              fontWeight: "500",
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
             }}
           >
             Industries
@@ -358,25 +423,27 @@ export default function DiscoverTab() {
         <View
           style={{
             flex: 1,
-            backgroundColor: colors.dark,
+            backgroundColor: colors.white,
             borderRadius: 14,
             borderWidth: 1,
-            borderColor: colors.darkBorder,
+            borderColor: colors.border,
             padding: 16,
             alignItems: "center",
           }}
         >
           <Text
-            style={{ color: colors.white, fontSize: 24, fontWeight: "800" }}
+            style={{ color: colors.gold, fontSize: 24, fontFamily: fonts.display }}
           >
             {cityCount || "—"}
           </Text>
           <Text
             style={{
-              color: colors.grey,
-              fontSize: 11,
+              color: colors.stone,
+              fontSize: 10,
               marginTop: 2,
-              fontWeight: "500",
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 1.5,
             }}
           >
             {cityCount === 1 ? "City" : "Cities"}
@@ -405,17 +472,13 @@ export default function DiscoverTab() {
                 paddingVertical: 9,
                 borderRadius: 20,
                 borderWidth: 1,
-                borderColor: isSelected
-                  ? colors.gold
-                  : "rgba(160, 160, 160, 0.25)",
-                backgroundColor: isSelected
-                  ? "rgba(201, 168, 76, 0.12)"
-                  : "transparent",
+                borderColor: isSelected ? colors.dark : colors.border,
+                backgroundColor: isSelected ? colors.dark : colors.white,
               }}
             >
               <Text
                 style={{
-                  color: isSelected ? colors.gold : colors.grey,
+                  color: isSelected ? colors.white : colors.dark,
                   fontSize: 13,
                   fontWeight: "600",
                 }}
@@ -444,12 +507,12 @@ export default function DiscoverTab() {
                 width: 4,
                 height: 20,
                 borderRadius: 2,
-                backgroundColor: colors.gold,
+                backgroundColor: colors.dark,
               }}
             />
             <Text
               style={{
-                color: colors.white,
+                color: colors.dark,
                 fontSize: 18,
                 fontWeight: "700",
               }}
@@ -458,7 +521,7 @@ export default function DiscoverTab() {
             </Text>
             <View
               style={{
-                backgroundColor: colors.gold,
+                backgroundColor: colors.dark,
                 borderRadius: 10,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
@@ -467,7 +530,7 @@ export default function DiscoverTab() {
             >
               <Text
                 style={{
-                  color: colors.black,
+                  color: colors.white,
                   fontSize: 11,
                   fontWeight: "700",
                 }}
@@ -486,10 +549,10 @@ export default function DiscoverTab() {
               <View
                 key={req.id}
                 style={{
-                  backgroundColor: colors.dark,
+                  backgroundColor: colors.white,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "rgba(201, 168, 76, 0.2)",
+                  borderColor: colors.border,
                   padding: 16,
                   marginBottom: 10,
                   marginHorizontal: 20,
@@ -498,35 +561,49 @@ export default function DiscoverTab() {
                 }}
               >
                 {/* Avatar */}
-                <View
-                  style={{
-                    width: 46,
-                    height: 46,
-                    borderRadius: 23,
-                    backgroundColor: "rgba(201, 168, 76, 0.12)",
-                    borderWidth: 1.5,
-                    borderColor: "rgba(201, 168, 76, 0.25)",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginRight: 12,
-                  }}
-                >
-                  <Text
+                {profile?.avatar_url ? (
+                  <Image
+                    source={{ uri: profile.avatar_url }}
                     style={{
-                      color: colors.gold,
-                      fontSize: 15,
-                      fontWeight: "700",
+                      width: 46,
+                      height: 46,
+                      borderRadius: 23,
+                      borderWidth: 1.5,
+                      borderColor: colors.border,
+                      marginRight: 12,
+                    }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 46,
+                      height: 46,
+                      borderRadius: 23,
+                      backgroundColor: colors.sand,
+                      borderWidth: 1.5,
+                      borderColor: colors.border,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      marginRight: 12,
                     }}
                   >
-                    {reqInitials.toUpperCase()}
-                  </Text>
-                </View>
+                    <Text
+                      style={{
+                        color: colors.dark,
+                        fontSize: 15,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {reqInitials.toUpperCase()}
+                    </Text>
+                  </View>
+                )}
 
                 {/* Info */}
                 <View style={{ flex: 1 }}>
                   <Text
                     style={{
-                      color: colors.white,
+                      color: colors.dark,
                       fontSize: 15,
                       fontWeight: "600",
                     }}
@@ -535,7 +612,7 @@ export default function DiscoverTab() {
                   </Text>
                   <Text
                     style={{
-                      color: colors.grey,
+                      color: colors.stone,
                       fontSize: 12,
                       marginTop: 1,
                     }}
@@ -604,12 +681,12 @@ export default function DiscoverTab() {
             width: 4,
             height: 20,
             borderRadius: 2,
-            backgroundColor: colors.gold,
+            backgroundColor: colors.dark,
           }}
         />
         <Text
           style={{
-            color: colors.white,
+            color: colors.dark,
             fontSize: 18,
             fontWeight: "700",
           }}
@@ -624,126 +701,148 @@ export default function DiscoverTab() {
       {filteredMembers.map((member) => {
         const status = getConnectionStatus(member.id);
         const connected = status === "pending" || status === "accepted";
+        const masked = isMasked(member);
         const memberInitials =
           (member.first_name?.[0] ?? "") + (member.last_name?.[0] ?? "");
+        const displayName = masked
+          ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
+          : `${member.first_name} ${member.last_name}`;
 
         return (
           <Pressable
             key={member.id}
+            onPress={() => router.push(`/member/${member.id}` as any)}
             style={{
-              backgroundColor: colors.dark,
+              backgroundColor: colors.white,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: colors.darkBorder,
+              borderColor: colors.border,
               padding: 18,
               marginBottom: 14,
               marginHorizontal: 20,
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
-              {/* Avatar */}
+              {/* Avatar — hidden for masked profiles */}
               <View
                 style={{
                   width: 52,
                   height: 52,
                   borderRadius: 26,
-                  backgroundColor: "rgba(201, 168, 76, 0.12)",
+                  backgroundColor: colors.sand,
                   borderWidth: 1.5,
-                  borderColor: "rgba(201, 168, 76, 0.25)",
+                  borderColor: colors.border,
                   justifyContent: "center",
                   alignItems: "center",
                   marginRight: 14,
                 }}
               >
-                <Text
-                  style={{
-                    color: colors.gold,
-                    fontSize: 17,
-                    fontWeight: "700",
-                    letterSpacing: 1,
-                  }}
-                >
-                  {memberInitials.toUpperCase()}
-                </Text>
+                {!masked && member.avatar_url ? (
+                  <Image
+                    source={{ uri: member.avatar_url }}
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 26,
+                    }}
+                  />
+                ) : (
+                  <Text
+                    style={{
+                      color: colors.dark,
+                      fontSize: 17,
+                      fontWeight: "700",
+                      letterSpacing: 1,
+                    }}
+                  >
+                    {memberInitials.toUpperCase()}
+                  </Text>
+                )}
               </View>
 
               {/* Info */}
               <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                  <Text
+                    style={{
+                      color: colors.dark,
+                      fontSize: 15,
+                      fontFamily: fonts.semibold,
+                    }}
+                  >
+                    {displayName}
+                  </Text>
+                  {masked && (
+                    <Ionicons name="lock-closed-outline" size={10} color={colors.stone} />
+                  )}
+                </View>
                 <Text
-                  style={{
-                    color: colors.white,
-                    fontSize: 15,
-                    fontWeight: "600",
-                    marginBottom: 2,
-                  }}
-                >
-                  {member.first_name} {member.last_name}
-                </Text>
-                <Text
-                  style={{ color: colors.grey, fontSize: 12, marginBottom: 6 }}
+                  style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body, marginBottom: 6 }}
                   numberOfLines={1}
                 >
-                  {member.title || "HQ Member"}
+                  {masked ? "HQ Member" : (member.title || "HQ Member")}
                 </Text>
 
                 {/* Location + industry */}
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 10,
-                  }}
-                >
-                  {member.city && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 3,
-                      }}
-                    >
-                      <Ionicons
-                        name="location-outline"
-                        size={12}
-                        color={colors.grey}
-                      />
-                      <Text style={{ color: colors.grey, fontSize: 11 }}>
-                        {member.city}
-                      </Text>
-                    </View>
-                  )}
-                  {member.industry && (
-                    <>
-                      <Text
-                        style={{ color: colors.darkBorder, fontSize: 11 }}
-                      >
-                        ·
-                      </Text>
-                      <Text
+                {!masked && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 10,
+                    }}
+                  >
+                    {member.city && !member.hide_city && (
+                      <View
                         style={{
-                          color: colors.gold,
-                          fontSize: 11,
-                          fontWeight: "500",
-                          textTransform: "capitalize",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 3,
                         }}
                       >
-                        {member.industry}
-                      </Text>
-                    </>
-                  )}
-                </View>
+                        <Ionicons
+                          name="location-outline"
+                          size={12}
+                          color={colors.stone}
+                        />
+                        <Text style={{ color: colors.stone, fontSize: 11, fontFamily: fonts.body }}>
+                          {member.city}
+                        </Text>
+                      </View>
+                    )}
+                    {member.industry && !member.hide_industry && (
+                      <>
+                        <Text
+                          style={{ color: colors.border, fontSize: 11 }}
+                        >
+                          ·
+                        </Text>
+                        <Text
+                          style={{
+                            color: colors.stone,
+                            fontSize: 11,
+                            fontFamily: fonts.medium,
+                            textTransform: "capitalize",
+                          }}
+                        >
+                          {member.industry}
+                        </Text>
+                      </>
+                    )}
+                  </View>
+                )}
 
-                {/* Interests */}
-                {member.interests && member.interests.length > 0 && (
+                {/* Interests — max 2, hidden for masked profiles */}
+                {!masked && !member.hide_interests && member.interests && member.interests.length > 0 && (
                   <View
                     style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}
                   >
-                    {member.interests.slice(0, 3).map((interest) => (
+                    {member.interests.slice(0, 2).map((interest) => (
                       <View
                         key={interest}
                         style={{
-                          backgroundColor: "rgba(160, 160, 160, 0.1)",
+                          backgroundColor: colors.sand,
                           borderRadius: 6,
                           paddingHorizontal: 8,
                           paddingVertical: 3,
@@ -751,9 +850,9 @@ export default function DiscoverTab() {
                       >
                         <Text
                           style={{
-                            color: colors.grey,
+                            color: colors.stone,
                             fontSize: 10,
-                            fontWeight: "500",
+                            fontFamily: fonts.medium,
                           }}
                         >
                           {interest}
@@ -770,12 +869,12 @@ export default function DiscoverTab() {
                   onPress={() => handleConnect(member)}
                   style={{
                     backgroundColor: connected
-                      ? "rgba(76, 175, 80, 0.15)"
-                      : "rgba(201, 168, 76, 0.12)",
+                      ? "rgba(46, 125, 50, 0.12)"
+                      : colors.dark,
                     borderWidth: 1,
                     borderColor: connected
-                      ? "rgba(76, 175, 80, 0.3)"
-                      : "rgba(201, 168, 76, 0.25)",
+                      ? "rgba(46, 125, 50, 0.3)"
+                      : colors.dark,
                     borderRadius: 10,
                     paddingHorizontal: 14,
                     paddingVertical: 8,
@@ -783,7 +882,7 @@ export default function DiscoverTab() {
                 >
                   <Text
                     style={{
-                      color: connected ? colors.green : colors.gold,
+                      color: connected ? colors.green : colors.white,
                       fontSize: 11,
                       fontWeight: "700",
                     }}
@@ -802,18 +901,18 @@ export default function DiscoverTab() {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 4,
-                      backgroundColor: "rgba(201, 168, 76, 0.08)",
+                      backgroundColor: colors.white,
                       borderWidth: 1,
-                      borderColor: "rgba(201, 168, 76, 0.2)",
+                      borderColor: colors.border,
                       borderRadius: 10,
                       paddingHorizontal: 12,
                       paddingVertical: 7,
                     }}
                   >
-                    <Ionicons name="chatbubble-outline" size={12} color={colors.gold} />
+                    <Ionicons name="chatbubble-outline" size={12} color={colors.dark} />
                     <Text
                       style={{
-                        color: colors.gold,
+                        color: colors.dark,
                         fontSize: 11,
                         fontWeight: "600",
                       }}
@@ -839,11 +938,11 @@ export default function DiscoverTab() {
           <Ionicons
             name="people-outline"
             size={48}
-            color={colors.darkBorder}
+            color={colors.border}
           />
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 15,
               textAlign: "center",
               marginTop: 16,

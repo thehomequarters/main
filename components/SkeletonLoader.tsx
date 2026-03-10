@@ -38,7 +38,7 @@ export function SkeletonLoader({
 
   const backgroundColor = shimmer.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.dark, colors.darkBorder],
+    outputRange: [colors.sand, colors.border],
   });
 
   return (

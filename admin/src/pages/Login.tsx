@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { auth } from "../firebase";
 
 export default function Login() {
@@ -9,12 +12,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/");
@@ -29,6 +33,23 @@ export default function Login() {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!email.trim()) {
+      setError("Enter your email address above first.");
+      return;
+    }
+    setResetLoading(true);
+    setError("");
+    try {
+      await sendPasswordResetEmail(auth, email.trim());
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err.message ?? "Failed to send reset email.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -38,9 +59,7 @@ export default function Login() {
             <span className="text-gold font-extrabold text-2xl">HQ</span>
           </div>
           <h1 className="text-white text-2xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Sign in to manage HomeQuarters
-          </p>
+          <p className="text-gray-500 text-sm mt-1">Sign in to manage HomeQuarters</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -78,14 +97,30 @@ export default function Login() {
             </div>
           )}
 
+          {resetSent && (
+            <div className="bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">
+              <p className="text-green-400 text-sm">
+                Password reset email sent. Check your inbox.
+              </p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-gold text-black font-bold py-3 rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Signing in…" : "Sign In"}
           </button>
         </form>
+
+        <button
+          onClick={handleResetPassword}
+          disabled={resetLoading}
+          className="mt-4 w-full text-gray-500 hover:text-gray-300 text-sm text-center transition-colors disabled:opacity-50"
+        >
+          {resetLoading ? "Sending…" : "Forgot password?"}
+        </button>
       </div>
     </div>
   );

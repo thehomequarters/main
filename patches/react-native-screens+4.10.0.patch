@@ -1,0 +1,32 @@
+diff --git a/node_modules/react-native-screens/ios/RNSDismissibleModalProtocol.h b/node_modules/react-native-screens/ios/RNSDismissibleModalProtocol.h
+new file mode 100644
+index 0000000..6c9bc74
+--- /dev/null
++++ b/node_modules/react-native-screens/ios/RNSDismissibleModalProtocol.h
+@@ -0,0 +1,10 @@
++// Copyright 2015-present 650 Industries. All rights reserved.
++// Stub header added for compatibility with expo-router
++
++#pragma once
++
++#import <Foundation/Foundation.h>
++
++@protocol RNSDismissibleModalProtocol <NSObject>
++@optional
++@end
+diff --git a/node_modules/react-native-screens/ios/RNSTabBarController.h b/node_modules/react-native-screens/ios/RNSTabBarController.h
+new file mode 100644
+index 0000000..3a6edfb
+--- /dev/null
++++ b/node_modules/react-native-screens/ios/RNSTabBarController.h
+@@ -0,0 +1,10 @@
++// Copyright 2015-present 650 Industries. All rights reserved.
++// Stub header added for compatibility with expo-router
++
++#pragma once
++
++#import <UIKit/UIKit.h>
++
++@interface RNSTabBarController : UITabBarController
++
++@end

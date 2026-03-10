@@ -22,13 +22,13 @@ export function CategoryPills({ selected, onSelect }: CategoryPillsProps) {
           paddingVertical: 10,
           borderRadius: 24,
           borderWidth: 1,
-          borderColor: selected === null ? colors.gold : colors.darkBorder,
+          borderColor: selected === null ? colors.stone : colors.darkBorder,
           backgroundColor: selected === null ? "rgba(201, 168, 76, 0.1)" : "transparent",
         }}
       >
         <Text
           style={{
-            color: selected === null ? colors.gold : colors.grey,
+            color: selected === null ? colors.stone : colors.grey,
             fontSize: 13,
             fontWeight: "500",
             letterSpacing: 0.5,
@@ -47,14 +47,14 @@ export function CategoryPills({ selected, onSelect }: CategoryPillsProps) {
             borderRadius: 24,
             borderWidth: 1,
             borderColor:
-              selected === cat.key ? colors.gold : colors.darkBorder,
+              selected === cat.key ? colors.stone : colors.darkBorder,
             backgroundColor:
               selected === cat.key ? "rgba(201, 168, 76, 0.1)" : "transparent",
           }}
         >
           <Text
             style={{
-              color: selected === cat.key ? colors.gold : colors.grey,
+              color: selected === cat.key ? colors.stone : colors.grey,
               fontSize: 13,
               fontWeight: "500",
               letterSpacing: 0.5,

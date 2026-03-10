@@ -17,6 +17,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -26,6 +27,7 @@ import type { HQEvent, Booking } from "@/lib/database.types";
 export default function BookingsScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const [bookings, setBookings] = useState<(Booking & { event?: HQEvent })[]>(
     []
   );
@@ -64,7 +66,7 @@ export default function BookingsScreen() {
 
       setBookings(combined);
     } catch (e: any) {
-      Alert.alert("Error", "Could not load bookings. Please try again.");
+      toast("Could not load bookings. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -123,7 +125,7 @@ export default function BookingsScreen() {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          tintColor={colors.gold}
+          tintColor={colors.stone}
         />
       }
     >
@@ -207,7 +209,7 @@ export default function BookingsScreen() {
             onPress={() => router.push("/(tabs)/events")}
             style={{
               marginTop: 20,
-              backgroundColor: colors.gold,
+              backgroundColor: colors.stone,
               borderRadius: 12,
               paddingHorizontal: 24,
               paddingVertical: 12,
@@ -243,7 +245,7 @@ export default function BookingsScreen() {
                 width: 4,
                 height: 20,
                 borderRadius: 2,
-                backgroundColor: colors.gold,
+                backgroundColor: colors.stone,
               }}
             />
             <Text
@@ -295,7 +297,7 @@ export default function BookingsScreen() {
                 >
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 20,
                       fontWeight: "800",
                     }}
@@ -304,7 +306,7 @@ export default function BookingsScreen() {
                   </Text>
                   <Text
                     style={{
-                      color: colors.gold,
+                      color: colors.stone,
                       fontSize: 10,
                       fontWeight: "600",
                       letterSpacing: 1,

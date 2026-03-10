@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable, Image } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Post, PostTopic } from "@/lib/database.types";
 
@@ -35,10 +35,10 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
     <Pressable
       onPress={onPress}
       style={{
-        backgroundColor: colors.dark,
+        backgroundColor: colors.white,
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: colors.darkBorder,
+        borderColor: colors.border,
         padding: 18,
         marginBottom: 14,
         marginHorizontal: 20,
@@ -58,9 +58,9 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
             width: 42,
             height: 42,
             borderRadius: 21,
-            backgroundColor: "rgba(201, 168, 76, 0.12)",
+            backgroundColor: colors.sand,
             borderWidth: 1,
-            borderColor: "rgba(201, 168, 76, 0.25)",
+            borderColor: colors.border,
             justifyContent: "center",
             alignItems: "center",
             marginRight: 12,
@@ -68,7 +68,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
         >
           <Text
             style={{
-              color: colors.gold,
+              color: colors.dark,
               fontSize: 14,
               fontWeight: "700",
             }}
@@ -80,17 +80,18 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
         <View style={{ flex: 1 }}>
           <Text
             style={{
-              color: colors.white,
+              color: colors.dark,
               fontSize: 14,
-              fontWeight: "600",
+              fontFamily: fonts.semibold,
             }}
           >
             {post.author_name}
           </Text>
           <Text
             style={{
-              color: colors.grey,
+              color: colors.stone,
               fontSize: 11,
+              fontFamily: fonts.body,
             }}
             numberOfLines={1}
           >
@@ -100,8 +101,9 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
 
         <Text
           style={{
-            color: colors.grey,
+            color: colors.stone,
             fontSize: 11,
+            fontFamily: fonts.body,
             opacity: 0.7,
           }}
         >
@@ -113,7 +115,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
       <View
         style={{
           alignSelf: "flex-start",
-          backgroundColor: `${topicColor}15`,
+          backgroundColor: `${topicColor}1A`,
           borderRadius: 6,
           paddingHorizontal: 8,
           paddingVertical: 3,
@@ -123,9 +125,9 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
         <Text
           style={{
             color: topicColor,
-            fontSize: 10,
-            fontWeight: "700",
-            letterSpacing: 1,
+            fontSize: 9,
+            fontFamily: fonts.bold,
+            letterSpacing: 2,
             textTransform: "uppercase",
           }}
         >
@@ -150,9 +152,10 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
       {/* Content */}
       <Text
         style={{
-          color: colors.white,
+          color: colors.dark,
           fontSize: 14,
-          lineHeight: 21,
+          fontFamily: fonts.body,
+          lineHeight: 22,
           marginBottom: 16,
         }}
       >
@@ -166,7 +169,7 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
           alignItems: "center",
           gap: 20,
           borderTopWidth: 1,
-          borderTopColor: colors.darkBorder,
+          borderTopColor: colors.border,
           paddingTop: 12,
         }}
       >
@@ -174,8 +177,8 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
           onPress={onLike}
           style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
         >
-          <Ionicons name="heart-outline" size={18} color={colors.grey} />
-          <Text style={{ color: colors.grey, fontSize: 12 }}>
+          <Ionicons name="heart-outline" size={18} color={colors.stone} />
+          <Text style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body }}>
             {post.likes}
           </Text>
         </Pressable>
@@ -186,14 +189,14 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
           <Ionicons
             name="chatbubble-outline"
             size={16}
-            color={colors.grey}
+            color={colors.stone}
           />
-          <Text style={{ color: colors.grey, fontSize: 12 }}>
+          <Text style={{ color: colors.stone, fontSize: 12, fontFamily: fonts.body }}>
             {post.comments}
           </Text>
         </Pressable>
         <View style={{ flex: 1 }} />
-        <Ionicons name="share-outline" size={18} color={colors.grey} />
+        <Ionicons name="share-outline" size={18} color={colors.stone} />
       </View>
     </Pressable>
   );

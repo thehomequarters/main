@@ -5,16 +5,18 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Image,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickImage, uploadAvatar } from "@/lib/storage";
@@ -84,6 +86,7 @@ function FieldInput({
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
   const [firstName, setFirstName] = useState(profile?.first_name ?? "");
   const [lastName, setLastName] = useState(profile?.last_name ?? "");
@@ -96,6 +99,12 @@ export default function ProfileScreen() {
   );
   const [interestsText, setInterestsText] = useState(
     (profile?.interests ?? []).join(", ")
+  );
+  const [instagramHandle, setInstagramHandle] = useState(
+    profile?.instagram_handle ?? ""
+  );
+  const [linkedinHandle, setLinkedinHandle] = useState(
+    profile?.linkedin_handle ?? ""
   );
   const [saving, setSaving] = useState(false);
   const [avatarLocal, setAvatarLocal] = useState<string | null>(null);
@@ -119,7 +128,7 @@ export default function ProfileScreen() {
       });
       await refreshProfile();
     } catch (e: any) {
-      Alert.alert("Upload failed", e.message);
+      toast("Upload failed. Please try again.", "error");
       setAvatarLocal(null);
     } finally {
       setUploadingAvatar(false);
@@ -134,15 +143,18 @@ export default function ProfileScreen() {
     bio !== (profile?.bio ?? "") ||
     city !== (profile?.city ?? "") ||
     industry !== (profile?.industry ?? null) ||
-    interestsText !== (profile?.interests ?? []).join(", ");
+    interestsText !== (profile?.interests ?? []).join(", ") ||
+    instagramHandle !== (profile?.instagram_handle ?? "") ||
+    linkedinHandle !== (profile?.linkedin_handle ?? "");
 
   const handleSave = async () => {
     if (!user?.uid) return;
     if (!firstName.trim() || !lastName.trim()) {
-      Alert.alert("Error", "First and last name are required.");
+      toast("First and last name are required.", "error");
       return;
     }
 
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setSaving(true);
     try {
       const interests = interestsText
@@ -159,11 +171,14 @@ export default function ProfileScreen() {
         city: city.trim() || null,
         industry: industry,
         interests: interests,
+        instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
+        linkedin_handle: linkedinHandle.trim() || null,
       });
       await refreshProfile();
-      Alert.alert("Saved", "Your profile has been updated.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      toast("Profile updated.", "success");
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast(e.message, "error");
     } finally {
       setSaving(false);
     }
@@ -239,7 +254,7 @@ export default function ProfileScreen() {
                   height: 100,
                   borderRadius: 50,
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.stone,
                 }}
               />
             ) : (
@@ -250,14 +265,14 @@ export default function ProfileScreen() {
                   borderRadius: 50,
                   backgroundColor: "rgba(201, 168, 76, 0.15)",
                   borderWidth: 2,
-                  borderColor: colors.gold,
+                  borderColor: colors.stone,
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.stone,
                     fontSize: 36,
                     fontWeight: "700",
                     letterSpacing: 2,
@@ -276,7 +291,7 @@ export default function ProfileScreen() {
                 width: 32,
                 height: 32,
                 borderRadius: 16,
-                backgroundColor: colors.gold,
+                backgroundColor: colors.stone,
                 justifyContent: "center",
                 alignItems: "center",
                 borderWidth: 3,
@@ -330,7 +345,7 @@ export default function ProfileScreen() {
                 color:
                   profile?.membership_status === "active"
                     ? colors.green
-                    : colors.gold,
+                    : colors.stone,
                 fontSize: 10,
                 fontWeight: "700",
                 letterSpacing: 2,
@@ -465,16 +480,16 @@ export default function ProfileScreen() {
                     borderRadius: 20,
                     borderWidth: 1,
                     borderColor: isSelected
-                      ? colors.gold
+                      ? colors.stone
                       : "rgba(160, 160, 160, 0.25)",
                     backgroundColor: isSelected
-                      ? "rgba(201, 168, 76, 0.12)"
+                      ? "rgba(154,142,130,0.18)"
                       : "transparent",
                   }}
                 >
                   <Text
                     style={{
-                      color: isSelected ? colors.gold : colors.grey,
+                      color: isSelected ? colors.stone : colors.grey,
                       fontSize: 13,
                       fontWeight: "600",
                     }}
@@ -493,17 +508,32 @@ export default function ProfileScreen() {
             placeholder="Photography, Music, Startups (comma separated)"
           />
 
+          <FieldLabel label="INSTAGRAM" />
+          <FieldInput
+            value={instagramHandle}
+            onChangeText={setInstagramHandle}
+            placeholder="@yourhandle"
+          />
+
+          <FieldLabel label="LINKEDIN" />
+          <FieldInput
+            value={linkedinHandle}
+            onChangeText={setLinkedinHandle}
+            placeholder="yourname or full profile URL"
+          />
+
           {/* Save Button */}
           {hasChanges && (
             <Pressable
               onPress={handleSave}
               disabled={saving}
               style={{
-                backgroundColor: colors.gold,
-                borderRadius: 12,
+                backgroundColor: colors.stone,
+                borderRadius: 100,
                 paddingVertical: 16,
                 opacity: saving ? 0.6 : 1,
                 marginBottom: 16,
+                alignItems: "center",
               }}
             >
               <Text

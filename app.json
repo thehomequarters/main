@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "scheme": "homequarters",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -14,7 +14,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.homequarters.app"
+      "bundleIdentifier": "com.homequarters.app",
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": []
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "HomeQuarters uses your camera to update your profile photo.",
+        "NSPhotoLibraryUsageDescription": "HomeQuarters accesses your photo library so you can set a profile photo.",
+        "NSUserNotificationUsageDescription": "HomeQuarters sends notifications for connection requests, event reminders, and membership updates."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,14 +31,16 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.homequarters.app"
+      "package": "com.homequarters.app",
+      "permissions": ["android.permission.POST_NOTIFICATIONS"]
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "react-native-maps"
     ]
   }
 }

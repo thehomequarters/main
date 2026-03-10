@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
-  Alert,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -23,6 +22,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickPostImage, uploadChatImage } from "@/lib/storage";
@@ -64,6 +64,7 @@ export default function ChatScreen() {
   const { id: conversationId } = useLocalSearchParams<{ id: string }>();
   const { user, profile } = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
   const scrollRef = useRef<ScrollView>(null);
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -156,7 +157,7 @@ export default function ChatScreen() {
 
       setNewMessage("");
     } catch (e: any) {
-      Alert.alert("Error", e.message);
+      toast("Failed to send message.", "error");
     } finally {
       setSending(false);
     }
@@ -217,7 +218,7 @@ export default function ChatScreen() {
           }}
         >
           <Text
-            style={{ color: colors.gold, fontSize: 12, fontWeight: "700" }}
+            style={{ color: colors.stone, fontSize: 12, fontWeight: "700" }}
           >
             {getOtherInitials()}
           </Text>
@@ -272,7 +273,7 @@ export default function ChatScreen() {
               >
                 <Text
                   style={{
-                    color: colors.gold,
+                    color: colors.stone,
                     fontSize: 14,
                     fontWeight: "500",
                   }}
@@ -450,7 +451,7 @@ export default function ChatScreen() {
             borderRadius: 20,
             backgroundColor:
               newMessage.trim() || imageUri
-                ? colors.gold
+                ? colors.stone
                 : "rgba(201, 168, 76, 0.2)",
             justifyContent: "center",
             alignItems: "center",

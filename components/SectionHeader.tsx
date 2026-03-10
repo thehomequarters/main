@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 
 interface SectionHeaderProps {
   title: string;
@@ -25,10 +25,11 @@ export function SectionHeader({
     >
       <Text
         style={{
-          color: colors.white,
-          fontSize: 20,
-          fontWeight: "700",
-          letterSpacing: 0.3,
+          color: colors.stone,
+          fontSize: 10,
+          fontFamily: fonts.semibold,
+          textTransform: "uppercase",
+          letterSpacing: 2.5,
         }}
       >
         {title}
@@ -38,8 +39,10 @@ export function SectionHeader({
           <Text
             style={{
               color: colors.gold,
-              fontSize: 13,
-              fontWeight: "500",
+              fontSize: 10,
+              fontFamily: fonts.semibold,
+              textTransform: "uppercase",
+              letterSpacing: 2.5,
             }}
           >
             {actionLabel}
