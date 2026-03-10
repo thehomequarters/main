@@ -157,6 +157,8 @@ export default function Members() {
     memberId: string,
     newStatus: Profile["membership_status"]
   ) => {
+    if (processingRef.current.has(memberId)) return;
+    processingRef.current.add(memberId);
     setUpdating(memberId);
     try {
       const payload: Record<string, unknown> = { membership_status: newStatus };
@@ -174,6 +176,7 @@ export default function Members() {
       console.error("Failed to update status:", e);
       toast("Failed to update status", "error");
     } finally {
+      processingRef.current.delete(memberId);
       setUpdating(null);
     }
   };
