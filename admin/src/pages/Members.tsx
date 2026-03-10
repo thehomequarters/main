@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   onSnapshot,
@@ -60,6 +60,7 @@ export default function Members() {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Profile>>({});
   const [savingEdit, setSavingEdit] = useState(false);
+  const processingRef = useRef<Set<string>>(new Set());
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
