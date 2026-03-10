@@ -410,7 +410,7 @@ We built this community around a simple idea — that people who share a connect
 
 I'm genuinely glad you're here.
 
-Take your time settling in. Explore the app, connect with a few members, and don't hesitate to reach out if you have any questions or feedback. I read everything.
+Take your time settling in. Explore the app, connect with a few members, and don't hesitate to reach out if you have any questions or feedback.
 
 With warmth,
 
