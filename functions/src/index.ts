@@ -839,6 +839,7 @@ export const getWebsiteContent = onRequest({ cors: true }, async (req, res) => {
     return;
   }
   try {
+    const db = getFirestore();
     const snap = await db.collection("website_content").doc("main").get();
     if (!snap.exists) {
       res.json({});
