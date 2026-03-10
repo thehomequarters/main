@@ -15,7 +15,7 @@ import { colors } from "@/constants/theme";
 
 const GRACE_DAYS = 30;
 const GRACE_KEY = "hq_grace_entered";
-// NOTE: No external payment URL here — linking to external purchase flows
+// NOTE: No external payment URL here - linking to external purchase flows
 // for digital goods is prohibited by App Store Review Guideline 3.1.1.
 // Members subscribe at thehomequarters.com independently.
 
@@ -68,7 +68,7 @@ export default function PaywallScreen() {
         <Text style={styles.sub}>
           {graceExpired
             ? "To continue using HomeQuarters, please activate your membership. Your community is waiting for you."
-            : `You have ${remaining} free day${remaining === 1 ? "" : "s"} to explore the app before your membership begins. No pressure — but when you're ready, your plan is just a tap away.`
+            : `You have ${remaining} free day${remaining === 1 ? "" : "s"} to explore the app before your membership begins. No pressure - but when you're ready, your plan is just a tap away.`
           }
         </Text>
 
@@ -93,7 +93,7 @@ export default function PaywallScreen() {
 
       {/* Footer CTAs */}
       <View style={styles.footer}>
-        {/* Membership website instruction — no tappable payment link (App Store 3.1.1) */}
+        {/* Membership website instruction - no tappable payment link (App Store 3.1.1) */}
         <View style={styles.websiteBox}>
           <Ionicons name="globe-outline" size={16} color={colors.stone} style={{ marginTop: 1 }} />
           <Text style={styles.websiteText}>

@@ -135,7 +135,7 @@ export default function AccountTab() {
         message: `Connect with me on HomeQuarters! I'm ${profile?.first_name} ${profile?.last_name} (${profile?.member_code}).`,
       });
     } catch (e: any) {
-      // User cancelled — non-critical
+      // User cancelled - non-critical
     }
   };
 
@@ -369,8 +369,8 @@ export default function AccountTab() {
             subtitle={
               profile?.membership_status === "active"
                 ? profile?.membership_tier === "platinum_card"
-                  ? "Platinum · £15/mo — UK & Zimbabwe venues"
-                  : "Gold · £5/mo — diaspora deals"
+                  ? "Platinum · £15/mo - UK & Zimbabwe venues"
+                  : "Gold · £5/mo - diaspora deals"
                 : "Choose a plan to activate"
             }
             onPress={() => router.push("/billing" as any)}
@@ -432,13 +432,13 @@ export default function AccountTab() {
             subtitle="Your favourite spots"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              toast("Saved venues coming soon — favourite your go-to spots.", "info");
+              toast("Saved venues coming soon - favourite your go-to spots.", "info");
             }}
           />
           <MenuItem
             icon="airplane-outline"
             label="eSIM & Travel"
-            subtitle="Get connected in Zimbabwe — powered by Airalo"
+            subtitle="Get connected in Zimbabwe - powered by Airalo"
             onPress={() => router.push("/esim-intro" as any)}
           />
         </View>

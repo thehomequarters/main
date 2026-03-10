@@ -27,7 +27,7 @@ const SECTIONS = [
   },
   {
     title: "6. Third-Party Services",
-    body: "We share limited data with the following trusted third parties:\n\n• Google Firebase — secure storage of all profile and account data\n• Stripe — payment processing (card details never touch our servers)\n• Airalo — eSIM fulfilment for Platinum members who opt in\n• OpenStreetMap — anonymous venue map requests\n• Unsplash — venue imagery CDN\n\nEach provider operates under its own privacy policy and data processing agreements.",
+    body: "We share limited data with the following trusted third parties:\n\n• Google Firebase - secure storage of all profile and account data\n• Stripe - payment processing (card details never touch our servers)\n• Airalo - eSIM fulfilment for Platinum members who opt in\n• OpenStreetMap - anonymous venue map requests\n• Unsplash - venue imagery CDN\n\nEach provider operates under its own privacy policy and data processing agreements.",
   },
   {
     title: "7. Data Retention",
