@@ -123,7 +123,7 @@ export default function ESIMScreen() {
         </Text>
         <Text style={{ color: MUTED_TEXT, fontSize: 14, lineHeight: 21 }}>
           As an HQ member, access affordable eSIMs for 200+ destinations through our
-          partner Airalo — no roaming charges, no physical SIM, instant activation.
+          partner Airalo - no roaming charges, no physical SIM, instant activation.
         </Text>
 
         {/* Stats strip */}

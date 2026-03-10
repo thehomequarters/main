@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────
 // HQ Branded Email Templates
-// All styles are inline — required for email client compatibility.
+// All styles are inline - required for email client compatibility.
 // Palette: cream #F2EBE0 · dark #1C1C1E · gold #C9A84C · stone #9A8E82
 // ─────────────────────────────────────────────
 
@@ -103,7 +103,7 @@ export function applicationReceivedHtml(opts: {
     </table>
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      You can strengthen your application by getting current members to vouch for you. Share your application code — <strong style="color:#1C1C1E;font-family:monospace;">${opts.applicationCode}</strong> — with people who know you and are already in the community.
+      You can strengthen your application by getting current members to vouch for you. Share your application code - <strong style="color:#1C1C1E;font-family:monospace;">${opts.applicationCode}</strong> - with people who know you and are already in the community.
     </p>
   `;
   return wrap(body);
@@ -141,7 +141,7 @@ export function membershipApprovedHtml(opts: {
     </table>
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      Your member code is your identity within the community. Keep it private — it&rsquo;s used to verify your membership at partner venues.
+      Your member code is your identity within the community. Keep it private - it&rsquo;s used to verify your membership at partner venues.
     </p>
   `;
   return wrap(body);
@@ -167,7 +167,7 @@ export function applicationRejectedHtml(opts: {
       Hi ${opts.firstName}, thank you for taking the time to apply to HomeQuarters.
     </p>
     <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
-      After careful review, the membership committee has decided not to move forward with your application at this time. This decision is not a reflection of your character or achievements — our membership is shaped by the community&rsquo;s current composition and needs.
+      After careful review, the membership committee has decided not to move forward with your application at this time. This decision is not a reflection of your character or achievements - our membership is shaped by the community&rsquo;s current composition and needs.
     </p>
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
@@ -232,12 +232,12 @@ export function vouchReceivedHtml(opts: {
     <table width="100%" cellpadding="0" cellspacing="0">
       ${infoRow("VOUCHES RECEIVED", `${opts.voucherCount} / ${opts.requiredVouches}`)}
       ${infoRow("APPLICATION CODE", opts.applicationCode)}
-      ${infoRow("STATUS", isComplete ? "COMPLETE — UNDER REVIEW" : "IN PROGRESS")}
+      ${infoRow("STATUS", isComplete ? "COMPLETE - UNDER REVIEW" : "IN PROGRESS")}
     </table>
     ${goldDivider()}
     ${isComplete
       ? `<p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">Your application is now complete and has been passed to the membership committee for review. We&rsquo;ll be in touch soon.</p>`
-      : `<p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">You need <strong style="color:#1C1C1E;">${remaining} more ${remaining === 1 ? "vouch" : "vouches"}</strong> to complete your application. Share your code — <strong style="color:#1C1C1E;font-family:monospace;">${opts.applicationCode}</strong> — with other members who know you.</p>`
+      : `<p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">You need <strong style="color:#1C1C1E;">${remaining} more ${remaining === 1 ? "vouch" : "vouches"}</strong> to complete your application. Share your code - <strong style="color:#1C1C1E;font-family:monospace;">${opts.applicationCode}</strong> - with other members who know you.</p>`
     }
   `;
   return wrap(body);
@@ -269,7 +269,7 @@ export function applicationCompleteHtml(opts: {
       Hi ${opts.firstName}, you&rsquo;ve received all the vouches needed. Your application has been passed to the HomeQuarters membership committee for review.
     </p>
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
-      The committee reviews applications carefully. We&rsquo;ll notify you by email as soon as a decision has been made — usually within a few days.
+      The committee reviews applications carefully. We&rsquo;ll notify you by email as soon as a decision has been made - usually within a few days.
     </p>
     ${goldDivider()}
     <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Your application details</p>
@@ -304,10 +304,10 @@ export function friendAcceptedHtml(opts: {
     <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">GREAT NEWS</p>
     <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">${opts.friendFirstName} has<br/>joined HQ.</h1>
     <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
-      Hi ${opts.firstName}, the membership committee has approved the application of <strong style="color:#1C1C1E;">${opts.friendFirstName} ${opts.friendLastName}</strong> — someone you vouched for.
+      Hi ${opts.firstName}, the membership committee has approved the application of <strong style="color:#1C1C1E;">${opts.friendFirstName} ${opts.friendLastName}</strong> - someone you vouched for.
     </p>
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
-      They&rsquo;re now a full member of HomeQuarters. Thank you for your recommendation — the quality of our community is built on the trust of people like you.
+      They&rsquo;re now a full member of HomeQuarters. Thank you for your recommendation - the quality of our community is built on the trust of people like you.
     </p>
     ${ctaButton("Open HomeQuarters", BASE_URL)}
     ${goldDivider()}
@@ -323,7 +323,7 @@ export function friendAcceptedText(opts: {
   friendFirstName: string;
   friendLastName: string;
 }): string {
-  return `Hi ${opts.firstName},\n\n${opts.friendFirstName} ${opts.friendLastName}, someone you vouched for, has been accepted into HomeQuarters.\n\nThank you for your recommendation — it means a great deal to the community.\n\nHomeQuarters`;
+  return `Hi ${opts.firstName},\n\n${opts.friendFirstName} ${opts.friendLastName}, someone you vouched for, has been accepted into HomeQuarters.\n\nThank you for your recommendation - it means a great deal to the community.\n\nHomeQuarters`;
 }
 
 // ─────────────────────────────────────────────
@@ -337,7 +337,7 @@ export function inviteeAppliedHtml(opts: {
     <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">INVITATION UPDATE</p>
     <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">${opts.inviteeName}<br/>has applied.</h1>
     <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
-      Hi ${opts.firstName}, someone you invited — <strong style="color:#1C1C1E;">${opts.inviteeName}</strong> — has used your invitation code and submitted their application to HomeQuarters.
+      Hi ${opts.firstName}, someone you invited - <strong style="color:#1C1C1E;">${opts.inviteeName}</strong> - has used your invitation code and submitted their application to HomeQuarters.
     </p>
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
       Their application is now with the membership committee. You&rsquo;ve already counted as one of their vouches by virtue of your invitation. You can also vouch for them directly in the app using their application code.
@@ -382,7 +382,7 @@ export function webApplicationReceivedHtml(opts: {
     </table>
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      If you receive an invitation code from a current member in the meantime, download the HomeQuarters app and apply directly — invited applications are reviewed with priority.
+      If you receive an invitation code from a current member in the meantime, download the HomeQuarters app and apply directly - invited applications are reviewed with priority.
     </p>
   `;
   return wrap(body);
@@ -396,7 +396,7 @@ export function webApplicationReceivedText(opts: {
 }
 
 // ─────────────────────────────────────────────
-// 10. Welcome Journey — Day 1: Personal note from Valentine
+// 10. Welcome Journey - Day 1: Personal note from Valentine
 // Plain text only. Warm, human, founder's voice.
 // ─────────────────────────────────────────────
 export function founderWelcomeText(opts: { firstName: string }): string {
@@ -406,7 +406,7 @@ I wanted to drop you a quick note personally.
 
 Welcome to HomeQuarters.
 
-We built this community around a simple idea — that people who share a connection to a homeland, wherever they are in the world, deserve a place that feels like their own. Somewhere with a real sense of belonging, not just another app or membership card.
+We built this community around a simple idea - that people who share a connection to a homeland, wherever they are in the world, deserve a place that feels like their own. Somewhere with a real sense of belonging, not just another app or membership card.
 
 I'm genuinely glad you're here.
 
@@ -420,7 +420,7 @@ hello@thehomequarters.com`;
 }
 
 // ─────────────────────────────────────────────
-// 11. Welcome Journey — Day 4: Features tour
+// 11. Welcome Journey - Day 4: Features tour
 // Branded. Introduces the key pillars of the community.
 // ─────────────────────────────────────────────
 export function welcomeFeaturesTourHtml(opts: { firstName: string }): string {
@@ -467,7 +467,7 @@ export function welcomeFeaturesTourHtml(opts: { firstName: string }): string {
         </td>
         <td style="padding-left:16px;vertical-align:top;">
           <p style="margin:0 0 4px;color:#1C1C1E;font-size:14px;font-weight:700;letter-spacing:-0.2px;">Connect</p>
-          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Browse member profiles and send a direct message to anyone in the community. No cold introductions — everyone here was vouched for.</p>
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Browse member profiles and send a direct message to anyone in the community. No cold introductions - everyone here was vouched for.</p>
         </td>
       </tr>
     </table>
@@ -480,7 +480,7 @@ export function welcomeFeaturesTourHtml(opts: { firstName: string }): string {
         </td>
         <td style="padding-left:16px;vertical-align:top;">
           <p style="margin:0 0 4px;color:#1C1C1E;font-size:14px;font-weight:700;letter-spacing:-0.2px;">Events</p>
-          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Members-only gatherings, dinners, and cultural moments. Keep an eye on the Events tab — these fill up quickly.</p>
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">Members-only gatherings, dinners, and cultural moments. Keep an eye on the Events tab - these fill up quickly.</p>
         </td>
       </tr>
     </table>
@@ -490,7 +490,7 @@ export function welcomeFeaturesTourHtml(opts: { firstName: string }): string {
     ${ctaButton("Open the App", BASE_URL)}
 
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      If you ever have a question, a suggestion, or just want to share something — reply to this email. We&rsquo;re always listening.
+      If you ever have a question, a suggestion, or just want to share something - reply to this email. We&rsquo;re always listening.
     </p>
   `;
   return wrap(body);
@@ -505,13 +505,13 @@ PARTNER VENUES & DEALS
 Exclusive offers at restaurants, bars, hotels, and cultural spaces. Show your member QR code to redeem.
 
 DISCOVER
-The community feed. Share what you're up to, where you've been, what you've found. Private — members only.
+The community feed. Share what you're up to, where you've been, what you've found. Private - members only.
 
 CONNECT
 Browse member profiles and message anyone in the community directly. Everyone here was vouched for.
 
 EVENTS
-Members-only gatherings and cultural moments. Check the Events tab regularly — they fill up fast.
+Members-only gatherings and cultural moments. Check the Events tab regularly - they fill up fast.
 
 Open the app to explore: ${BASE_URL}
 
@@ -519,7 +519,7 @@ HomeQuarters`;
 }
 
 // ─────────────────────────────────────────────
-// 12. Welcome Journey — Day 10: Discover nudge
+// 12. Welcome Journey - Day 10: Discover nudge
 // Branded. Encourages first post on the community feed.
 // ─────────────────────────────────────────────
 export function welcomeDiscoverNudgeHtml(opts: { firstName: string }): string {
@@ -527,17 +527,17 @@ export function welcomeDiscoverNudgeHtml(opts: { firstName: string }): string {
     <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">COMMUNITY</p>
     <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Say something,<br/>${opts.firstName}.</h1>
     <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
-      The best communities are built by the people in them. Discover is your space — a private feed where members share the moments, places, and thoughts that make up their lives.
+      The best communities are built by the people in them. Discover is your space - a private feed where members share the moments, places, and thoughts that make up their lives.
     </p>
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
-      It could be a restaurant you just tried, a city you&rsquo;re visiting, a thought you want to share with people who get it. There&rsquo;s no pressure — just a space that gets richer the more you put into it.
+      It could be a restaurant you just tried, a city you&rsquo;re visiting, a thought you want to share with people who get it. There&rsquo;s no pressure - just a space that gets richer the more you put into it.
     </p>
     ${goldDivider()}
     <p style="margin:0 0 20px;color:#1C1C1E;font-size:14px;font-weight:600;line-height:22px;">
       Your first post is waiting.
     </p>
     <p style="margin:0 0 28px;color:#9A8E82;font-size:13px;line-height:21px;">
-      Open the app, tap <strong style="color:#1C1C1E;">Discover</strong>, and share something — anything. The community will be glad you did.
+      Open the app, tap <strong style="color:#1C1C1E;">Discover</strong>, and share something - anything. The community will be glad you did.
     </p>
     ${ctaButton("Post on Discover", BASE_URL)}
     ${goldDivider()}
@@ -553,7 +553,7 @@ export function welcomeDiscoverNudgeText(opts: { firstName: string }): string {
 
 The best communities are built by the people in them.
 
-Discover is the HQ community feed — a private space where members share moments, places, and thoughts with people who get it.
+Discover is the HQ community feed - a private space where members share moments, places, and thoughts with people who get it.
 
 Your first post is waiting. Open the app, tap Discover, and share something. A place you love, a city you're visiting, an introduction. Anything.
 
@@ -614,7 +614,7 @@ export function membershipAcceptedHtml(opts: {
       Your application has been approved by the membership committee. You are now part of the HomeQuarters community.
     </p>
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
-      You have <strong style="color:#1C1C1E;">30 free days</strong> to explore the app before your membership begins. When you're ready, choose a plan to unlock the full experience — and to help keep this community going.
+      You have <strong style="color:#1C1C1E;">30 free days</strong> to explore the app before your membership begins. When you're ready, choose a plan to unlock the full experience - and to help keep this community going.
     </p>
 
     <!-- Membership CTA -->
@@ -652,14 +652,14 @@ export function membershipAcceptedHtml(opts: {
     <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Your membership details</p>
     <table width="100%" cellpadding="0" cellspacing="0">
       ${infoRow("MEMBER CODE", opts.memberCode)}
-      ${infoRow("STATUS", "ACCEPTED — 30 DAY TRIAL")}
+      ${infoRow("STATUS", "ACCEPTED - 30 DAY TRIAL")}
       ${infoRow("PLANS FROM", "£5 / MONTH")}
     </table>
 
     ${goldDivider()}
 
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      Questions about plans or billing? Reply to this email — we&rsquo;re happy to help. Your member code is your identity within the community. Keep it private — it&rsquo;s used to verify your membership at partner venues.
+      Questions about plans or billing? Reply to this email - we&rsquo;re happy to help. Your member code is your identity within the community. Keep it private - it&rsquo;s used to verify your membership at partner venues.
     </p>
   `;
   return wrap(body);
@@ -673,7 +673,7 @@ export function membershipAcceptedText(opts: {
 
 Welcome to HomeQuarters. Your application has been approved.
 
-You have 30 free days to explore the app before your membership begins. When you're ready, choose a plan — your support is what keeps this community, the app, and our partner venues growing.
+You have 30 free days to explore the app before your membership begins. When you're ready, choose a plan - your support is what keeps this community, the app, and our partner venues growing.
 
 Choose your plan: ${BASE_URL}/membership
 
@@ -686,7 +686,7 @@ WHY YOUR MEMBERSHIP MATTERS
 Plans start from £5/month.
 
 Your member code: ${opts.memberCode}
-Keep this private — it's used to verify your membership at partner venues.
+Keep this private - it's used to verify your membership at partner venues.
 
 Any questions? Reply to this email.
 
@@ -751,16 +751,16 @@ export function graceReminderHtml(opts: {
     : `Your 30-day free trial ends today. After today, you'll need an active membership to continue using HomeQuarters.`;
 
   const valueIntro = reminderNumber === 1
-    ? `Choosing a plan is more than unlocking features — it's what makes this whole thing work.`
+    ? `Choosing a plan is more than unlocking features - it's what makes this whole thing work.`
     : reminderNumber === 2
     ? `Your membership directly supports everything you've been enjoying. Here's what it goes towards:`
     : `Every membership counts. Here's what yours would support:`;
 
   const closingNote = reminderNumber === 1
-    ? `Plans start from <strong style="color:#1C1C1E;">£5/month</strong>. No pressure — you've got ${daysRemaining} days. But when you're ready, we'd love to have you as a full member.`
+    ? `Plans start from <strong style="color:#1C1C1E;">£5/month</strong>. No pressure - you've got ${daysRemaining} days. But when you're ready, we'd love to have you as a full member.`
     : reminderNumber === 2
-    ? `Plans from <strong style="color:#1C1C1E;">£5/month</strong>. Annual plans save you 15%. Take a look — it only takes a minute.`
-    : `Plans from <strong style="color:#1C1C1E;">£5/month</strong>. Thank you for being part of this community — we hope you'll stick around.`;
+    ? `Plans from <strong style="color:#1C1C1E;">£5/month</strong>. Annual plans save you 15%. Take a look - it only takes a minute.`
+    : `Plans from <strong style="color:#1C1C1E;">£5/month</strong>. Thank you for being part of this community - we hope you'll stick around.`;
 
   const body = `
     <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">${tagline.toUpperCase()}</p>
@@ -796,10 +796,10 @@ export function graceReminderText(opts: {
     : `Your 30-day free trial ends today. After today, an active membership is required to continue using HomeQuarters.`;
 
   const closing = reminderNumber === 1
-    ? `No rush — you have ${daysRemaining} days. But when you're ready, we'd love to have you as a full member.`
+    ? `No rush - you have ${daysRemaining} days. But when you're ready, we'd love to have you as a full member.`
     : reminderNumber === 2
     ? `Plans start from £5/month. Annual plans save 15%. Takes a minute to set up.`
-    : `Plans start from £5/month. Thank you for being part of this — we hope you'll stay.`;
+    : `Plans start from £5/month. Thank you for being part of this - we hope you'll stay.`;
 
   return `Hi ${firstName},
 

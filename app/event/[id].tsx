@@ -543,7 +543,7 @@ export default function EventDetailScreen() {
                 letterSpacing: 0.5,
               }}
             >
-              {booking ? "Please wait..." : userBooking ? "Booked — Cancel?" : isFull ? "Event Full" : "Book My Spot"}
+              {booking ? "Please wait..." : userBooking ? "Booked - Cancel?" : isFull ? "Event Full" : "Book My Spot"}
             </Text>
           </Pressable>
         )}

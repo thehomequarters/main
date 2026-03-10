@@ -37,7 +37,7 @@ const SLIDES = [
     icon: "phone-portrait-outline" as const,
     tag: "HOW IT WORKS",
     title: "Install Before\nYou Fly",
-    body: "Get a Telecel Zimbabwe eSIM through Airalo before you leave. It installs digitally on your phone — no physical SIM card needed — and activates automatically when you touch down in Zim.",
+    body: "Get a Telecel Zimbabwe eSIM through Airalo before you leave. It installs digitally on your phone - no physical SIM card needed - and activates automatically when you touch down in Zim.",
     accent: { icon: "checkmark-circle-outline" as const, label: "Telecel Zimbabwe · Only network with eSIM support" },
   },
   {
@@ -45,7 +45,7 @@ const SLIDES = [
     icon: "flash-outline" as const,
     tag: "LOCAL RATES",
     title: "Local Data.\nNo Drama.",
-    body: "Browse affordable Telecel data plans at local rates — from as little as a few dollars. No contracts, no contracts, no SIM swap, no airport kiosk queue.",
+    body: "Browse affordable Telecel data plans at local rates - from as little as a few dollars. No contracts, no contracts, no SIM swap, no airport kiosk queue.",
     accent: { icon: "wifi-outline" as const, label: "4G LTE · Pay as you need · Cancel anytime" },
   },
   {
