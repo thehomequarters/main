@@ -1762,9 +1762,7 @@ export const sendMonthlyVenueDigests = onSchedule(
           ]);
 
           const totalRedemptions = lastMonthSnap.size;
-          const prevMonthTotal = prevMonthSnap.size > 0 || /* has prior data */ true
-            ? prevMonthSnap.size
-            : null;
+          const prevMonthTotal: number | null = prevMonthSnap.size > 0 ? prevMonthSnap.size : null;
 
           // Aggregate tier split
           let gold = 0;
