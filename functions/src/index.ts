@@ -921,15 +921,14 @@ export const handleWebApplication = onRequest(
       return;
     }
 
-    const {
-      first_name,
-      last_name,
-      email,
-      instagram,
-      linkedin,
-      about,
-      marketing_opt_in,
-    } = req.body as Record<string, string | boolean | undefined>;
+    const body = req.body as Record<string, unknown>;
+    const first_name     = body.first_name     as string | undefined;
+    const last_name      = body.last_name      as string | undefined;
+    const email          = body.email          as string | undefined;
+    const instagram      = body.instagram      as string | undefined;
+    const linkedin       = body.linkedin       as string | undefined;
+    const about          = body.about          as string | undefined;
+    const marketing_opt_in = body.marketing_opt_in;
 
     // Validate required fields
     if (!first_name?.trim() || !last_name?.trim()) {
