@@ -9,7 +9,6 @@ import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { getMessaging } from "firebase-admin/messaging";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import {
@@ -72,6 +71,68 @@ async function sendEmail(opts: {
 }
 
 initializeApp();
+
+// ─────────────────────────────────────────────
+// sendExpoPush
+// Sends a push notification via the Expo Push API.
+// Accepts Expo Push Tokens (ExponentPushToken[...]) stored by the app's
+// lib/notifications.ts → registerPushToken().
+// Batches into chunks of 100 (Expo API limit).
+// ─────────────────────────────────────────────
+async function sendExpoPush(opts: {
+  to: string | string[];
+  title?: string;
+  body: string;
+  data?: Record<string, string>;
+}): Promise<{ sent: number; failed: number }> {
+  const tokens = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean);
+  if (tokens.length === 0) return { sent: 0, failed: 0 };
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < tokens.length; i += 100) {
+    chunks.push(tokens.slice(i, i + 100));
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const chunk of chunks) {
+    try {
+      const messages = chunk.map((token) => ({
+        to: token,
+        title: opts.title,
+        body: opts.body,
+        data: opts.data,
+        sound: "default",
+      }));
+
+      const res = await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Accept-Encoding": "gzip, deflate",
+        },
+        body: JSON.stringify(messages),
+      });
+
+      if (!res.ok) {
+        console.error("Expo Push API error:", res.status, await res.text());
+        failed += chunk.length;
+      } else {
+        const json = await res.json() as { data: { status: string }[] };
+        const results = json.data ?? [];
+        sent += results.filter((r) => r.status === "ok").length;
+        failed += results.filter((r) => r.status !== "ok").length;
+      }
+    } catch (err) {
+      console.error("sendExpoPush error:", err);
+      failed += chunk.length;
+    }
+  }
+
+  return { sent, failed };
+}
 
 // ─────────────────────────────────────────────
 // onApplicationReceived
@@ -324,12 +385,10 @@ export const onMemberApproved = onDocumentUpdated(
     const pushToken = after.push_token as string | undefined;
     if (pushToken) {
       try {
-        await getMessaging().send({
-          token: pushToken,
-          notification: {
-            title: "Welcome to HomeQuarters",
-            body: `${after.first_name as string}, your membership has been approved. Welcome to the community.`,
-          },
+        await sendExpoPush({
+          to: pushToken,
+          title: "Welcome to HomeQuarters",
+          body: `${after.first_name as string}, your membership has been approved. Welcome to the community.`,
           data: { type: "membership_approved" },
         });
       } catch (err) {
@@ -660,12 +719,10 @@ export const sendGracePushNotifications = onSchedule("every 24 hours", async () 
     // Day 2: "Your membership is waiting" nudge (28 days remaining)
     if (daysSince >= 2 && daysSince < 3 && !pushSent.includes(2)) {
       try {
-        await getMessaging().send({
-          token: profile.push_token as string,
-          notification: {
-            title: "Your HQ membership is waiting",
-            body: "You have 28 days to explore HomeQuarters free. Take a look whenever you're ready.",
-          },
+        await sendExpoPush({
+          to: profile.push_token as string,
+          title: "Your HQ membership is waiting",
+          body: "You have 28 days to explore HomeQuarters free. Take a look whenever you're ready.",
           data: { route: "/billing" },
         });
         await doc.ref.update({ grace_push_sent: [...pushSent, 2] });
@@ -679,12 +736,10 @@ export const sendGracePushNotifications = onSchedule("every 24 hours", async () 
     const pushSentAfterDay2 = pushSent.includes(2) ? pushSent : [...pushSent, 2];
     if (daysSince >= 28 && daysSince < 29 && !pushSent.includes(28)) {
       try {
-        await getMessaging().send({
-          token: profile.push_token as string,
-          notification: {
-            title: "2 days left on your free trial",
-            body: "Your HomeQuarters trial ends in 2 days. Choose a plan to keep access.",
-          },
+        await sendExpoPush({
+          to: profile.push_token as string,
+          title: "2 days left on your free trial",
+          body: "Your HomeQuarters trial ends in 2 days. Choose a plan to keep access.",
           data: { route: "/billing" },
         });
         await doc.ref.update({ grace_push_sent: [...pushSentAfterDay2, 28] });
@@ -715,12 +770,10 @@ export const onMemberSuspended = onDocumentUpdated(
     const pushToken = after.push_token as string | undefined;
     if (pushToken) {
       try {
-        await getMessaging().send({
-          token: pushToken,
-          notification: {
-            title: "HomeQuarters Membership",
-            body: "Your membership has been suspended. Please contact support for more information.",
-          },
+        await sendExpoPush({
+          to: pushToken,
+          title: "HomeQuarters Membership",
+          body: "Your membership has been suspended. Please contact support for more information.",
           data: { type: "membership_suspended" },
         });
       } catch (err) {
@@ -779,12 +832,10 @@ export const onNewMessage = onDocumentCreated(
     const text = (message.text as string) || "Sent a photo";
 
     try {
-      await getMessaging().send({
-        token: recipient.push_token as string,
-        notification: {
-          title: message.sender_name as string,
-          body: text.length > 100 ? text.slice(0, 97) + "..." : text,
-        },
+      await sendExpoPush({
+        to: recipient.push_token as string,
+        title: message.sender_name as string,
+        body: text.length > 100 ? text.slice(0, 97) + "..." : text,
         data: {
           type: "message",
           conversationId,
@@ -1532,29 +1583,12 @@ export const sendBroadcastNotification = onCall(async (request) => {
     return { sent: 0, failed: 0 };
   }
 
-  // Chunk into batches of 500 (FCM multicast limit)
-  const chunks: string[][] = [];
-  for (let i = 0; i < tokens.length; i += 500) {
-    chunks.push(tokens.slice(i, i + 500));
-  }
-
-  let totalSent = 0;
-  let totalFailed = 0;
-
-  for (const chunk of chunks) {
-    try {
-      const result = await getMessaging().sendEachForMulticast({
-        tokens: chunk,
-        notification: { title: title.trim(), body: body.trim() },
-        data: { type, ...(extraData ?? {}) },
-      });
-      totalSent += result.successCount;
-      totalFailed += result.failureCount;
-    } catch (err) {
-      console.error("FCM multicast error:", err);
-      totalFailed += chunk.length;
-    }
-  }
+  const { sent: totalSent, failed: totalFailed } = await sendExpoPush({
+    to: tokens,
+    title: title.trim(),
+    body: body.trim(),
+    data: { type, ...(extraData ?? {}) },
+  });
 
   // Log the broadcast
   await db.collection("broadcast_notifications").add({
