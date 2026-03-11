@@ -33,6 +33,8 @@ import {
   subscriptionCancelledText,
   newsletterWelcomeHtml, newsletterWelcomeText,
   welcomeInviteNudgeHtml, welcomeInviteNudgeText,
+  venueRedemptionNotificationText,
+  venueMonthlyDigestHtml, venueMonthlyDigestText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -1365,7 +1367,7 @@ export const handleSubscribe = onRequest(
 //
 // On success: writes a confirmed redemption and returns member/deal info for the UI.
 // ─────────────────────────────────────────────
-export const verifyRedemption = onRequest({ cors: true }, async (req, res) => {
+export const verifyRedemption = onRequest({ cors: true, secrets: [resendApiKey] }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1476,6 +1478,35 @@ export const verifyRedemption = onRequest({ cors: true }, async (req, res) => {
     member_name: memberName,
     member_tier: profile.membership_tier ?? null,
   });
+
+  // Notify venue contact if opt-in is enabled
+  const venueDoc = await db.doc(`venues/${venue_id}`).get();
+  const venue = venueDoc.data();
+  if (venue?.notify_on_redemption && typeof venue.contact_email === "string") {
+    const dealTitle = dealDoc.data()!.title as string;
+    const venueName = (venue.name as string | undefined) ??
+      (pinDoc.data()!.venue_name as string | undefined) ??
+      (payload.venue_name as string | undefined) ?? "";
+    const redeemedAt = new Date().toLocaleString("en-GB", {
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", timeZone: "Africa/Harare",
+    });
+    try {
+      await sendEmail({
+        to: venue.contact_email,
+        subject: `HomeQuarters member redeemed a benefit at ${venueName}`,
+        text: venueRedemptionNotificationText({
+          venueName,
+          dealTitle,
+          memberTier: profile.membership_tier ?? "gold_card",
+          redeemedAt,
+        }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send venue redemption notification:", err);
+    }
+  }
 
   res.json({
     ok: true,
@@ -1603,5 +1634,141 @@ export const getStripePortalUrl = onCall(
     });
 
     return { url: session.url };
+  }
+);
+
+// ─────────────────────────────────────────────
+// sendMonthlyVenueDigests
+// Runs on the 1st of every month at 09:00 London time.
+// Sends a partner report email to every active venue that has a contact_email.
+// Report covers the previous full calendar month:
+//   — total redemptions, per-deal breakdown, member tier split, month-on-month change.
+// ─────────────────────────────────────────────
+export const sendMonthlyVenueDigests = onSchedule(
+  { schedule: "0 9 1 * *", timeZone: "Europe/London", secrets: [resendApiKey] },
+  async () => {
+    const db = getFirestore();
+
+    // Calculate previous calendar month date range
+    const now = new Date();
+    const startOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const startOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    const startOfTwoMonthsAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+
+    const monthLabel = startOfLastMonth.toLocaleDateString("en-GB", {
+      month: "long", year: "numeric", timeZone: "UTC",
+    });
+
+    // Fetch all active venues with a contact email
+    const venuesSnap = await db.collection("venues")
+      .where("is_active", "==", true)
+      .get();
+
+    const venues = venuesSnap.docs.filter((d) => {
+      const ce = d.data().contact_email;
+      return typeof ce === "string" && ce.includes("@");
+    });
+
+    if (venues.length === 0) {
+      console.log("sendMonthlyVenueDigests: no venues with contact_email, skipping.");
+      return;
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    await Promise.allSettled(
+      venues.map(async (venueDoc) => {
+        const venue = venueDoc.data();
+        const venueId = venueDoc.id;
+        const contactEmail = venue.contact_email as string;
+        const venueName = (venue.name as string | undefined) ?? "Your Venue";
+
+        try {
+          // Fetch redemptions for last month and the month before (for comparison)
+          const [lastMonthSnap, prevMonthSnap] = await Promise.all([
+            db.collection("redemptions")
+              .where("venue_id", "==", venueId)
+              .where("redeemed_at", ">=", startOfLastMonth.toISOString())
+              .where("redeemed_at", "<", startOfThisMonth.toISOString())
+              .get(),
+            db.collection("redemptions")
+              .where("venue_id", "==", venueId)
+              .where("redeemed_at", ">=", startOfTwoMonthsAgo.toISOString())
+              .where("redeemed_at", "<", startOfLastMonth.toISOString())
+              .get(),
+          ]);
+
+          const totalRedemptions = lastMonthSnap.size;
+          const prevMonthTotal = prevMonthSnap.size > 0 || /* has prior data */ true
+            ? prevMonthSnap.size
+            : null;
+
+          // Aggregate tier split
+          let gold = 0;
+          let platinum = 0;
+          const dealCounts = new Map<string, number>();
+
+          for (const r of lastMonthSnap.docs) {
+            const data = r.data();
+            if (data.member_tier === "platinum_card") platinum++;
+            else gold++;
+            const dealId = data.deal_id as string;
+            if (dealId) dealCounts.set(dealId, (dealCounts.get(dealId) ?? 0) + 1);
+          }
+
+          // Fetch deal titles for all unique deal IDs
+          const dealTitleMap = new Map<string, string>();
+          const uniqueDealIds = [...dealCounts.keys()];
+          await Promise.all(
+            uniqueDealIds.map(async (dealId) => {
+              try {
+                const dealDoc = await db.doc(`deals/${dealId}`).get();
+                const title = dealDoc.data()?.title as string | undefined;
+                dealTitleMap.set(dealId, title ?? "Unnamed deal");
+              } catch {
+                dealTitleMap.set(dealId, "Unnamed deal");
+              }
+            })
+          );
+
+          const deals = [...dealCounts.entries()]
+            .map(([id, count]) => ({ title: dealTitleMap.get(id) ?? "Unnamed deal", count }))
+            .sort((a, b) => b.count - a.count);
+
+          // Only send if there were redemptions OR it's the first month (encourage engagement)
+          // We send regardless — even 0 is useful feedback to the venue.
+          await sendEmail({
+            to: contactEmail,
+            subject: `Your HomeQuarters partner report — ${monthLabel}`,
+            html: venueMonthlyDigestHtml({
+              venueName,
+              month: monthLabel,
+              totalRedemptions,
+              deals,
+              tierBreakdown: { gold, platinum },
+              prevMonthTotal,
+            }),
+            text: venueMonthlyDigestText({
+              venueName,
+              month: monthLabel,
+              totalRedemptions,
+              deals,
+              tierBreakdown: { gold, platinum },
+              prevMonthTotal,
+            }),
+            apiKey: resendApiKey.value(),
+          });
+
+          sent++;
+          console.log(`sendMonthlyVenueDigests: sent to ${contactEmail} (${venueName})`);
+        } catch (err) {
+          failed++;
+          console.error(`sendMonthlyVenueDigests: failed for venue ${venueId}:`, err);
+        }
+      })
+    );
+
+    console.log(`sendMonthlyVenueDigests: ${sent} sent, ${failed} failed for ${monthLabel}`);
   }
 );

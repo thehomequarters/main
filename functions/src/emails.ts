@@ -1060,3 +1060,136 @@ Open the app: ${BASE_URL}
 
 HomeQuarters`;
 }
+
+// ─────────────────────────────────────────────
+// 21. Venue Redemption Notification (instant, plain text)
+// Sent to venue contact_email when notify_on_redemption is true
+// and a verified redemption is recorded via verifyRedemption.
+// ─────────────────────────────────────────────
+export function venueRedemptionNotificationText(opts: {
+  venueName: string;
+  dealTitle: string;
+  memberTier: string;
+  redeemedAt: string;
+}): string {
+  const tierLabel = opts.memberTier === "platinum_card" ? "Platinum Card" : "Gold Card";
+  return `A HomeQuarters member just redeemed a benefit at ${opts.venueName}.
+
+Deal: ${opts.dealTitle}
+Member tier: ${tierLabel}
+Time: ${opts.redeemedAt}
+
+This is an automated notification from HomeQuarters.
+To manage your notification preferences, contact hello@thehomequarters.com`;
+}
+
+// ─────────────────────────────────────────────
+// 22. Venue Monthly Partner Digest
+// Sent automatically on the 1st of each month to venue contact_email.
+// Shows redemption stats for the previous calendar month.
+// ─────────────────────────────────────────────
+export function venueMonthlyDigestHtml(opts: {
+  venueName: string;
+  month: string;
+  totalRedemptions: number;
+  deals: { title: string; count: number }[];
+  tierBreakdown: { gold: number; platinum: number };
+  prevMonthTotal: number | null;
+}): string {
+  const changeText = (() => {
+    if (opts.prevMonthTotal === null) return "First month on record.";
+    if (opts.prevMonthTotal === 0) return opts.totalRedemptions > 0 ? "Up from 0 last month." : "No change from last month.";
+    const pct = Math.round(((opts.totalRedemptions - opts.prevMonthTotal) / opts.prevMonthTotal) * 100);
+    if (pct > 0) return `+${pct}% vs last month.`;
+    if (pct < 0) return `${pct}% vs last month.`;
+    return "Same as last month.";
+  })();
+
+  const dealsRows = opts.deals.length > 0
+    ? opts.deals.map((d) => `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0E8DC;color:#1C1C1E;font-size:13px;">${d.title}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #F0E8DC;color:#C9A84C;font-size:13px;font-weight:700;text-align:right;">${d.count}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="2" style="padding:10px 0;color:#9A8E82;font-size:13px;">No deal redemptions this month.</td></tr>`;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">YOUR MONTHLY PARTNER REPORT</p>
+    <h1 style="margin:0 0 8px;color:#1C1C1E;font-size:26px;font-weight:800;line-height:32px;letter-spacing:-0.3px;">${opts.venueName}</h1>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;">${opts.month}</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9F5F0;border-radius:12px;padding:24px;margin-bottom:28px;">
+      <tr>
+        <td>
+          <p style="margin:0 0 4px;color:#9A8E82;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">HQ MEMBERS THIS MONTH</p>
+          <p style="margin:0 0 8px;color:#1C1C1E;font-size:48px;font-weight:800;line-height:1;letter-spacing:-2px;">${opts.totalRedemptions}</p>
+          <p style="margin:0;color:#9A8E82;font-size:12px;">${changeText}</p>
+        </td>
+      </tr>
+    </table>
+
+    ${goldDivider()}
+
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:700;">Deal breakdown</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      ${dealsRows}
+    </table>
+
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:700;">Member tier split</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      ${infoRow("GOLD CARD", String(opts.tierBreakdown.gold))}
+      ${infoRow("PLATINUM CARD", String(opts.tierBreakdown.platinum))}
+    </table>
+
+    ${goldDivider()}
+
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:13px;line-height:21px;">
+      HQ members discover your venue and browse your benefits directly in the HomeQuarters app. The members who visited you this month are part of a curated, invite-only community.
+    </p>
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Questions, or want to update your venue listing or deals? Simply reply to this email.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function venueMonthlyDigestText(opts: {
+  venueName: string;
+  month: string;
+  totalRedemptions: number;
+  deals: { title: string; count: number }[];
+  tierBreakdown: { gold: number; platinum: number };
+  prevMonthTotal: number | null;
+}): string {
+  const changeText = (() => {
+    if (opts.prevMonthTotal === null) return "First month on record.";
+    if (opts.prevMonthTotal === 0) return opts.totalRedemptions > 0 ? "Up from 0 last month." : "No change from last month.";
+    const pct = Math.round(((opts.totalRedemptions - opts.prevMonthTotal) / opts.prevMonthTotal) * 100);
+    if (pct > 0) return `+${pct}% vs last month.`;
+    if (pct < 0) return `${pct}% vs last month.`;
+    return "Same as last month.";
+  })();
+
+  const dealLines = opts.deals.length > 0
+    ? opts.deals.map((d) => `  ${d.title}: ${d.count}`).join("\n")
+    : "  No deal redemptions this month.";
+
+  return `YOUR MONTHLY PARTNER REPORT — ${opts.venueName}
+${opts.month}
+
+HQ MEMBERS THIS MONTH: ${opts.totalRedemptions}
+${changeText}
+
+DEAL BREAKDOWN
+${dealLines}
+
+MEMBER TIER SPLIT
+  Gold Card: ${opts.tierBreakdown.gold}
+  Platinum Card: ${opts.tierBreakdown.platinum}
+
+HQ members discover your venue and browse your benefits directly in the HomeQuarters app.
+
+Questions or want to update your listing? Reply to this email.
+
+HomeQuarters`;
+}
