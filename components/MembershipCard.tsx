@@ -253,7 +253,10 @@ export function MembershipCard({
         <View>
           {tierLabel && (
             <Text style={{
-              color: PEARL_DIM, fontSize: 7, fontFamily: fonts.bold,
+              color: (tier === "founding_member" || tier === "committee_member")
+                ? "#C9A84C"
+                : PEARL_DIM,
+              fontSize: 7, fontFamily: fonts.bold,
               letterSpacing: 3, textTransform: "uppercase", marginBottom: 4,
             }}>
               {tierLabel}
