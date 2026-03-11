@@ -28,6 +28,11 @@ import {
   welcomeDiscoverNudgeHtml, welcomeDiscoverNudgeText,
   membershipAcceptedHtml, membershipAcceptedText,
   graceReminderHtml, graceReminderText,
+  paymentConfirmedHtml, paymentConfirmedText,
+  paymentFailedHtml, paymentFailedText,
+  subscriptionCancelledText,
+  newsletterWelcomeHtml, newsletterWelcomeText,
+  welcomeInviteNudgeHtml, welcomeInviteNudgeText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -399,6 +404,21 @@ export const onMemberApproved = onDocumentUpdated(
       } catch (err) {
         console.error("Failed to schedule discover nudge email:", err);
       }
+
+      // Email 4 — Day 30: Invite a friend nudge
+      const day30 = new Date(now + 30 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Who would belong here?",
+          html: welcomeInviteNudgeHtml({ firstName }),
+          text: welcomeInviteNudgeText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day30,
+        });
+      } catch (err) {
+        console.error("Failed to schedule invite nudge email:", err);
+      }
     }
 
     // Notify all vouchers that their friend was accepted
@@ -558,23 +578,44 @@ export const onPaymentActivated = onDocumentUpdated(
     // Only fire when stripe_customer_id is newly written (i.e. first payment)
     if (before.stripe_customer_id || !after.stripe_customer_id) return;
 
+    // Cancel any pending grace-period reminder emails
     const emailIds = (after.grace_email_ids as string[] | undefined) ?? [];
-    if (emailIds.length === 0) return;
+    if (emailIds.length > 0) {
+      const resend = new Resend(resendApiKey.value());
+      await Promise.allSettled(
+        emailIds.map(async (id) => {
+          try {
+            await resend.emails.cancel(id);
+            console.log(`Cancelled grace email ${id} for ${event.params.userId}`);
+          } catch (err) {
+            console.error(`Failed to cancel grace email ${id}:`, err);
+          }
+        })
+      );
+      await event.data?.after.ref.update({ grace_email_ids: [] });
+    }
 
-    const resend = new Resend(resendApiKey.value());
-    await Promise.allSettled(
-      emailIds.map(async (id) => {
-        try {
-          await resend.emails.cancel(id);
-          console.log(`Cancelled grace email ${id} for ${event.params.userId}`);
-        } catch (err) {
-          console.error(`Failed to cancel grace email ${id}:`, err);
-        }
-      })
-    );
-
-    // Clear stored IDs — no longer needed
-    await event.data?.after.ref.update({ grace_email_ids: [] });
+    // Send payment confirmation email
+    if (after.email && typeof after.email === "string") {
+      const firstName = (after.first_name as string) ?? "there";
+      const memberCode = (after.member_code as string) ?? "";
+      const tier = (after.membership_tier as string) ?? "gold_card";
+      const periodEnd = after.current_period_end as string | undefined;
+      const nextBillingDate = periodEnd
+        ? new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+        : "your next billing date";
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "You're a full HomeQuarters member",
+          html: paymentConfirmedHtml({ firstName, memberCode, tier, nextBillingDate }),
+          text: paymentConfirmedText({ firstName, memberCode, tier, nextBillingDate }),
+          apiKey: resendApiKey.value(),
+        });
+      } catch (err) {
+        console.error("Failed to send payment confirmation email:", err);
+      }
+    }
   }
 );
 
@@ -834,6 +875,7 @@ export const getWebsiteContent = onRequest({ cors: true }, async (req, res) => {
     return;
   }
   try {
+    const db = getFirestore();
     const snap = await db.collection("website_content").doc("main").get();
     if (!snap.exists) {
       res.json({});
@@ -1071,6 +1113,24 @@ export const stripeWebhook = onRequest(
             stripe_subscription_id: null,
             current_period_end: null,
           });
+
+          // Win-back email — plain text from Valentine, scheduled 24h later
+          const profile = snap.docs[0].data();
+          if (profile.email && typeof profile.email === "string") {
+            const firstName = (profile.first_name as string) ?? "there";
+            try {
+              await sendEmail({
+                from: FOUNDER_EMAIL,
+                to: profile.email,
+                subject: "From me, personally",
+                text: subscriptionCancelledText({ firstName }),
+                apiKey: resendApiKey.value(),
+                scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              });
+            } catch (err) {
+              console.error("Failed to schedule win-back email:", err);
+            }
+          }
           break;
         }
 
@@ -1128,6 +1188,34 @@ export const stripeWebhook = onRequest(
           await snap.docs[0].ref.update({ subscription_status: "past_due" });
 
           const profile = snap.docs[0].data();
+
+          // Payment failed email — urgent, directs to Stripe portal to update card
+          if (profile.email && typeof profile.email === "string") {
+            const firstName = (profile.first_name as string) ?? "there";
+            const stripe2 = new Stripe(stripeSecretKey.value());
+            let portalUrl = `${process.env.APP_BASE_URL ?? "https://thehomequarters.com"}/billing`;
+            try {
+              const portalSession = await stripe2.billingPortal.sessions.create({
+                customer: custId,
+                return_url: process.env.APP_BASE_URL ?? "https://thehomequarters.com",
+              });
+              portalUrl = portalSession.url;
+            } catch {
+              // Non-fatal — fall back to app billing page
+            }
+            try {
+              await sendEmail({
+                to: profile.email,
+                subject: "Action required: your HomeQuarters payment failed",
+                html: paymentFailedHtml({ firstName, portalUrl }),
+                text: paymentFailedText({ firstName, portalUrl }),
+                apiKey: resendApiKey.value(),
+              });
+            } catch (err) {
+              console.error("Failed to send payment failed email:", err);
+            }
+          }
+
           const priceId = invoice.lines?.data[0]?.price?.id ?? "";
           const tier = tierFromPriceId(priceId);
 
@@ -1170,6 +1258,56 @@ export const stripeWebhook = onRequest(
 // Requires Customer Portal to be enabled in Stripe dashboard:
 //   https://dashboard.stripe.com/settings/billing/portal
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// handleSubscribe
+// HTTP POST — newsletter sign-up from the website popup.
+// Saves the email to newsletter_subscribers/{email} (idempotent upsert).
+// Sends a branded welcome email to the subscriber.
+// Exposed via Firebase Hosting rewrite at /api/subscribe.
+// ─────────────────────────────────────────────
+export const handleSubscribe = onRequest(
+  { cors: true, secrets: [resendApiKey] },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+    const { email, first_name } = req.body as { email?: string; first_name?: string };
+    if (!email?.trim() || !email.includes("@")) {
+      res.status(400).json({ error: "A valid email address is required." });
+      return;
+    }
+    const sanitized = email.trim().toLowerCase();
+    const firstName = first_name?.trim() || undefined;
+    const db = getFirestore();
+    try {
+      await db.collection("newsletter_subscribers").doc(sanitized).set({
+        email: sanitized,
+        first_name: firstName ?? null,
+        subscribed_at: new Date().toISOString(),
+        source: "website_popup",
+      }, { merge: true });
+    } catch (err) {
+      console.error("handleSubscribe error:", err);
+      res.status(500).json({ error: "Could not save subscription." });
+      return;
+    }
+    // Send welcome confirmation (non-fatal if it fails)
+    try {
+      await sendEmail({
+        to: sanitized,
+        subject: "You're on the HomeQuarters list",
+        html: newsletterWelcomeHtml({ firstName }),
+        text: newsletterWelcomeText({ firstName }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send newsletter welcome email:", err);
+    }
+    res.json({ ok: true });
+  }
+);
+
 // ─────────────────────────────────────────────
 // verifyRedemption
 // Public HTTP endpoint — no auth required (security comes from venue PIN + expiring token).
