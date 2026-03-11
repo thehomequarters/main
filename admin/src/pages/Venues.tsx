@@ -110,6 +110,8 @@ const EMPTY_VENUE = {
   tags: "",
   latitude: "",
   longitude: "",
+  contact_email: "",
+  notify_on_redemption: false,
 };
 
 export default function Venues() {
@@ -227,6 +229,8 @@ export default function Venues() {
         tags: tagList.length > 0 ? tagList : null,
         latitude: form.latitude.trim() ? parseFloat(form.latitude) : 0,
         longitude: form.longitude.trim() ? parseFloat(form.longitude) : 0,
+        contact_email: form.contact_email.trim() || null,
+        notify_on_redemption: form.notify_on_redemption,
         is_active: true,
       };
 
@@ -443,6 +447,8 @@ export default function Venues() {
       tags: (venue.tags ?? []).join(", "),
       latitude: (venue as any).latitude ? String((venue as any).latitude) : "",
       longitude: (venue as any).longitude ? String((venue as any).longitude) : "",
+      contact_email: (venue as any).contact_email ?? "",
+      notify_on_redemption: (venue as any).notify_on_redemption ?? false,
     });
     setShowForm(true);
   };
@@ -670,6 +676,28 @@ export default function Venues() {
                 placeholder="Phone (optional)"
                 className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
               />
+
+              <div>
+                <label className="text-gray-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                  Partner contact email
+                </label>
+                <input
+                  type="email"
+                  value={form.contact_email}
+                  onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+                  placeholder="manager@venue.com (optional)"
+                  className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
+                />
+                <label className="flex items-center gap-3 mt-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.notify_on_redemption}
+                    onChange={(e) => setForm({ ...form, notify_on_redemption: e.target.checked })}
+                    className="w-4 h-4 accent-yellow-500 rounded"
+                  />
+                  <span className="text-gray-400 text-sm">Notify this contact when a deal is redeemed</span>
+                </label>
+              </div>
 
               {/* Lat / Long */}
               <div>
