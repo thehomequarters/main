@@ -28,6 +28,8 @@ import {
   welcomeDiscoverNudgeHtml, welcomeDiscoverNudgeText,
   membershipAcceptedHtml, membershipAcceptedText,
   graceReminderHtml, graceReminderText,
+  foundingMemberText,
+  committeeMemberText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -697,6 +699,51 @@ export const onMemberSuspended = onDocumentUpdated(
       } catch (err) {
         console.error("Failed to send suspension email:", err);
       }
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// onMembershipTierChanged
+// Fires when a profile's membership_tier is updated.
+// Sends a plain-text email from Valentine when tier becomes
+// "founding_member" or "committee_member".
+// ─────────────────────────────────────────────
+export const onMembershipTierChanged = onDocumentUpdated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) return;
+    if (before.membership_tier === after.membership_tier) return;
+
+    const tier = after.membership_tier as string | undefined;
+    if (tier !== "founding_member" && tier !== "committee_member") return;
+
+    const email = after.email as string | undefined;
+    if (!email) return;
+
+    const firstName = (after.first_name as string) ?? "there";
+
+    const subject = tier === "founding_member"
+      ? "You're a Founding Member of HomeQuarters"
+      : "You've been appointed to the HomeQuarters Committee";
+
+    const text = tier === "founding_member"
+      ? foundingMemberText({ firstName })
+      : committeeMemberText({ firstName });
+
+    try {
+      await sendEmail({
+        from: FOUNDER_EMAIL,
+        to: email,
+        subject,
+        text,
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send membership tier email:", err);
     }
   }
 );

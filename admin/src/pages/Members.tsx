@@ -33,6 +33,7 @@ interface Profile {
   application_code?: string;
   instagram_handle?: string | null;
   linkedin_handle?: string | null;
+  membership_tier?: "gold_card" | "platinum_card" | "founding_member" | "committee_member" | null;
 }
 
 type FilterTab = "all" | "pending" | "open_application" | "accepted" | "active" | "rejected" | "suspended";
@@ -829,6 +830,27 @@ export default function Members() {
                     >
                       Delete Account
                     </button>
+                  </div>
+
+                  {/* Membership role */}
+                  <div className="mt-4 pt-4 border-t border-dark-border">
+                    <p className="text-gray-600 text-xs uppercase tracking-wider font-semibold mb-2">Membership Role</p>
+                    <select
+                      value={selected.membership_tier ?? ""}
+                      onChange={async (e) => {
+                        const value = e.target.value || null;
+                        await updateDoc(doc(db, "profiles", selected.id), { membership_tier: value });
+                        setMembers((prev) => prev.map((m) => m.id === selected.id ? { ...m, membership_tier: value as typeof m.membership_tier } : m));
+                        setSelected((prev) => prev ? { ...prev, membership_tier: value as typeof prev.membership_tier } : prev);
+                      }}
+                      className="w-full bg-black border border-dark-border rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-gold/50"
+                    >
+                      <option value="">None</option>
+                      <option value="gold_card">Gold Card</option>
+                      <option value="platinum_card">Platinum Card</option>
+                      <option value="founding_member">Founding Member</option>
+                      <option value="committee_member">Committee Member</option>
+                    </select>
                   </div>
                 </>
               )}

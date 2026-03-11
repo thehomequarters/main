@@ -706,3 +706,67 @@ export function passwordResetText(opts: {
   const greeting = opts.firstName ? `Hi ${opts.firstName},` : "Hello,";
   return `${greeting}\n\nReset your HomeQuarters password using the link below. It expires in 1 hour.\n\n${opts.resetLink}\n\nIf you didn't request this, ignore this email.\n\nHomeQuarters`;
 }
+
+// ─────────────────────────────────────────────
+// 16. Founding Member designation
+// ─────────────────────────────────────────────
+export function foundingMemberText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+I wanted to reach out personally.
+
+We've designated you as a Founding Member of HomeQuarters. With that, you're also part of the committee.
+
+You've been here from the beginning, and that means something to us. Founding Members are the people who helped shape what this community is, through their presence, their connections, and the culture they've brought with them.
+
+Here's what this means for you:
+
+Your vouch alone is enough to accept someone into HomeQuarters. No second vouch needed. Use it for people you genuinely believe in.
+
+You'll be invited to Committee Member dinners and events. Smaller, more intimate gatherings for the people at the centre of this community.
+
+You'll have priority access to HQ events and anything new we launch, and you'll hear about it first.
+
+The Founding Member designation will appear permanently on your profile.
+
+And occasionally, when difficult membership decisions arise, we may reach out for your perspective. Your judgement matters to us.
+
+In return, all we ask is that you stay present, uphold the culture, and handle anything discussed in confidence with discretion.
+
+Thank you for being here from the start.
+
+Valentine Eluwasi
+Founder, HomeQuarters
+hello@thehomequarters.com`;
+}
+
+// ─────────────────────────────────────────────
+// 17. Committee Member designation
+// ─────────────────────────────────────────────
+export function committeeMemberText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+I wanted to let you know personally. You've been appointed as a Committee Member of HomeQuarters.
+
+This is a role we don't give lightly. It means we trust your judgement and believe you represent what this community stands for.
+
+Here's what this means for you:
+
+Your vouch alone is enough to get someone accepted into HomeQuarters. You don't need a second. Use it for people you genuinely believe in.
+
+You'll be invited to Committee Member dinners and events. Smaller, more intimate gatherings for the people at the centre of this community.
+
+From time to time, if a serious membership question comes up, we may reach out for your thoughts. Not for everything. Just where your perspective would be genuinely useful.
+
+What we ask of you:
+
+Handle anything discussed in your committee capacity with complete discretion. The trust of this community depends on it.
+
+Stay engaged. That's really all.
+
+Welcome to the committee.
+
+Valentine Eluwasi
+Founder, HomeQuarters
+hello@thehomequarters.com`;
+}
