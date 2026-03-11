@@ -25,7 +25,7 @@ const PRICES = {
 
 const GOLD_FEATURES = [
   { icon: "storefront-outline" as const, text: "Deals at 15+ partner venues across the UK" },
-  { icon: "people-outline" as const, text: "Connect & Discover — full community access" },
+  { icon: "people-outline" as const, text: "Connect & Discover - full community access" },
   { icon: "calendar-outline" as const, text: "Members-only events & social nights" },
   { icon: "card-outline" as const, text: "Digital HQ membership card" },
   { icon: "star-outline" as const, text: "Nominate friends to join the community" },
@@ -35,7 +35,7 @@ const PLATINUM_FEATURES = [
   { icon: "checkmark-circle-outline" as const, text: "Everything in Gold", dim: true },
   { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants in Zim" },
   { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
-  { icon: "sparkles-outline" as const, text: "Curated experiences — events, stays & more" },
+  { icon: "sparkles-outline" as const, text: "Curated experiences - events, stays & more" },
 ];
 
 const G = {
@@ -292,7 +292,7 @@ export default function BillingScreen() {
 
           <Text style={[styles.tierDesc, { color: "rgba(255,255,255,0.58)" }]}>
             For members heading back to Zimbabwe. Unlock member discounts at the
-            best restaurants, bars, and experiences in Harare and beyond — plus
+            best restaurants, bars, and experiences in Harare and beyond - plus
             a Telecel eSIM so you land connected.
           </Text>
 
@@ -353,7 +353,7 @@ export default function BillingScreen() {
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
         ) : (
-          // Not on this plan — direct user to website (App Store 3.1.1 compliant)
+          // Not on this plan - direct user to website (App Store 3.1.1 compliant)
           <View style={styles.websiteBox}>
             <Ionicons name="globe-outline" size={15} color={colors.stone} style={{ marginTop: 1 }} />
             <Text style={styles.websiteText}>

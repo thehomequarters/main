@@ -11,7 +11,7 @@ const SECTIONS = [
   },
   {
     title: "2. Content Standards",
-    body: "HomeQuarters is not an adult-content platform. All content shared within the app — including profile photos, messages, and any community contributions — must be suitable for a professional social setting. Sexually explicit material, graphic violence, hate speech, and harassment are strictly prohibited and will result in immediate permanent removal with no refund. No exceptions.",
+    body: "HomeQuarters is not an adult-content platform. All content shared within the app - including profile photos, messages, and any community contributions - must be suitable for a professional social setting. Sexually explicit material, graphic violence, hate speech, and harassment are strictly prohibited and will result in immediate permanent removal. No exceptions.",
   },
   {
     title: "3. Invitation & Application",
@@ -22,16 +22,16 @@ const SECTIONS = [
     body: "HQ offers the following membership tiers:\n\n• Gold — recurring monthly subscription at the published rate\n• Platinum — recurring monthly subscription at the published rate\n• Founding Member — by invitation only; fixed rate as agreed at the time of joining\n• Committee Member — by appointment only; rate and terms as agreed separately\n\nSubscriptions are billed monthly in advance via Stripe. You may cancel at any time through Account > Settings; cancellation takes effect at the end of the current billing period and no partial refunds are issued for the remaining days. HQ reserves the right to change pricing for Gold and Platinum tiers with 30 days' written notice. Continued use after a price change constitutes acceptance of the new price. Founding Member rates are fixed and not subject to change.",
   },
   {
-    title: "5. Refunds",
-    body: "All subscription payments are non-refundable except: (a) where required by applicable consumer protection law; (b) in the case of a billing error by HQ or Stripe; or (c) where a member under 21 is removed under clause 1. If you believe you have been charged in error, contact hello@thehomequarters.com within 14 days of the charge. HQ will investigate and, where a billing error is confirmed, issue a refund within 10 business days.",
+    title: "5. Benefits & Redemption",
+    body: "Membership benefits - including venue deals, event access, and the Telecel Zimbabwe eSIM - are for your personal use only. Benefits may not be resold, gifted, or shared. One redemption per benefit per visit unless the specific benefit states otherwise. HQ partner venues and benefit offerings may change at any time without prior notice.",
   },
   {
     title: "6. Benefits & Redemption",
     body: "Membership benefits — including venue deals, event access, and partner offers such as the Telecel Zimbabwe eSIM for eligible Platinum members — are for your personal use only and cannot be resold, gifted, or transferred. One redemption per benefit per visit unless the specific benefit expressly states otherwise. HQ partner venues and benefit offerings may change, be withdrawn, or be substituted at any time without prior notice. HQ acts as an introducer only: the benefit is provided by the partner venue or supplier, and HQ accepts no liability for the quality, availability, or discontinuation of any third-party benefit.",
   },
   {
-    title: "7. Acceptable Use",
-    body: "You agree not to use HomeQuarters to: send unsolicited commercial messages (spam); harass, threaten, stalk, or intimidate other members; impersonate any person or entity; collect, harvest, or scrape other members' personal data; circumvent or abuse the nomination or vouching system; attempt to gain unauthorised access to any part of the platform; or engage in any activity that violates applicable UK, Zimbabwean, or other local laws. Violation of this clause may result in immediate suspension, permanent termination, and referral to relevant authorities where appropriate.",
+    title: "7. Termination",
+    body: "HQ may suspend or permanently revoke your membership at any time for breach of these Terms, the House Rules, or conduct deemed detrimental to the community - at HQ's sole discretion. Upon termination you will lose access to all membership benefits immediately. No refund is due for the remaining days of a billing period where termination results from a breach.",
   },
   {
     title: "8. Termination by HQ",

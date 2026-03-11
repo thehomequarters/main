@@ -13,7 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useAuth } from "@/lib/auth";
 
-// Placeholder payment URL — swap in Stripe / payment link when ready
+// Placeholder payment URL - swap in Stripe / payment link when ready
 const PAYMENT_URL = "https://homequarters.app/activate";
 
 const BG    = "#1C1C1E";
@@ -78,7 +78,7 @@ export default function ActivateScreen() {
           </View>
           <Text style={styles.heroTitle}>{"You're In.\nNow Unlock Everything."}</Text>
           <Text style={styles.heroSub}>
-            Your application was approved — activate your membership to access the full HQ experience.
+            Your application was approved - activate your membership to access the full HQ experience.
           </Text>
         </View>
 

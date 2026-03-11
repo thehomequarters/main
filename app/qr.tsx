@@ -199,7 +199,7 @@ export default function QRCodeScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Ionicons name="scan-outline" size={16} color={colors.grey} />
           <Text style={{ color: colors.grey, fontSize: 12 }}>
-            Staff scans with their camera — no app needed
+            Staff scans with their camera - no app needed
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -210,7 +210,7 @@ export default function QRCodeScreen() {
         </View>
       </View>
 
-      {/* Manual fallback — only if venue isn't set up with PIN yet */}
+      {/* Manual fallback - only if venue isn't set up with PIN yet */}
       {venueId && dealId && (
         <View style={{ marginTop: 20, alignItems: "center" }}>
           <Text style={{ color: colors.grey, fontSize: 11, marginBottom: 8 }}>

@@ -26,8 +26,8 @@ const SECTIONS = [
     body: "We use your personal data to:\n\n• Create and manage your membership account\n• Verify your eligibility and process your application\n• Display your profile to other active members (subject to your privacy settings)\n• Process subscription payments and manage billing via Stripe\n• Send push notifications about messages, connection requests, and membership updates\n• Facilitate deal redemptions and benefit access\n• Send transactional emails about your membership (e.g. approval, suspension, billing)\n• Send marketing emails if you opted in (you may opt out at any time)\n• Maintain the safety, integrity, and quality of the community\n• Comply with legal obligations\n\nWe do not use your data for advertising, profiling for commercial purposes, or sell your data to any third party.",
   },
   {
-    title: "6. Your Privacy Controls",
-    body: "You control what other members can see about you. From Account > Privacy you can:\n\n• Set profile visibility to Everyone or Connections only\n• Hide your city from other members\n• Hide your industry from other members\n• Hide your interests from other members\n• Hide your Instagram and LinkedIn links\n• Restrict direct messages to connections only\n\nYour first name and profile photo are always visible to active members as part of the community experience and cannot be hidden. You may update your profile information at any time from Account > Edit Profile.",
+    title: "6. Third-Party Services",
+    body: "We share limited data with the following trusted third parties:\n\n• Google Firebase - secure storage of all profile and account data\n• Stripe - payment processing (card details never touch our servers)\n• Airalo - eSIM fulfilment for Platinum members who opt in\n• OpenStreetMap - anonymous venue map requests\n• Unsplash - venue imagery CDN\n\nEach provider operates under its own privacy policy and data processing agreements.",
   },
   {
     title: "7. Third-Party Data Processors",

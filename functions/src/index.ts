@@ -39,8 +39,8 @@ const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
 const stripeWebhookSecret = defineSecret("STRIPE_WEBHOOK_SECRET");
 const resendApiKey = defineSecret("RESEND_API_KEY");
 
-const FROM_EMAIL = "HomeQuarters <noreply@thehomequarters.com>";
-const FOUNDER_EMAIL = "Valentine Eluwasi <hello@thehomequarters.com>";
+const FROM_EMAIL = "HomeQuarters <noreply@email.thehomequarters.com>";
+const FOUNDER_EMAIL = "Valentine Eluwasi <hello@email.thehomequarters.com>";
 
 async function sendEmail(opts: {
   to: string;
@@ -356,12 +356,15 @@ export const onMemberApproved = onDocumentUpdated(
     }
 
     // ── Welcome journey: 3 emails scheduled over 10 days ──
+    // Resend allows 2 req/s — space calls 600ms apart to stay within the limit.
     if (after.email && typeof after.email === "string") {
       const firstName = (after.first_name as string) ?? "there";
       const now = Date.now();
+      const pause = () => new Promise<void>((r) => setTimeout(r, 600));
 
-      // Email 1 — Day 1: Personal plain-text note from Valentine
-      const day1 = new Date(now + 1 * 24 * 60 * 60 * 1000);
+      // Email 1 — 6 hours after acceptance: Personal plain-text note from Valentine
+      await pause();
+      const day1 = new Date(now + 6 * 60 * 60 * 1000);
       try {
         await sendEmail({
           from: FOUNDER_EMAIL,
@@ -376,6 +379,7 @@ export const onMemberApproved = onDocumentUpdated(
       }
 
       // Email 2 — Day 4: Branded features tour
+      await pause();
       const day4 = new Date(now + 4 * 24 * 60 * 60 * 1000);
       try {
         await sendEmail({
@@ -390,8 +394,9 @@ export const onMemberApproved = onDocumentUpdated(
         console.error("Failed to schedule features tour email:", err);
       }
 
-      // Email 3 — Day 10: Discover nudge
-      const day10 = new Date(now + 10 * 24 * 60 * 60 * 1000);
+      // Email 3 — Day 8: Discover nudge
+      await pause();
+      const day10 = new Date(now + 8 * 24 * 60 * 60 * 1000);
       try {
         await sendEmail({
           to: after.email,
@@ -421,36 +426,36 @@ export const onMemberApproved = onDocumentUpdated(
       }
     }
 
-    // Notify all vouchers that their friend was accepted
+    // Notify all vouchers that their friend was accepted — serialised to respect rate limit
     const vouchers = (after.vouchers as string[]) ?? [];
     if (vouchers.length > 0) {
       const db = getFirestore();
-      await Promise.allSettled(
-        vouchers.map(async (voucherUid) => {
-          try {
-            const voucherDoc = await db.doc(`profiles/${voucherUid}`).get();
-            const voucher = voucherDoc.data();
-            if (!voucher?.email || typeof voucher.email !== "string") return;
-            await sendEmail({
-              to: voucher.email,
-              subject: `${after.first_name ?? "Your friend"} has been accepted to HomeQuarters`,
-              html: friendAcceptedHtml({
-                firstName: (voucher.first_name as string) ?? "there",
-                friendFirstName: (after.first_name as string) ?? "",
-                friendLastName: (after.last_name as string) ?? "",
-              }),
-              text: friendAcceptedText({
-                firstName: (voucher.first_name as string) ?? "there",
-                friendFirstName: (after.first_name as string) ?? "",
-                friendLastName: (after.last_name as string) ?? "",
-              }),
-              apiKey: resendApiKey.value(),
-            });
-          } catch (err) {
-            console.error(`Failed to send friend-accepted email to voucher ${voucherUid}:`, err);
-          }
-        })
-      );
+      const pause = () => new Promise<void>((r) => setTimeout(r, 600));
+      for (const voucherUid of vouchers) {
+        await pause();
+        try {
+          const voucherDoc = await db.doc(`profiles/${voucherUid}`).get();
+          const voucher = voucherDoc.data();
+          if (!voucher?.email || typeof voucher.email !== "string") continue;
+          await sendEmail({
+            to: voucher.email,
+            subject: `${after.first_name ?? "Your friend"} has been accepted to HomeQuarters`,
+            html: friendAcceptedHtml({
+              firstName: (voucher.first_name as string) ?? "there",
+              friendFirstName: (after.first_name as string) ?? "",
+              friendLastName: (after.last_name as string) ?? "",
+            }),
+            text: friendAcceptedText({
+              firstName: (voucher.first_name as string) ?? "there",
+              friendFirstName: (after.first_name as string) ?? "",
+              friendLastName: (after.last_name as string) ?? "",
+            }),
+            apiKey: resendApiKey.value(),
+          });
+        } catch (err) {
+          console.error(`Failed to send friend-accepted email to voucher ${voucherUid}:`, err);
+        }
+      }
     }
   }
 );
@@ -911,7 +916,8 @@ export const handleWebApplication = onRequest(
       instagram,
       linkedin,
       about,
-    } = req.body as Record<string, string | undefined>;
+      marketing_opt_in,
+    } = req.body as Record<string, string | boolean | undefined>;
 
     // Validate required fields
     if (!first_name?.trim() || !last_name?.trim()) {
@@ -934,9 +940,10 @@ export const handleWebApplication = onRequest(
         first_name: firstName,
         last_name: lastName,
         email: sanitizedEmail,
-        instagram: instagram?.trim() ?? null,
-        linkedin: linkedin?.trim() ?? null,
-        about: about?.trim() ?? null,
+        instagram: (instagram as string)?.trim() ?? null,
+        linkedin: (linkedin as string)?.trim() ?? null,
+        about: (about as string)?.trim() ?? null,
+        marketing_opt_in: marketing_opt_in === true || marketing_opt_in === "true",
         source: "website",
         submitted_at: new Date().toISOString(),
         status: "received",
@@ -964,6 +971,38 @@ export const handleWebApplication = onRequest(
     res.json({ ok: true });
   }
 );
+
+// ─────────────────────────────────────────────
+// handleSubscribe
+// HTTP POST — newsletter sign-up from the website popup.
+// Saves the email to newsletter_subscribers/{email} (idempotent upsert).
+// Exposed via Firebase Hosting rewrite at /api/subscribe.
+// ─────────────────────────────────────────────
+export const handleSubscribe = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+  const { email } = req.body as Record<string, string | undefined>;
+  if (!email?.trim() || !email.includes("@")) {
+    res.status(400).json({ error: "A valid email address is required." });
+    return;
+  }
+  const sanitized = email.trim().toLowerCase();
+  try {
+    const db = getFirestore();
+    // Use email as doc ID so duplicate sign-ups are idempotent
+    await db.collection("newsletter_subscribers").doc(sanitized).set({
+      email: sanitized,
+      subscribed_at: new Date().toISOString(),
+      source: "website_popup",
+    }, { merge: true });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("handleSubscribe error:", err);
+    res.status(500).json({ error: "Could not save subscription." });
+  }
+});
 
 // ─────────────────────────────────────────────
 // stripeWebhook

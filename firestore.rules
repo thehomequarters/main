@@ -167,6 +167,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ──── Newsletter Subscribers ────
+    match /newsletter_subscribers/{email} {
+      allow create: if true; // public sign-up
+      allow read, update, delete: if isAdmin();
+    }
+
     // ──── Website Content (CMS) ────
     match /website_content/{docId} {
       allow read: if true; // public website reads it unauthenticated
