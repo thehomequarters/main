@@ -176,7 +176,9 @@ export default function NominateScreen() {
       });
 
       const applicantName = `${applicantData.first_name} ${applicantData.last_name}`;
-      const isNowComplete = newCount >= 2;
+      const myTier = profile?.membership_tier;
+      const isElevated = myTier === "founding_member" || myTier === "committee_member";
+      const isNowComplete = isElevated || newCount >= 2;
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       toast(

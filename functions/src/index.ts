@@ -832,25 +832,31 @@ export const onVouchReceived = onDocumentUpdated(
     const addedUid = newVouchers.find((uid) => !prevVouchers.includes(uid));
 
     let voucherName = "A HomeQuarters member";
+    let voucherIsElevated = false;
     if (addedUid) {
       try {
         const voucherDoc = await db.doc(`profiles/${addedUid}`).get();
         const voucherData = voucherDoc.data();
         if (voucherData) {
           voucherName = `${voucherData.first_name ?? ""} ${voucherData.last_name ?? ""}`.trim() || voucherName;
+          const tier = voucherData.membership_tier as string | undefined;
+          voucherIsElevated = tier === "founding_member" || tier === "committee_member";
         }
       } catch {
         // Non-fatal — use default name
       }
     }
 
+    // Committee/founding members count as a single sufficient vouch
+    const effectiveRequired = voucherIsElevated ? 1 : REQUIRED_VOUCHES;
+
     // Send vouch notification
     try {
       await sendEmail({
         to: after.email,
         subject: `${voucherName} vouched for your HomeQuarters application`,
-        html: vouchReceivedHtml({ firstName, voucherName, voucherCount: newCount, requiredVouches: REQUIRED_VOUCHES, applicationCode }),
-        text: vouchReceivedText({ firstName, voucherName, voucherCount: newCount, requiredVouches: REQUIRED_VOUCHES, applicationCode }),
+        html: vouchReceivedHtml({ firstName, voucherName, voucherCount: newCount, requiredVouches: effectiveRequired, applicationCode }),
+        text: vouchReceivedText({ firstName, voucherName, voucherCount: newCount, requiredVouches: effectiveRequired, applicationCode }),
         apiKey: resendApiKey.value(),
       });
     } catch (err) {
@@ -858,7 +864,7 @@ export const onVouchReceived = onDocumentUpdated(
     }
 
     // If just crossed the threshold, also send "application complete" email
-    if (prevCount < REQUIRED_VOUCHES && newCount >= REQUIRED_VOUCHES) {
+    if (prevCount < effectiveRequired && newCount >= effectiveRequired) {
       try {
         await sendEmail({
           to: after.email,
