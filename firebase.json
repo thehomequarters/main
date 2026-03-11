@@ -11,6 +11,9 @@
       "codebase": "default",
       "ignore": [
         "node_modules",
+        "ios",
+        "android",
+        "app.json",
         ".git",
         "firebase-debug.log",
         "firebase-debug.*.log",
