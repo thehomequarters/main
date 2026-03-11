@@ -1193,3 +1193,77 @@ Questions or want to update your listing? Reply to this email.
 
 HomeQuarters`;
 }
+
+// ─────────────────────────────────────────────
+// 23. Member Redemption Thank-You
+// Sent to the member after they redeem a deal (verified by venue staff).
+// Warm appreciation + social/review nudge to support the partner venue.
+// ─────────────────────────────────────────────
+export function memberRedemptionThankYouHtml(opts: {
+  firstName: string;
+  venueName: string;
+  dealTitle: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">THANK YOU</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Hope you enjoyed<br/>${opts.venueName}.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, we hope your visit was everything it should have been.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Every one of our partner venues is genuinely proud to host HomeQuarters members. They set aside exclusive benefits for you because they believe in what this community stands for &mdash; and because they want to earn your loyalty.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:14px;font-weight:700;line-height:22px;">A small favour, if you&rsquo;re happy to.</p>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      In exchange for the exclusive member benefits they provide, we&rsquo;d be incredibly grateful if you could:
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#1C1C1E;font-size:13px;line-height:20px;">
+            <strong>Leave a positive review.</strong>
+            <span style="color:#9A8E82;"> A few kind words on Google or TripAdvisor go a long way for a small business. It only takes a minute and it means the world to them.</span>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;">
+          <p style="margin:0;color:#1C1C1E;font-size:13px;line-height:20px;">
+            <strong>Share on social.</strong>
+            <span style="color:#9A8E82;"> A post, a story, a tag &mdash; it helps bring real people through their door. This is how we keep the cashflow moving in our community and support the brands, businesses, and institutions we genuinely love.</span>
+          </p>
+        </td>
+      </tr>
+    </table>
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Thank you for being part of this. See you at the next one.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function memberRedemptionThankYouText(opts: {
+  firstName: string;
+  venueName: string;
+  dealTitle: string;
+}): string {
+  return `Hi ${opts.firstName},
+
+We hope your visit to ${opts.venueName} was everything it should have been.
+
+Every one of our partner venues is genuinely proud to host HomeQuarters members. They set aside exclusive benefits because they believe in what this community stands for — and because they want to earn your loyalty.
+
+A SMALL FAVOUR, IF YOU'RE HAPPY TO
+
+In exchange for the exclusive member benefits they provide, we'd be incredibly grateful if you could:
+
+Leave a positive review — a few kind words on Google or TripAdvisor means the world to a small business. It only takes a minute.
+
+Share on social — a post, a story, a tag. It helps bring real people through their door. This is how we keep cashflow moving in our community and support the brands, businesses, and institutions we genuinely love.
+
+Thank you for being part of this. See you at the next one.
+
+HomeQuarters`;
+}

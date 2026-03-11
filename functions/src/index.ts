@@ -35,6 +35,7 @@ import {
   welcomeInviteNudgeHtml, welcomeInviteNudgeText,
   venueRedemptionNotificationText,
   venueMonthlyDigestHtml, venueMonthlyDigestText,
+  memberRedemptionThankYouHtml, memberRedemptionThankYouText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -1602,6 +1603,65 @@ export const getStripePortalUrl = onCall(
     });
 
     return { url: session.url };
+  }
+);
+
+// ─────────────────────────────────────────────
+// onRedemptionCreated
+// Fires when a new document is created in the redemptions collection.
+// Covers both PIN-verified (verifyRedemption) and manual (client-side) redemptions.
+// Sends the member a warm thank-you email with a review + social share nudge
+// to support the partner venue.
+// ─────────────────────────────────────────────
+export const onRedemptionCreated = onDocumentCreated(
+  { document: "redemptions/{redemptionId}", secrets: [resendApiKey] },
+  async (event) => {
+    const redemption = event.data?.data();
+    if (!redemption) return;
+
+    const { member_id, deal_id } = redemption as {
+      member_id?: string;
+      deal_id?: string;
+    };
+    if (!member_id || !deal_id) return;
+
+    const db = getFirestore();
+
+    // Fetch member profile for email + first name
+    const profileDoc = await db.doc(`profiles/${member_id}`).get();
+    const profile = profileDoc.data();
+    if (!profile?.email || typeof profile.email !== "string") return;
+
+    const firstName = (profile.first_name as string) ?? "there";
+
+    // Fetch deal title
+    let dealTitle = "your benefit";
+    try {
+      const dealDoc = await db.doc(`deals/${deal_id}`).get();
+      dealTitle = (dealDoc.data()?.title as string | undefined) ?? dealTitle;
+    } catch { /* non-fatal */ }
+
+    // Fetch venue name
+    let venueName = "our partner venue";
+    const venueId = redemption.venue_id as string | undefined;
+    if (venueId) {
+      try {
+        const venueDoc = await db.doc(`venues/${venueId}`).get();
+        venueName = (venueDoc.data()?.name as string | undefined) ?? venueName;
+      } catch { /* non-fatal */ }
+    }
+
+    try {
+      await sendEmail({
+        to: profile.email,
+        subject: `Hope you enjoyed ${venueName} — a small favour`,
+        html: memberRedemptionThankYouHtml({ firstName, venueName, dealTitle }),
+        text: memberRedemptionThankYouText({ firstName, venueName, dealTitle }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send redemption thank-you email:", err);
+    }
   }
 );
 

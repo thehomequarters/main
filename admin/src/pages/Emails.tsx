@@ -16,6 +16,23 @@ const SAMPLE = {
   inviteeName: "Chidi Okeke",
   email: "amara.osei@gmail.com",
   resetLink: "https://thehomequarters.com/reset?token=preview-example-token",
+  // Payment / billing
+  tier: "gold_card",
+  nextBillingDate: "1 April 2026",
+  portalUrl: "https://billing.stripe.com/preview",
+  // Venue
+  venueName: "Cadogan Arms",
+  dealTitle: "Complimentary welcome drink",
+  month: "March 2026",
+  totalRedemptions: 24,
+  prevMonthTotal: 18,
+  deals: [
+    { title: "Complimentary welcome drink", count: 14 },
+    { title: "15% off food", count: 10 },
+  ],
+  tierBreakdown: { gold: 16, platinum: 8 },
+  redeemedAt: "11 March 2026, 19:34",
+  memberTier: "gold_card",
 };
 
 // ─────────────────────────────────────────────
@@ -25,7 +42,7 @@ interface EmailEntry {
   id: string;
   label: string;
   trigger: string;
-  category: "application" | "membership" | "social" | "welcome" | "account";
+  category: "application" | "membership" | "social" | "welcome" | "account" | "venue";
   html: () => string;
   text: () => string;
 }
@@ -175,6 +192,74 @@ const EMAILS: EmailEntry[] = [
     html: () => T.passwordResetHtml(SAMPLE),
     text: () => T.passwordResetText(SAMPLE),
   },
+  // ── Payment / billing ────────────────────────────────────────────────────
+  {
+    id: "payment-confirmed",
+    label: "Payment Confirmed",
+    trigger: "Member completes first payment — stripe_customer_id newly set",
+    category: "membership",
+    html: () => T.paymentConfirmedHtml(SAMPLE),
+    text: () => T.paymentConfirmedText(SAMPLE),
+  },
+  {
+    id: "payment-failed",
+    label: "Payment Failed",
+    trigger: "invoice.payment_failed webhook — card declined or expired",
+    category: "membership",
+    html: () => T.paymentFailedHtml(SAMPLE),
+    text: () => T.paymentFailedText(SAMPLE),
+  },
+  {
+    id: "subscription-cancelled",
+    label: "Membership Cancelled (Win-Back)",
+    trigger: "customer.subscription.deleted webhook — sent 24h after cancellation",
+    category: "membership",
+    html: () => `<pre style="font-family:Georgia,serif;font-size:15px;line-height:1.8;color:#1C1C1E;white-space:pre-wrap;padding:40px;max-width:560px;margin:0 auto;background:#F2EBE0;">${T.subscriptionCancelledText(SAMPLE)}</pre>`,
+    text: () => T.subscriptionCancelledText(SAMPLE),
+  },
+  // ── Newsletter ───────────────────────────────────────────────────────────
+  {
+    id: "newsletter-welcome",
+    label: "Newsletter Welcome",
+    trigger: "Website newsletter sign-up via /api/subscribe",
+    category: "application",
+    html: () => T.newsletterWelcomeHtml(SAMPLE),
+    text: () => T.newsletterWelcomeText(SAMPLE),
+  },
+  // ── Welcome journey ──────────────────────────────────────────────────────
+  {
+    id: "welcome-day-30",
+    label: "Welcome — Day 30",
+    trigger: "Scheduled 30 days after approval · invite a friend nudge",
+    category: "welcome",
+    html: () => T.welcomeInviteNudgeHtml(SAMPLE),
+    text: () => T.welcomeInviteNudgeText(SAMPLE),
+  },
+  // ── Venue / partner ──────────────────────────────────────────────────────
+  {
+    id: "venue-redemption-notification",
+    label: "Venue: Redemption Alert",
+    trigger: "Sent to venue contact_email when a deal is verified (opt-in)",
+    category: "venue",
+    html: () => `<pre style="font-family:Georgia,serif;font-size:15px;line-height:1.8;color:#1C1C1E;white-space:pre-wrap;padding:40px;max-width:560px;margin:0 auto;background:#F2EBE0;">${T.venueRedemptionNotificationText(SAMPLE)}</pre>`,
+    text: () => T.venueRedemptionNotificationText(SAMPLE),
+  },
+  {
+    id: "venue-monthly-digest",
+    label: "Venue: Monthly Partner Report",
+    trigger: "Sent on 1st of each month to venues with a contact_email",
+    category: "venue",
+    html: () => T.venueMonthlyDigestHtml(SAMPLE),
+    text: () => T.venueMonthlyDigestText(SAMPLE),
+  },
+  {
+    id: "member-redemption-thankyou",
+    label: "Member: Redemption Thank-You",
+    trigger: "Sent to member after every deal redemption — review + social share ask",
+    category: "venue",
+    html: () => T.memberRedemptionThankYouHtml(SAMPLE),
+    text: () => T.memberRedemptionThankYouText(SAMPLE),
+  },
 ];
 
 const CATEGORY_LABELS: Record<EmailEntry["category"], string> = {
@@ -183,6 +268,7 @@ const CATEGORY_LABELS: Record<EmailEntry["category"], string> = {
   social: "Social",
   welcome: "Welcome Journey",
   account: "Account",
+  venue: "Venue & Partner",
 };
 
 const CATEGORY_COLOR: Record<EmailEntry["category"], string> = {
@@ -191,6 +277,7 @@ const CATEGORY_COLOR: Record<EmailEntry["category"], string> = {
   social: "text-green-400 bg-green-400/10 border-green-400/20",
   welcome: "text-purple-400 bg-purple-400/10 border-purple-400/20",
   account: "text-gray-400 bg-white/5 border-white/10",
+  venue: "text-orange-400 bg-orange-400/10 border-orange-400/20",
 };
 
 export default function Emails() {
@@ -218,7 +305,7 @@ export default function Emails() {
 
         {/* Category filter */}
         <div className="flex flex-wrap gap-1.5">
-          {(["all", "application", "membership", "social", "welcome", "account"] as const).map((cat) => (
+          {(["all", "application", "membership", "social", "welcome", "account", "venue"] as const).map((cat) => (
             <button
               key={cat}
               onClick={() => setFilterCategory(cat)}
