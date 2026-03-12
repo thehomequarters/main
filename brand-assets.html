@@ -169,88 +169,70 @@
       <div class="icon-wrap">
         <svg id="hqIconSvg" class="hq-icon" width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#242424"/>
-              <stop offset="100%" stop-color="#1C1C1E"/>
+            <linearGradient id="bgG" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#2a2a2c"/>
+              <stop offset="100%" stop-color="#1a1a1c"/>
             </linearGradient>
-            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#E8C97A"/>
+            <linearGradient id="auG" x1="88" y1="212" x2="960" y2="812" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#EDD07E"/>
               <stop offset="50%"  stop-color="#C9A84C"/>
-              <stop offset="100%" stop-color="#A8843A"/>
-            </linearGradient>
-            <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#D4B05E"/>
-              <stop offset="100%" stop-color="#C9A84C"/>
+              <stop offset="100%" stop-color="#A07828"/>
             </linearGradient>
           </defs>
 
           <!-- background -->
-          <rect width="1024" height="1024" fill="url(#bg)"/>
+          <rect width="1024" height="1024" fill="url(#bgG)"/>
 
-          <!-- subtle corner accent lines -->
-          <line x1="80" y1="80"  x2="200" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="80" y1="80"  x2="80"  y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="80"  x2="824" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="80"  x2="944" y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="80"  y1="944" x2="200" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="80"  y1="944" x2="80"  y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="944" x2="824" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="944" x2="944" y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <!-- corner marks -->
+          <path d="M72,72 h100 M72,72 v100"   stroke="#C9A84C" stroke-width="4" opacity="0.4" fill="none"/>
+          <path d="M952,72 h-100 M952,72 v100" stroke="#C9A84C" stroke-width="4" opacity="0.4" fill="none"/>
+          <path d="M72,952 h100 M72,952 v-100" stroke="#C9A84C" stroke-width="4" opacity="0.4" fill="none"/>
+          <path d="M952,952 h-100 M952,952 v-100" stroke="#C9A84C" stroke-width="4" opacity="0.4" fill="none"/>
 
-          <!-- H -->
-          <!-- left vertical stroke -->
-          <rect x="188" y="268" width="96" height="488" rx="12" fill="url(#goldGrad)"/>
-          <!-- right vertical stroke of H -->
-          <rect x="436" y="268" width="96" height="488" rx="12" fill="url(#goldGrad)"/>
-          <!-- crossbar of H -->
-          <rect x="188" y="468" width="344" height="88" rx="10" fill="url(#goldGrad2)"/>
+          <!-- ═══ H ═══ -->
+          <rect x="88"  y="212" width="88" height="600" rx="10" fill="url(#auG)"/>
+          <rect x="366" y="212" width="88" height="600" rx="10" fill="url(#auG)"/>
+          <rect x="88"  y="462" width="366" height="88" rx="10" fill="url(#auG)"/>
 
-          <!-- Q -->
-          <!-- outer ring -->
-          <circle cx="716" cy="488" r="196" fill="url(#goldGrad)"/>
-          <circle cx="716" cy="488" r="126" fill="url(#bg)"/>
-          <!-- tail of Q -->
-          <rect x="778" y="566" width="96" height="136" rx="14"
-                transform="rotate(38, 826, 634)"
-                fill="url(#goldGrad)"/>
+          <!--
+            ═══ Q ═══
+            Center (727,512). Stroke r=173, stroke-width=88 → outer r=217, inner r=129.
+            Gap from 30° to 60° (approx 4–5 o'clock).
+            Outer ring at 60°: (836, 700)   at 30°: (915, 621)
+            Inner ring at 30°: (839, 577)   at 60°: (792, 624)
+            Path: outer arc CW 330° → line to inner → inner arc CCW 330° → close.
+          -->
+          <path d="M 836,700
+                   A 217,217 0 1 1 915,621
+                   L 839,577
+                   A 129,129 0 1 0 792,624
+                   Z"
+                fill="url(#auG)"/>
 
-          <!-- thin rule below letters -->
-          <rect x="188" y="796" width="636" height="2" rx="1" fill="#C9A84C" opacity="0.4"/>
+          <!-- Q tail — bold diagonal stroke from ring centre-gap outward (SE direction) -->
+          <line x1="849" y1="634" x2="955" y2="756"
+                stroke="url(#auG)" stroke-width="92" stroke-linecap="round"/>
         </svg>
         <span>1024 × 1024</span>
       </div>
 
-      <!-- 128px preview -->
+      <!-- 128px preview — same geometry, just smaller rendered size -->
       <div class="icon-wrap">
         <svg class="hq-icon" width="128" height="128" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-          <use href="#hqIconSvg" />
           <defs>
-            <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#242424"/>
-              <stop offset="100%" stop-color="#1C1C1E"/>
+            <linearGradient id="bgG2" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#2a2a2c"/><stop offset="100%" stop-color="#1a1a1c"/>
             </linearGradient>
-            <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#E8C97A"/>
-              <stop offset="50%"  stop-color="#C9A84C"/>
-              <stop offset="100%" stop-color="#A8843A"/>
+            <linearGradient id="auG2" x1="88" y1="212" x2="960" y2="812" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#EDD07E"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#A07828"/>
             </linearGradient>
           </defs>
-          <rect width="1024" height="1024" fill="url(#bg2)"/>
-          <line x1="80" y1="80"  x2="200" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="80" y1="80"  x2="80"  y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="80"  x2="824" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="80"  x2="944" y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="80"  y1="944" x2="200" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="80"  y1="944" x2="80"  y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="944" x2="824" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <line x1="944" y1="944" x2="944" y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
-          <rect x="188" y="268" width="96" height="488" rx="12" fill="url(#g2)"/>
-          <rect x="436" y="268" width="96" height="488" rx="12" fill="url(#g2)"/>
-          <rect x="188" y="468" width="344" height="88" rx="10" fill="url(#g2)"/>
-          <circle cx="716" cy="488" r="196" fill="url(#g2)"/>
-          <circle cx="716" cy="488" r="126" fill="url(#bg2)"/>
-          <rect x="778" y="566" width="96" height="136" rx="14" transform="rotate(38, 826, 634)" fill="url(#g2)"/>
-          <rect x="188" y="796" width="636" height="2" rx="1" fill="#C9A84C" opacity="0.4"/>
+          <rect width="1024" height="1024" fill="url(#bgG2)"/>
+          <rect x="88"  y="212" width="88" height="600" rx="10" fill="url(#auG2)"/>
+          <rect x="366" y="212" width="88" height="600" rx="10" fill="url(#auG2)"/>
+          <rect x="88"  y="462" width="366" height="88" rx="10" fill="url(#auG2)"/>
+          <path d="M 836,700 A 217,217 0 1 1 915,621 L 839,577 A 129,129 0 1 0 792,624 Z" fill="url(#auG2)"/>
+          <line x1="849" y1="634" x2="955" y2="756" stroke="url(#auG2)" stroke-width="92" stroke-linecap="round"/>
         </svg>
         <span>128 × 128</span>
       </div>
@@ -259,23 +241,19 @@
       <div class="icon-wrap">
         <svg class="hq-icon" width="60" height="60" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#242424"/>
-              <stop offset="100%" stop-color="#1C1C1E"/>
+            <linearGradient id="bgG3" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#2a2a2c"/><stop offset="100%" stop-color="#1a1a1c"/>
             </linearGradient>
-            <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%"   stop-color="#E8C97A"/>
-              <stop offset="50%"  stop-color="#C9A84C"/>
-              <stop offset="100%" stop-color="#A8843A"/>
+            <linearGradient id="auG3" x1="88" y1="212" x2="960" y2="812" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#EDD07E"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#A07828"/>
             </linearGradient>
           </defs>
-          <rect width="1024" height="1024" fill="url(#bg3)"/>
-          <rect x="188" y="268" width="96" height="488" rx="12" fill="url(#g3)"/>
-          <rect x="436" y="268" width="96" height="488" rx="12" fill="url(#g3)"/>
-          <rect x="188" y="468" width="344" height="88" rx="10" fill="url(#g3)"/>
-          <circle cx="716" cy="488" r="196" fill="url(#g3)"/>
-          <circle cx="716" cy="488" r="126" fill="url(#bg3)"/>
-          <rect x="778" y="566" width="96" height="136" rx="14" transform="rotate(38, 826, 634)" fill="url(#g3)"/>
+          <rect width="1024" height="1024" fill="url(#bgG3)"/>
+          <rect x="88"  y="212" width="88" height="600" rx="10" fill="url(#auG3)"/>
+          <rect x="366" y="212" width="88" height="600" rx="10" fill="url(#auG3)"/>
+          <rect x="88"  y="462" width="366" height="88" rx="10" fill="url(#auG3)"/>
+          <path d="M 836,700 A 217,217 0 1 1 915,621 L 839,577 A 129,129 0 1 0 792,624 Z" fill="url(#auG3)"/>
+          <line x1="849" y1="634" x2="955" y2="756" stroke="url(#auG3)" stroke-width="92" stroke-linecap="round"/>
         </svg>
         <span>60 × 60</span>
       </div>
