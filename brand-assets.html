@@ -166,57 +166,35 @@
     <h2>App Icon</h2>
 
     <div class="icon-grid">
+      <!--
+        H:  left bar  x=72–142,   right bar x=362–432,  crossbar y=477–547,  all y=280–744
+        Q:  center=(720,512), outer r=232, inner r=162 (stroke 70) → same height as H (464px)
+            Gap 30°–60°: outer(836,713)→(921,628), inner(860,593)→(801,652)
+            Tail: (816,628)→(966,778) at 45°
+      -->
       <div class="icon-wrap">
         <svg id="hqIconSvg" class="hq-icon" width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="bgG" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-              <stop offset="0%"   stop-color="#272729"/>
+              <stop offset="0%" stop-color="#242424"/>
               <stop offset="100%" stop-color="#1C1C1E"/>
             </linearGradient>
-            <linearGradient id="auG" x1="180" y1="180" x2="844" y2="844" gradientUnits="userSpaceOnUse">
-              <stop offset="0%"   stop-color="#F0D98A"/>
+            <linearGradient id="auG" x1="72" y1="280" x2="952" y2="780" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#EDD07E"/>
               <stop offset="50%"  stop-color="#C9A84C"/>
-              <stop offset="100%"  stop-color="#9E7A28"/>
+              <stop offset="100%" stop-color="#9E7820"/>
             </linearGradient>
           </defs>
-
-          <!-- Background -->
           <rect width="1024" height="1024" fill="url(#bgG)"/>
-
-          <!-- Outer decorative oval -->
-          <ellipse cx="512" cy="490" rx="408" ry="418" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.55"/>
-          <!-- Inner decorative oval -->
-          <ellipse cx="512" cy="490" rx="378" ry="388" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.2"/>
-
-          <!-- Top rule with ornament -->
-          <line x1="172" y1="188" x2="852" y2="188" stroke="#C9A84C" stroke-width="1.5" opacity="0.4"/>
-          <circle cx="512" cy="188" r="5" fill="#C9A84C" opacity="0.6"/>
-          <circle cx="172" cy="188" r="3" fill="#C9A84C" opacity="0.4"/>
-          <circle cx="852" cy="188" r="3" fill="#C9A84C" opacity="0.4"/>
-
-          <!-- Bottom rule with ornament -->
-          <line x1="172" y1="836" x2="852" y2="836" stroke="#C9A84C" stroke-width="1.5" opacity="0.4"/>
-          <circle cx="512" cy="836" r="5" fill="#C9A84C" opacity="0.6"/>
-          <circle cx="172" cy="836" r="3" fill="#C9A84C" opacity="0.4"/>
-          <circle cx="852" cy="836" r="3" fill="#C9A84C" opacity="0.4"/>
-
-          <!-- HQ monogram — Cormorant Garamond serif -->
-          <text x="512" y="670"
-                font-family="'Cormorant Garamond', Georgia, 'Times New Roman', serif"
-                font-weight="600"
-                font-size="490"
-                fill="url(#auG)"
-                text-anchor="middle">HQ</text>
-
-          <!-- Sub-label -->
-          <text x="512" y="790"
-                font-family="'DM Sans', Arial, sans-serif"
-                font-weight="400"
-                font-size="44"
-                fill="#C9A84C"
-                opacity="0.6"
-                text-anchor="middle"
-                letter-spacing="10">HOMEQUARTERS</text>
+          <circle cx="512" cy="512" r="468" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.28"/>
+          <!-- H -->
+          <rect x="72"  y="280" width="70" height="464" rx="6" fill="url(#auG)"/>
+          <rect x="362" y="280" width="70" height="464" rx="6" fill="url(#auG)"/>
+          <rect x="72"  y="477" width="360" height="70"  rx="6" fill="url(#auG)"/>
+          <!-- Q ring with gap -->
+          <path d="M 836,713 A 232,232 0 1 1 921,628 L 860,593 A 162,162 0 1 0 801,652 Z" fill="url(#auG)"/>
+          <!-- Q tail -->
+          <line x1="816" y1="628" x2="966" y2="778" stroke="url(#auG)" stroke-width="70" stroke-linecap="round"/>
         </svg>
         <span>1024 × 1024</span>
       </div>
@@ -226,15 +204,19 @@
         <svg class="hq-icon" width="128" height="128" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="bgG2" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#272729"/><stop offset="100%" stop-color="#1C1C1E"/>
+              <stop offset="0%" stop-color="#242424"/><stop offset="100%" stop-color="#1C1C1E"/>
             </linearGradient>
-            <linearGradient id="auG2" x1="180" y1="180" x2="844" y2="844" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#F0D98A"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#9E7A28"/>
+            <linearGradient id="auG2" x1="72" y1="280" x2="952" y2="780" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#EDD07E"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#9E7820"/>
             </linearGradient>
           </defs>
           <rect width="1024" height="1024" fill="url(#bgG2)"/>
-          <ellipse cx="512" cy="490" rx="408" ry="418" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.55"/>
-          <text x="512" y="670" font-family="'Cormorant Garamond', Georgia, serif" font-weight="600" font-size="490" fill="url(#auG2)" text-anchor="middle">HQ</text>
+          <circle cx="512" cy="512" r="468" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.28"/>
+          <rect x="72"  y="280" width="70" height="464" rx="6" fill="url(#auG2)"/>
+          <rect x="362" y="280" width="70" height="464" rx="6" fill="url(#auG2)"/>
+          <rect x="72"  y="477" width="360" height="70"  rx="6" fill="url(#auG2)"/>
+          <path d="M 836,713 A 232,232 0 1 1 921,628 L 860,593 A 162,162 0 1 0 801,652 Z" fill="url(#auG2)"/>
+          <line x1="816" y1="628" x2="966" y2="778" stroke="url(#auG2)" stroke-width="70" stroke-linecap="round"/>
         </svg>
         <span>128 × 128</span>
       </div>
@@ -244,15 +226,19 @@
         <svg class="hq-icon" width="60" height="60" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="bgG3" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#272729"/><stop offset="100%" stop-color="#1C1C1E"/>
+              <stop offset="0%" stop-color="#242424"/><stop offset="100%" stop-color="#1C1C1E"/>
             </linearGradient>
-            <linearGradient id="auG3" x1="180" y1="180" x2="844" y2="844" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#F0D98A"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#9E7A28"/>
+            <linearGradient id="auG3" x1="72" y1="280" x2="952" y2="780" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#EDD07E"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#9E7820"/>
             </linearGradient>
           </defs>
           <rect width="1024" height="1024" fill="url(#bgG3)"/>
-          <ellipse cx="512" cy="490" rx="408" ry="418" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.55"/>
-          <text x="512" y="670" font-family="'Cormorant Garamond', Georgia, serif" font-weight="600" font-size="490" fill="url(#auG3)" text-anchor="middle">HQ</text>
+          <circle cx="512" cy="512" r="468" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.28"/>
+          <rect x="72"  y="280" width="70" height="464" rx="6" fill="url(#auG3)"/>
+          <rect x="362" y="280" width="70" height="464" rx="6" fill="url(#auG3)"/>
+          <rect x="72"  y="477" width="360" height="70"  rx="6" fill="url(#auG3)"/>
+          <path d="M 836,713 A 232,232 0 1 1 921,628 L 860,593 A 162,162 0 1 0 801,652 Z" fill="url(#auG3)"/>
+          <line x1="816" y1="628" x2="966" y2="778" stroke="url(#auG3)" stroke-width="70" stroke-linecap="round"/>
         </svg>
         <span>60 × 60</span>
       </div>
@@ -355,71 +341,59 @@
       URL.revokeObjectURL(url);
     }
 
-    async function exportIcon(size) {
-      await document.fonts.ready;
+    function exportIcon(size) {
       const canvas = document.getElementById('exportCanvas');
       canvas.width  = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d');
       const s = size / 1024;
 
+      const gold = () => {
+        const g = ctx.createLinearGradient(72*s, 280*s, 952*s, 780*s);
+        g.addColorStop(0,   '#EDD07E');
+        g.addColorStop(0.5, '#C9A84C');
+        g.addColorStop(1,   '#9E7820');
+        return g;
+      };
+
       // Background
       const bg = ctx.createLinearGradient(0, 0, size, size);
-      bg.addColorStop(0, '#272729');
-      bg.addColorStop(1, '#1C1C1E');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, size, size);
+      bg.addColorStop(0, '#242424'); bg.addColorStop(1, '#1C1C1E');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, size, size);
 
-      // Gold gradient
-      const gold = ctx.createLinearGradient(180*s, 180*s, 844*s, 844*s);
-      gold.addColorStop(0,   '#F0D98A');
-      gold.addColorStop(0.5, '#C9A84C');
-      gold.addColorStop(1,   '#9E7A28');
+      // Circle border
+      ctx.strokeStyle = 'rgba(201,168,76,0.28)'; ctx.lineWidth = 2*s;
+      ctx.beginPath(); ctx.arc(512*s, 512*s, 468*s, 0, Math.PI*2); ctx.stroke();
 
-      // Outer oval
-      ctx.save();
-      ctx.strokeStyle = 'rgba(201,168,76,0.55)';
-      ctx.lineWidth = 2 * s;
+      // H — left bar
+      ctx.fillStyle = gold();
+      ctx.beginPath(); ctx.roundRect(72*s, 280*s, 70*s, 464*s, 6*s); ctx.fill();
+      // H — right bar
+      ctx.fillStyle = gold();
+      ctx.beginPath(); ctx.roundRect(362*s, 280*s, 70*s, 464*s, 6*s); ctx.fill();
+      // H — crossbar
+      ctx.fillStyle = gold();
+      ctx.beginPath(); ctx.roundRect(72*s, 477*s, 360*s, 70*s, 6*s); ctx.fill();
+
+      // Q ring (donut arc with gap 30°–60°)
+      ctx.fillStyle = gold();
       ctx.beginPath();
-      ctx.ellipse(512*s, 490*s, 408*s, 418*s, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-
-      // Inner oval
-      ctx.save();
-      ctx.strokeStyle = 'rgba(201,168,76,0.2)';
-      ctx.lineWidth = 1 * s;
+      ctx.arc(720*s, 512*s, 232*s, 0, Math.PI*2);           // outer CW full
+      ctx.arc(720*s, 512*s, 162*s, Math.PI*2, 0, true);     // inner CCW full (hole)
+      ctx.fill('evenodd');
+      // Erase the gap 30°–60° using background colour
+      ctx.fillStyle = '#1E1E1E';
       ctx.beginPath();
-      ctx.ellipse(512*s, 490*s, 378*s, 388*s, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+      ctx.moveTo(720*s, 512*s);
+      ctx.arc(720*s, 512*s, 240*s, 30*Math.PI/180, 60*Math.PI/180);
+      ctx.closePath(); ctx.fill();
 
-      // Top rule + ornament dots
-      ctx.strokeStyle = 'rgba(201,168,76,0.4)';
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath(); ctx.moveTo(172*s, 188*s); ctx.lineTo(852*s, 188*s); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(172*s, 836*s); ctx.lineTo(852*s, 836*s); ctx.stroke();
-      ctx.fillStyle = 'rgba(201,168,76,0.6)';
-      [[512,188],[172,188],[852,188],[512,836],[172,836],[852,836]].forEach(([x,y],i) => {
-        ctx.beginPath(); ctx.arc(x*s, y*s, (i===0||i===3?5:3)*s, 0, Math.PI*2); ctx.fill();
-      });
-
-      // HQ text
-      ctx.fillStyle = gold;
-      ctx.font = `600 ${490*s}px 'Cormorant Garamond', Georgia, 'Times New Roman', serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText('HQ', 512*s, 670*s);
-
-      // Sub-label
-      ctx.fillStyle = 'rgba(201,168,76,0.6)';
-      ctx.font = `400 ${44*s}px 'DM Sans', Arial, sans-serif`;
-      ctx.fillText('HOMEQUARTERS', 512*s, 790*s);
+      // Q tail
+      ctx.strokeStyle = gold(); ctx.lineWidth = 70*s; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(816*s, 628*s); ctx.lineTo(966*s, 778*s); ctx.stroke();
 
       const a = document.createElement('a');
-      a.href     = canvas.toDataURL('image/png');
-      a.download = `hq-icon-${size}.png`;
-      a.click();
+      a.href = canvas.toDataURL('image/png'); a.download = `hq-icon-${size}.png`; a.click();
     }
   </script>
 </body>
