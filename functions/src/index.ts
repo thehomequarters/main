@@ -1572,7 +1572,6 @@ export const sendBroadcastNotification = onCall(async (request) => {
   const snap = await db
     .collection("profiles")
     .where("membership_status", "==", "active")
-    .where("push_token", "!=", null)
     .get();
 
   const tokens = snap.docs
