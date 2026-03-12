@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HomeQuarters — Brand Assets</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -166,87 +167,67 @@
     <h2>App Icon</h2>
 
     <div class="icon-grid">
-      <!--
-        H:  left bar  x=72–142,   right bar x=362–432,  crossbar y=477–547,  all y=280–744
-        Q:  center=(720,512), outer r=232, inner r=162 (stroke 70) → same height as H (464px)
-            Gap 30°–60°: outer(836,713)→(921,628), inner(860,593)→(801,652)
-            Tail: (816,628)→(966,778) at 45°
-      -->
       <div class="icon-wrap">
-        <svg id="hqIconSvg" class="hq-icon" width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bgG" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#242424"/>
-              <stop offset="100%" stop-color="#1C1C1E"/>
-            </linearGradient>
-            <linearGradient id="auG" x1="72" y1="280" x2="952" y2="780" gradientUnits="userSpaceOnUse">
-              <stop offset="0%"   stop-color="#EDD07E"/>
-              <stop offset="50%"  stop-color="#C9A84C"/>
-              <stop offset="100%" stop-color="#9E7820"/>
-            </linearGradient>
-          </defs>
-          <rect width="1024" height="1024" fill="url(#bgG)"/>
-          <circle cx="512" cy="512" r="468" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.28"/>
-          <!-- H -->
-          <rect x="72"  y="280" width="70" height="464" rx="6" fill="url(#auG)"/>
-          <rect x="362" y="280" width="70" height="464" rx="6" fill="url(#auG)"/>
-          <rect x="72"  y="477" width="360" height="70"  rx="6" fill="url(#auG)"/>
-          <!-- Q ring with gap -->
-          <path d="M 836,713 A 232,232 0 1 1 921,628 L 860,593 A 162,162 0 1 0 801,652 Z" fill="url(#auG)"/>
-          <!-- Q tail -->
-          <line x1="816" y1="628" x2="966" y2="778" stroke="url(#auG)" stroke-width="70" stroke-linecap="round"/>
-        </svg>
-        <span>1024 × 1024</span>
+        <div id="hqIconSvg" class="hq-icon" style="
+          width:256px; height:256px;
+          background: linear-gradient(135deg,#242424,#1C1C1E);
+          border-radius: 22.5%;
+          display:flex; align-items:center; justify-content:center;
+          position:relative; flex-shrink:0;
+        ">
+          <!-- corner frame lines -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" viewBox="0 0 256 256">
+            <path d="M20,20 h36 M20,20 v36"  stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+            <path d="M236,20 h-36 M236,20 v36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+            <path d="M20,236 h36 M20,236 v-36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+            <path d="M236,236 h-36 M236,236 v-36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+          </svg>
+          <span style="
+            font-family:'Cormorant Garamond',Georgia,serif;
+            font-weight:600;
+            font-size:5.6rem;
+            color:#C9A84C;
+            letter-spacing:0.08em;
+            line-height:1;
+            background: linear-gradient(135deg,#EDD07E 0%,#C9A84C 50%,#9E7820 100%);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            background-clip:text;
+          ">HQ</span>
+        </div>
+        <span>Preview</span>
       </div>
 
-      <!-- 128px preview -->
+      <!-- 128px -->
       <div class="icon-wrap">
-        <svg class="hq-icon" width="128" height="128" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bgG2" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#242424"/><stop offset="100%" stop-color="#1C1C1E"/>
-            </linearGradient>
-            <linearGradient id="auG2" x1="72" y1="280" x2="952" y2="780" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#EDD07E"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#9E7820"/>
-            </linearGradient>
-          </defs>
-          <rect width="1024" height="1024" fill="url(#bgG2)"/>
-          <circle cx="512" cy="512" r="468" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.28"/>
-          <rect x="72"  y="280" width="70" height="464" rx="6" fill="url(#auG2)"/>
-          <rect x="362" y="280" width="70" height="464" rx="6" fill="url(#auG2)"/>
-          <rect x="72"  y="477" width="360" height="70"  rx="6" fill="url(#auG2)"/>
-          <path d="M 836,713 A 232,232 0 1 1 921,628 L 860,593 A 162,162 0 1 0 801,652 Z" fill="url(#auG2)"/>
-          <line x1="816" y1="628" x2="966" y2="778" stroke="url(#auG2)" stroke-width="70" stroke-linecap="round"/>
-        </svg>
+        <div class="hq-icon" style="
+          width:128px; height:128px;
+          background:linear-gradient(135deg,#242424,#1C1C1E);
+          border-radius:22.5%;
+          display:flex;align-items:center;justify-content:center;
+        ">
+          <span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2.8rem;letter-spacing:0.08em;line-height:1;background:linear-gradient(135deg,#EDD07E,#C9A84C,#9E7820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">HQ</span>
+        </div>
         <span>128 × 128</span>
       </div>
 
-      <!-- 60px preview -->
+      <!-- 60px -->
       <div class="icon-wrap">
-        <svg class="hq-icon" width="60" height="60" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="bgG3" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#242424"/><stop offset="100%" stop-color="#1C1C1E"/>
-            </linearGradient>
-            <linearGradient id="auG3" x1="72" y1="280" x2="952" y2="780" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stop-color="#EDD07E"/><stop offset="50%" stop-color="#C9A84C"/><stop offset="100%" stop-color="#9E7820"/>
-            </linearGradient>
-          </defs>
-          <rect width="1024" height="1024" fill="url(#bgG3)"/>
-          <circle cx="512" cy="512" r="468" fill="none" stroke="#C9A84C" stroke-width="2" opacity="0.28"/>
-          <rect x="72"  y="280" width="70" height="464" rx="6" fill="url(#auG3)"/>
-          <rect x="362" y="280" width="70" height="464" rx="6" fill="url(#auG3)"/>
-          <rect x="72"  y="477" width="360" height="70"  rx="6" fill="url(#auG3)"/>
-          <path d="M 836,713 A 232,232 0 1 1 921,628 L 860,593 A 162,162 0 1 0 801,652 Z" fill="url(#auG3)"/>
-          <line x1="816" y1="628" x2="966" y2="778" stroke="url(#auG3)" stroke-width="70" stroke-linecap="round"/>
-        </svg>
+        <div class="hq-icon" style="
+          width:60px;height:60px;
+          background:linear-gradient(135deg,#242424,#1C1C1E);
+          border-radius:22.5%;
+          display:flex;align-items:center;justify-content:center;
+        ">
+          <span style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:1.35rem;letter-spacing:0.06em;line-height:1;background:linear-gradient(135deg,#EDD07E,#C9A84C,#9E7820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">HQ</span>
+        </div>
         <span>60 × 60</span>
       </div>
     </div>
 
     <div class="btn-row">
       <button onclick="exportIcon(1024)">Export PNG 1024×1024</button>
-      <button class="outline" onclick="exportSvg()">Export SVG</button>
+      <button class="outline" onclick="exportIcon(1024)" style="margin-left:0">Export PNG (uses font)</button>
     </div>
   </section>
 
@@ -328,20 +309,22 @@
   <canvas id="exportCanvas"></canvas>
 
   <script>
-    function exportSvg() {
-      const svgEl = document.getElementById('hqIconSvg');
-      const clone = svgEl.cloneNode(true);
-      clone.setAttribute('width', '1024');
-      clone.setAttribute('height', '1024');
-      const svgStr = new XMLSerializer().serializeToString(clone);
-      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
-      const url  = URL.createObjectURL(blob);
+    async function exportIcon(size) {
+      const el = document.getElementById('hqIconSvg');
+      const canvas = await html2canvas(el, {
+        width: el.offsetWidth, height: el.offsetHeight,
+        scale: size / el.offsetWidth,
+        backgroundColor: null,
+        useCORS: true,
+        logging: false,
+      });
       const a = document.createElement('a');
-      a.href = url; a.download = 'hq-icon.svg'; a.click();
-      URL.revokeObjectURL(url);
+      a.href = canvas.toDataURL('image/png');
+      a.download = `hq-icon-${size}.png`;
+      a.click();
     }
 
-    function exportIcon(size) {
+    function exportIconOLD(size) {
       const canvas = document.getElementById('exportCanvas');
       canvas.width  = size;
       canvas.height = size;
