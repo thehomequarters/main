@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HomeQuarters — Brand Assets</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --dark:  #1C1C1E;
+      --gold:  #C9A84C;
+      --cream: #F2EBE0;
+      --stone: #9A8E82;
+      --gold2: #E8C97A;
+    }
+
+    body {
+      background: #111;
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      padding: 60px 40px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .subtitle { color: var(--stone); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 60px; }
+
+    section { margin-bottom: 70px; }
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--stone);
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 12px;
+      margin-bottom: 32px;
+    }
+
+    /* ── ICON PREVIEW ── */
+    .icon-grid {
+      display: flex;
+      align-items: flex-end;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .icon-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .icon-wrap span { font-size: 0.72rem; color: var(--stone); letter-spacing: 0.06em; }
+
+    /* The actual icon SVG — rendered at different sizes */
+    .hq-icon {
+      border-radius: 22.5%;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* ── EXPORT BUTTON ── */
+    .btn-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 36px; }
+    button {
+      background: var(--gold);
+      color: #111;
+      border: none;
+      padding: 12px 28px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover { background: var(--gold2); }
+    button.outline {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+    button.outline:hover { background: rgba(201,168,76,0.08); }
+
+    /* ── COLOUR PALETTE ── */
+    .palette { display: flex; gap: 20px; flex-wrap: wrap; }
+    .swatch {
+      width: 100px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .swatch-block {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .swatch-name { font-size: 0.75rem; font-weight: 500; color: var(--cream); letter-spacing: 0.04em; }
+    .swatch-hex  { font-size: 0.68rem; color: var(--stone); font-family: monospace; }
+
+    /* ── TYPOGRAPHY ── */
+    .type-row { margin-bottom: 28px; }
+    .type-label { font-size: 0.7rem; color: var(--stone); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .display-sample { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-weight: 600; color: var(--cream); line-height: 1; }
+    .display-italic  { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-style: italic; color: var(--gold); line-height: 1; }
+    .body-sample     { font-family: 'DM Sans', sans-serif; font-size: 1rem; color: var(--cream); line-height: 1.6; margin-top: 6px; }
+
+    /* ── LOGO VARIANTS ── */
+    .logo-row { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+    .logo-dark, .logo-light {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 24px 36px;
+      border-radius: 8px;
+    }
+    .logo-dark  { background: var(--dark); }
+    .logo-light { background: var(--cream); }
+    .logo-wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .logo-dark  .logo-wordmark { color: var(--gold); }
+    .logo-light .logo-wordmark { color: var(--dark); }
+
+    /* tiny badge */
+    .badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--stone);
+      border: 1px solid #2a2a2a;
+      padding: 2px 8px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* hidden canvas for export */
+    #exportCanvas { display: none; }
+  </style>
+</head>
+<body>
+
+  <p class="badge">Brand Kit 1.0</p>
+  <h1>HomeQuarters</h1>
+  <p class="subtitle">Brand Assets &amp; Design System</p>
+
+  <!-- ── 1. ICON ── -->
+  <section>
+    <h2>App Icon</h2>
+
+    <div class="icon-grid">
+      <div class="icon-wrap">
+        <svg id="hqIconSvg" class="hq-icon" width="256" height="256" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#242424"/>
+              <stop offset="100%" stop-color="#1C1C1E"/>
+            </linearGradient>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#E8C97A"/>
+              <stop offset="50%"  stop-color="#C9A84C"/>
+              <stop offset="100%" stop-color="#A8843A"/>
+            </linearGradient>
+            <linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#D4B05E"/>
+              <stop offset="100%" stop-color="#C9A84C"/>
+            </linearGradient>
+          </defs>
+
+          <!-- background -->
+          <rect width="1024" height="1024" fill="url(#bg)"/>
+
+          <!-- subtle corner accent lines -->
+          <line x1="80" y1="80"  x2="200" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="80" y1="80"  x2="80"  y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="80"  x2="824" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="80"  x2="944" y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="80"  y1="944" x2="200" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="80"  y1="944" x2="80"  y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="944" x2="824" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="944" x2="944" y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+
+          <!-- H -->
+          <!-- left vertical stroke -->
+          <rect x="188" y="268" width="96" height="488" rx="12" fill="url(#goldGrad)"/>
+          <!-- right vertical stroke of H -->
+          <rect x="436" y="268" width="96" height="488" rx="12" fill="url(#goldGrad)"/>
+          <!-- crossbar of H -->
+          <rect x="188" y="468" width="344" height="88" rx="10" fill="url(#goldGrad2)"/>
+
+          <!-- Q -->
+          <!-- outer ring -->
+          <circle cx="716" cy="488" r="196" fill="url(#goldGrad)"/>
+          <circle cx="716" cy="488" r="126" fill="url(#bg)"/>
+          <!-- tail of Q -->
+          <rect x="778" y="566" width="96" height="136" rx="14"
+                transform="rotate(38, 826, 634)"
+                fill="url(#goldGrad)"/>
+
+          <!-- thin rule below letters -->
+          <rect x="188" y="796" width="636" height="2" rx="1" fill="#C9A84C" opacity="0.4"/>
+        </svg>
+        <span>1024 × 1024</span>
+      </div>
+
+      <!-- 128px preview -->
+      <div class="icon-wrap">
+        <svg class="hq-icon" width="128" height="128" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <use href="#hqIconSvg" />
+          <defs>
+            <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#242424"/>
+              <stop offset="100%" stop-color="#1C1C1E"/>
+            </linearGradient>
+            <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#E8C97A"/>
+              <stop offset="50%"  stop-color="#C9A84C"/>
+              <stop offset="100%" stop-color="#A8843A"/>
+            </linearGradient>
+          </defs>
+          <rect width="1024" height="1024" fill="url(#bg2)"/>
+          <line x1="80" y1="80"  x2="200" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="80" y1="80"  x2="80"  y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="80"  x2="824" y2="80"  stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="80"  x2="944" y2="200" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="80"  y1="944" x2="200" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="80"  y1="944" x2="80"  y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="944" x2="824" y2="944" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <line x1="944" y1="944" x2="944" y2="824" stroke="#C9A84C" stroke-width="3" opacity="0.35"/>
+          <rect x="188" y="268" width="96" height="488" rx="12" fill="url(#g2)"/>
+          <rect x="436" y="268" width="96" height="488" rx="12" fill="url(#g2)"/>
+          <rect x="188" y="468" width="344" height="88" rx="10" fill="url(#g2)"/>
+          <circle cx="716" cy="488" r="196" fill="url(#g2)"/>
+          <circle cx="716" cy="488" r="126" fill="url(#bg2)"/>
+          <rect x="778" y="566" width="96" height="136" rx="14" transform="rotate(38, 826, 634)" fill="url(#g2)"/>
+          <rect x="188" y="796" width="636" height="2" rx="1" fill="#C9A84C" opacity="0.4"/>
+        </svg>
+        <span>128 × 128</span>
+      </div>
+
+      <!-- 60px preview -->
+      <div class="icon-wrap">
+        <svg class="hq-icon" width="60" height="60" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bg3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#242424"/>
+              <stop offset="100%" stop-color="#1C1C1E"/>
+            </linearGradient>
+            <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#E8C97A"/>
+              <stop offset="50%"  stop-color="#C9A84C"/>
+              <stop offset="100%" stop-color="#A8843A"/>
+            </linearGradient>
+          </defs>
+          <rect width="1024" height="1024" fill="url(#bg3)"/>
+          <rect x="188" y="268" width="96" height="488" rx="12" fill="url(#g3)"/>
+          <rect x="436" y="268" width="96" height="488" rx="12" fill="url(#g3)"/>
+          <rect x="188" y="468" width="344" height="88" rx="10" fill="url(#g3)"/>
+          <circle cx="716" cy="488" r="196" fill="url(#g3)"/>
+          <circle cx="716" cy="488" r="126" fill="url(#bg3)"/>
+          <rect x="778" y="566" width="96" height="136" rx="14" transform="rotate(38, 826, 634)" fill="url(#g3)"/>
+        </svg>
+        <span>60 × 60</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button onclick="exportIcon(1024)">Export PNG 1024×1024</button>
+      <button class="outline" onclick="exportSvg()">Export SVG</button>
+    </div>
+  </section>
+
+  <!-- ── 2. LOGO WORDMARK ── -->
+  <section>
+    <h2>Wordmark</h2>
+    <div class="logo-row">
+      <div>
+        <p class="type-label" style="margin-bottom:10px">On Dark</p>
+        <div class="logo-dark">
+          <span class="logo-wordmark">HomeQuarters</span>
+        </div>
+      </div>
+      <div>
+        <p class="type-label" style="margin-bottom:10px">On Light</p>
+        <div class="logo-light">
+          <span class="logo-wordmark" style="color:var(--dark)">HomeQuarters</span>
+        </div>
+      </div>
+      <div>
+        <p class="type-label" style="margin-bottom:10px">Monogram</p>
+        <div class="logo-dark" style="padding:24px;">
+          <span class="logo-wordmark" style="font-size:2.4rem;letter-spacing:0.1em">HQ</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3. COLOUR PALETTE ── -->
+  <section>
+    <h2>Colour Palette</h2>
+    <div class="palette">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#1C1C1E"></div>
+        <div class="swatch-name">Dark</div>
+        <div class="swatch-hex">#1C1C1E</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#C9A84C"></div>
+        <div class="swatch-name">Gold</div>
+        <div class="swatch-hex">#C9A84C</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F2EBE0; border-color:rgba(255,255,255,0.15)"></div>
+        <div class="swatch-name">Cream</div>
+        <div class="swatch-hex">#F2EBE0</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#9A8E82"></div>
+        <div class="swatch-name">Stone</div>
+        <div class="swatch-hex">#9A8E82</div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#E8C97A"></div>
+        <div class="swatch-name">Gold Light</div>
+        <div class="swatch-hex">#E8C97A</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4. TYPOGRAPHY ── -->
+  <section>
+    <h2>Typography</h2>
+    <div class="type-row">
+      <p class="type-label">Display — Cormorant Garamond 600</p>
+      <div class="display-sample">The City's Finest Tables</div>
+    </div>
+    <div class="type-row">
+      <p class="type-label">Display Italic — Cormorant Garamond 400</p>
+      <div class="display-italic">Your Card. Your Table.</div>
+    </div>
+    <div class="type-row">
+      <p class="type-label">Body — DM Sans 400</p>
+      <div class="body-sample">An invitation-only membership for the diaspora. Connect, dine, and discover with people who share your world.</div>
+    </div>
+  </section>
+
+  <!-- hidden canvas -->
+  <canvas id="exportCanvas"></canvas>
+
+  <script>
+    function getIconSvgString() {
+      const svgEl = document.getElementById('hqIconSvg');
+      const clone = svgEl.cloneNode(true);
+      clone.setAttribute('width', '1024');
+      clone.setAttribute('height', '1024');
+      return new XMLSerializer().serializeToString(clone);
+    }
+
+    function exportSvg() {
+      const svgStr = getIconSvgString();
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'hq-icon.svg'; a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportIcon(size) {
+      const svgStr = getIconSvgString();
+      const canvas = document.getElementById('exportCanvas');
+      canvas.width  = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const url  = URL.createObjectURL(blob);
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, size, size);
+        URL.revokeObjectURL(url);
+        const a = document.createElement('a');
+        a.href     = canvas.toDataURL('image/png');
+        a.download = `hq-icon-${size}.png`;
+        a.click();
+      };
+      img.src = url;
+    }
+  </script>
+</body>
+</html>
