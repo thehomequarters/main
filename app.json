@@ -15,6 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.homequarters.app",
+      "buildNumber": "1",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": []
       },
@@ -40,7 +41,20 @@
     },
     "plugins": [
       "expo-router",
-      "react-native-maps"
-    ]
+      "react-native-maps",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#C9A84C"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cc080307-b9fa-4c60-b376-dd42ec09f31b"
+      }
+    }
   }
 }
+

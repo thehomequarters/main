@@ -194,6 +194,11 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // ──── Broadcast Notifications (push log) ────
+    match /broadcast_notifications/{docId} {
+      allow read, write: if isAdmin();
+    }
+
     // ──── Redemptions ────
     match /redemptions/{redemptionId} {
       allow read: if isAuth();
