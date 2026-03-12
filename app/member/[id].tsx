@@ -192,6 +192,15 @@ export default function MemberProfileScreen() {
           <Text style={styles.title}>HQ Member</Text>
         ) : null}
 
+        {/* Founding / Committee Member badge */}
+        {!isMasked && (member.membership_tier === "founding_member" || member.membership_tier === "committee_member") ? (
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>
+              {member.membership_tier === "founding_member" ? "Founding Member" : "Committee Member"}
+            </Text>
+          </View>
+        ) : null}
+
         {/* Meta chips — location + industry */}
         {!isMasked && (member.city || member.industry) ? (
           <View style={styles.chips}>
@@ -409,6 +418,23 @@ const styles = StyleSheet.create({
   },
 
   // Chips
+  roleBadge: {
+    alignSelf: "center",
+    backgroundColor: "rgba(201,168,76,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.35)",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    marginBottom: 16,
+  },
+  roleBadgeText: {
+    color: "#C9A84C",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
   chips: {
     flexDirection: "row",
     gap: 8,

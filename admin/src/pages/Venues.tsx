@@ -187,7 +187,7 @@ export default function Venues() {
     const u4 = onSnapshot(
       collection(db, "venue_pins"),
       (snap) => {
-        const pins: Record<string, VenuePin | null> = {};
+        const pins: Record<string, VenuePin> = {};
         snap.docs.forEach((d) => { pins[d.id] = d.data() as VenuePin; });
         setVenuePins(pins);
         pinsReady = true; checkDone();
