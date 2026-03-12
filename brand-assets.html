@@ -259,7 +259,7 @@
   <!-- ── SCREENSHOT THIS ── -->
   <section>
     <h2>Icon — Screenshot This</h2>
-    <p style="color:var(--stone);font-size:0.8rem;margin-bottom:32px;">Screenshot the box below, then crop to the square. Use it as your icon.png.</p>
+    <p style="color:var(--stone);font-size:0.8rem;margin-bottom:32px;">Screenshot the box below at 1:1, then replace assets/icon.png. The Q tail is intentionally clipped to keep the monogram clean.</p>
     <div style="
       width: 600px; height: 600px;
       background: #1C1C1E;
@@ -267,14 +267,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      position: relative;
     ">
       <span style="
         font-family: 'Cormorant Garamond', Georgia, serif;
         font-weight: 600;
-        font-size: 18rem;
+        font-size: 19rem;
         color: #C9A84C;
-        letter-spacing: 0.06em;
-        line-height: 1;
+        letter-spacing: 0.08em;
+        line-height: 0.82;
+        transform: translateY(-6%);
+        display: block;
       ">HQ</span>
     </div>
   </section>
