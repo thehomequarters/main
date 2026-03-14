@@ -18,6 +18,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   doc,
   getDoc,
+  setDoc,
+  deleteDoc,
   collection,
   query,
   where,
@@ -50,6 +52,8 @@ export default function VenueDetailScreen() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [isVisited, setIsVisited] = useState(false);
+  const [visitLoading, setVisitLoading] = useState(false);
 
   const screenWidth = Dimensions.get("window").width;
 
@@ -65,6 +69,10 @@ export default function VenueDetailScreen() {
         );
         const dealsSnap = await getDocs(dealsQuery);
         setDeals(dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
+        if (profile?.id) {
+          const visitSnap = await getDoc(doc(db, "venue_visits", `${profile.id}_${id}`));
+          setIsVisited(visitSnap.exists());
+        }
       }
       setLoading(false);
     };
@@ -84,6 +92,27 @@ export default function VenueDetailScreen() {
   const callVenue = () => {
     if (!venue?.phone) return;
     Linking.openURL(`tel:${venue.phone}`);
+  };
+
+  const handleVisitToggle = async () => {
+    if (!profile?.id || visitLoading) return;
+    const visitRef = doc(db, "venue_visits", `${profile.id}_${id}`);
+    setVisitLoading(true);
+    try {
+      if (isVisited) {
+        await deleteDoc(visitRef);
+        setIsVisited(false);
+      } else {
+        await setDoc(visitRef, {
+          member_id: profile.id,
+          venue_id: id,
+          visited_at: new Date().toISOString(),
+        });
+        setIsVisited(true);
+      }
+    } finally {
+      setVisitLoading(false);
+    }
   };
 
   const openMenu = () => {
@@ -543,7 +572,7 @@ export default function VenueDetailScreen() {
             </Pressable>
           )}
 
-          {/* Share + Menu quick actions */}
+          {/* Share + Menu + Visited quick actions */}
           <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
             {venue.menu_url && (
               <Pressable
@@ -586,6 +615,32 @@ export default function VenueDetailScreen() {
             >
               <Ionicons name="share-outline" size={16} color={colors.dark} />
               <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600" }}>Share</Text>
+            </Pressable>
+            <Pressable
+              onPress={handleVisitToggle}
+              disabled={visitLoading}
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                backgroundColor: isVisited ? "rgba(201,168,76,0.1)" : colors.white,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: isVisited ? "rgba(201,168,76,0.4)" : colors.border,
+                paddingVertical: 13,
+                opacity: visitLoading ? 0.6 : 1,
+              }}
+            >
+              <Ionicons
+                name={isVisited ? "checkmark-circle" : "checkmark-circle-outline"}
+                size={16}
+                color={isVisited ? "#C9A84C" : colors.dark}
+              />
+              <Text style={{ color: isVisited ? "#C9A84C" : colors.dark, fontSize: 13, fontWeight: "600" }}>
+                {isVisited ? "Visited" : "Been here"}
+              </Text>
             </Pressable>
           </View>
 

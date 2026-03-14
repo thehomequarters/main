@@ -27,7 +27,7 @@ import { useToast } from "@/components/Toast";
 import * as Haptics from "expo-haptics";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import type { Profile, Connection } from "@/lib/database.types";
+import type { Profile, Connection, Venue } from "@/lib/database.types";
 
 export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,6 +39,7 @@ export default function MemberProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [visitedVenues, setVisitedVenues] = useState<Venue[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -57,6 +58,14 @@ export default function MemberProfileScreen() {
         if (!cSnap.empty) {
           setConnection({ id: cSnap.docs[0].id, ...cSnap.docs[0].data() } as Connection);
         }
+      }
+      const visitsSnap = await getDocs(
+        query(collection(db, "venue_visits"), where("member_id", "==", id))
+      );
+      const venueIds = [...new Set(visitsSnap.docs.map((d) => d.data().venue_id as string))];
+      if (venueIds.length > 0) {
+        const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
+        setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
       }
       setLoading(false);
     };
@@ -284,6 +293,32 @@ export default function MemberProfileScreen() {
                 </View>
               ))}
             </View>
+          </View>
+        )}
+
+        {/* Places */}
+        {!isMasked && !member.hide_venue_log && visitedVenues.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>PLACES</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginHorizontal: -18 }}
+              contentContainerStyle={{ paddingHorizontal: 18, gap: 10 }}
+            >
+              {visitedVenues.map((venue) => (
+                <Pressable
+                  key={venue.id}
+                  onPress={() => router.push(`/venue/${venue.id}` as any)}
+                  style={styles.venueChip}
+                >
+                  {venue.logo_url ? (
+                    <Image source={{ uri: venue.logo_url }} style={styles.venueChipLogo} />
+                  ) : null}
+                  <Text style={styles.venueChipText}>{venue.name}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         )}
 
@@ -527,6 +562,29 @@ const styles = StyleSheet.create({
   socialHandle: {
     color: colors.dark,
     fontSize: 14,
+    fontWeight: "500",
+  },
+
+  // Venue chips
+  venueChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  venueChipLogo: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+  },
+  venueChipText: {
+    color: colors.dark,
+    fontSize: 13,
     fontWeight: "500",
   },
 
