@@ -49,6 +49,7 @@ export interface Profile {
   hide_industry?: boolean;
   hide_interests?: boolean;
   hide_social_links?: boolean;
+  hide_venue_log?: boolean;
   allow_messages?: "all" | "connections";
   // Grace period
   accepted_at?: string | null;  // ISO timestamp set when status → "accepted"
@@ -224,6 +225,13 @@ export interface VenueLike {
   venue_id: string;
   member_id: string;
   created_at: string;
+}
+
+export interface VenueVisit {
+  id: string;
+  member_id: string;
+  venue_id: string;
+  visited_at: string;
 }
 
 export interface Redemption {

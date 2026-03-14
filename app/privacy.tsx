@@ -29,6 +29,7 @@ export default function PrivacyScreen() {
   const [hideIndustry, setHideIndustry] = useState(profile?.hide_industry ?? false);
   const [hideInterests, setHideInterests] = useState(profile?.hide_interests ?? false);
   const [hideSocialLinks, setHideSocialLinks] = useState(profile?.hide_social_links ?? false);
+  const [hideVenueLog, setHideVenueLog] = useState(profile?.hide_venue_log ?? false);
   const [allowMessages, setAllowMessages] = useState<"all" | "connections">(
     profile?.allow_messages ?? "all"
   );
@@ -163,6 +164,15 @@ export default function PrivacyScreen() {
           subtitle="Show Instagram and LinkedIn on your profile"
           value={!hideSocialLinks}
           onToggle={() => toggle("hide_social_links", hideSocialLinks, setHideSocialLinks)}
+          disabled={saving}
+        />
+        <View style={styles.divider} />
+        <ToggleRow
+          icon="storefront-outline"
+          label="Show Places"
+          subtitle="Show venues you've visited on your profile"
+          value={!hideVenueLog}
+          onToggle={() => toggle("hide_venue_log", hideVenueLog, setHideVenueLog)}
           disabled={saving}
         />
       </View>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, Pressable, Dimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import * as Haptics from "expo-haptics";
@@ -54,6 +54,11 @@ export default function QRCodeScreen() {
         venue_id: venueId,
         deal_id: dealId,
         redeemed_at: new Date().toISOString(),
+      });
+      await setDoc(doc(db, "venue_visits", `${user.uid}_${venueId}`), {
+        member_id: user.uid,
+        venue_id: venueId,
+        visited_at: new Date().toISOString(),
       });
       setRedeemed(true);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
