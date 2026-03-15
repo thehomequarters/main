@@ -1,13 +1,11 @@
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 /**
  * Registers for push notifications and stores the Expo push token
  * on the user's profile document.
- *
- * Requires expo-notifications to be installed:
- *   npx expo install expo-notifications
  */
 export async function registerPushToken(userId: string): Promise<void> {
   // expo-notifications is optional — import dynamically so the app doesn't
@@ -34,8 +32,15 @@ export async function registerPushToken(userId: string): Promise<void> {
 
   if (finalStatus !== "granted") return;
 
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+  if (!projectId || projectId === "YOUR_EAS_PROJECT_ID") {
+    console.warn("registerPushToken: EAS projectId not configured, skipping.");
+    return;
+  }
+
   try {
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
     const token = tokenData.data;
 
     await updateDoc(doc(db, "profiles", userId), { push_token: token });

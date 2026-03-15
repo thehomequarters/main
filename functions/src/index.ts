@@ -9,7 +9,6 @@ import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import { getMessaging } from "firebase-admin/messaging";
 import Stripe from "stripe";
 import { Resend } from "resend";
 import {
@@ -30,6 +29,14 @@ import {
   graceReminderHtml, graceReminderText,
   foundingMemberText,
   committeeMemberText,
+  paymentConfirmedHtml, paymentConfirmedText,
+  paymentFailedHtml, paymentFailedText,
+  subscriptionCancelledText,
+  newsletterWelcomeHtml, newsletterWelcomeText,
+  welcomeInviteNudgeHtml, welcomeInviteNudgeText,
+  venueRedemptionNotificationText,
+  venueMonthlyDigestHtml, venueMonthlyDigestText,
+  memberRedemptionThankYouHtml, memberRedemptionThankYouText,
 } from "./emails";
 
 const stripeSecretKey = defineSecret("STRIPE_SECRET_KEY");
@@ -66,6 +73,68 @@ async function sendEmail(opts: {
 }
 
 initializeApp();
+
+// ─────────────────────────────────────────────
+// sendExpoPush
+// Sends a push notification via the Expo Push API.
+// Accepts Expo Push Tokens (ExponentPushToken[...]) stored by the app's
+// lib/notifications.ts → registerPushToken().
+// Batches into chunks of 100 (Expo API limit).
+// ─────────────────────────────────────────────
+async function sendExpoPush(opts: {
+  to: string | string[];
+  title?: string;
+  body: string;
+  data?: Record<string, string>;
+}): Promise<{ sent: number; failed: number }> {
+  const tokens = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean);
+  if (tokens.length === 0) return { sent: 0, failed: 0 };
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < tokens.length; i += 100) {
+    chunks.push(tokens.slice(i, i + 100));
+  }
+
+  let sent = 0;
+  let failed = 0;
+
+  for (const chunk of chunks) {
+    try {
+      const messages = chunk.map((token) => ({
+        to: token,
+        title: opts.title,
+        body: opts.body,
+        data: opts.data,
+        sound: "default",
+      }));
+
+      const res = await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Accept-Encoding": "gzip, deflate",
+        },
+        body: JSON.stringify(messages),
+      });
+
+      if (!res.ok) {
+        console.error("Expo Push API error:", res.status, await res.text());
+        failed += chunk.length;
+      } else {
+        const json = await res.json() as { data: { status: string }[] };
+        const results = json.data ?? [];
+        sent += results.filter((r) => r.status === "ok").length;
+        failed += results.filter((r) => r.status !== "ok").length;
+      }
+    } catch (err) {
+      console.error("sendExpoPush error:", err);
+      failed += chunk.length;
+    }
+  }
+
+  return { sent, failed };
+}
 
 // ─────────────────────────────────────────────
 // onApplicationReceived
@@ -318,12 +387,10 @@ export const onMemberApproved = onDocumentUpdated(
     const pushToken = after.push_token as string | undefined;
     if (pushToken) {
       try {
-        await getMessaging().send({
-          token: pushToken,
-          notification: {
-            title: "Welcome to HomeQuarters",
-            body: `${after.first_name as string}, your membership has been approved. Welcome to the community.`,
-          },
+        await sendExpoPush({
+          to: pushToken,
+          title: "Welcome to HomeQuarters",
+          body: `${after.first_name as string}, your membership has been approved. Welcome to the community.`,
           data: { type: "membership_approved" },
         });
       } catch (err) {
@@ -405,6 +472,21 @@ export const onMemberApproved = onDocumentUpdated(
         });
       } catch (err) {
         console.error("Failed to schedule discover nudge email:", err);
+      }
+
+      // Email 4 — Day 30: Invite a friend nudge
+      const day30 = new Date(now + 30 * 24 * 60 * 60 * 1000);
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "Who would belong here?",
+          html: welcomeInviteNudgeHtml({ firstName }),
+          text: welcomeInviteNudgeText({ firstName }),
+          apiKey: resendApiKey.value(),
+          scheduledAt: day30,
+        });
+      } catch (err) {
+        console.error("Failed to schedule invite nudge email:", err);
       }
     }
 
@@ -565,23 +647,44 @@ export const onPaymentActivated = onDocumentUpdated(
     // Only fire when stripe_customer_id is newly written (i.e. first payment)
     if (before.stripe_customer_id || !after.stripe_customer_id) return;
 
+    // Cancel any pending grace-period reminder emails
     const emailIds = (after.grace_email_ids as string[] | undefined) ?? [];
-    if (emailIds.length === 0) return;
+    if (emailIds.length > 0) {
+      const resend = new Resend(resendApiKey.value());
+      await Promise.allSettled(
+        emailIds.map(async (id) => {
+          try {
+            await resend.emails.cancel(id);
+            console.log(`Cancelled grace email ${id} for ${event.params.userId}`);
+          } catch (err) {
+            console.error(`Failed to cancel grace email ${id}:`, err);
+          }
+        })
+      );
+      await event.data?.after.ref.update({ grace_email_ids: [] });
+    }
 
-    const resend = new Resend(resendApiKey.value());
-    await Promise.allSettled(
-      emailIds.map(async (id) => {
-        try {
-          await resend.emails.cancel(id);
-          console.log(`Cancelled grace email ${id} for ${event.params.userId}`);
-        } catch (err) {
-          console.error(`Failed to cancel grace email ${id}:`, err);
-        }
-      })
-    );
-
-    // Clear stored IDs — no longer needed
-    await event.data?.after.ref.update({ grace_email_ids: [] });
+    // Send payment confirmation email
+    if (after.email && typeof after.email === "string") {
+      const firstName = (after.first_name as string) ?? "there";
+      const memberCode = (after.member_code as string) ?? "";
+      const tier = (after.membership_tier as string) ?? "gold_card";
+      const periodEnd = after.current_period_end as string | undefined;
+      const nextBillingDate = periodEnd
+        ? new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+        : "your next billing date";
+      try {
+        await sendEmail({
+          to: after.email,
+          subject: "You're a full HomeQuarters member",
+          html: paymentConfirmedHtml({ firstName, memberCode, tier, nextBillingDate }),
+          text: paymentConfirmedText({ firstName, memberCode, tier, nextBillingDate }),
+          apiKey: resendApiKey.value(),
+        });
+      } catch (err) {
+        console.error("Failed to send payment confirmation email:", err);
+      }
+    }
   }
 );
 
@@ -618,12 +721,10 @@ export const sendGracePushNotifications = onSchedule("every 24 hours", async () 
     // Day 2: "Your membership is waiting" nudge (28 days remaining)
     if (daysSince >= 2 && daysSince < 3 && !pushSent.includes(2)) {
       try {
-        await getMessaging().send({
-          token: profile.push_token as string,
-          notification: {
-            title: "Your HQ membership is waiting",
-            body: "You have 28 days to explore HomeQuarters free. Take a look whenever you're ready.",
-          },
+        await sendExpoPush({
+          to: profile.push_token as string,
+          title: "Your HQ membership is waiting",
+          body: "You have 28 days to explore HomeQuarters free. Take a look whenever you're ready.",
           data: { route: "/billing" },
         });
         await doc.ref.update({ grace_push_sent: [...pushSent, 2] });
@@ -637,12 +738,10 @@ export const sendGracePushNotifications = onSchedule("every 24 hours", async () 
     const pushSentAfterDay2 = pushSent.includes(2) ? pushSent : [...pushSent, 2];
     if (daysSince >= 28 && daysSince < 29 && !pushSent.includes(28)) {
       try {
-        await getMessaging().send({
-          token: profile.push_token as string,
-          notification: {
-            title: "2 days left on your free trial",
-            body: "Your HomeQuarters trial ends in 2 days. Choose a plan to keep access.",
-          },
+        await sendExpoPush({
+          to: profile.push_token as string,
+          title: "2 days left on your free trial",
+          body: "Your HomeQuarters trial ends in 2 days. Choose a plan to keep access.",
           data: { route: "/billing" },
         });
         await doc.ref.update({ grace_push_sent: [...pushSentAfterDay2, 28] });
@@ -673,12 +772,10 @@ export const onMemberSuspended = onDocumentUpdated(
     const pushToken = after.push_token as string | undefined;
     if (pushToken) {
       try {
-        await getMessaging().send({
-          token: pushToken,
-          notification: {
-            title: "HomeQuarters Membership",
-            body: "Your membership has been suspended. Please contact support for more information.",
-          },
+        await sendExpoPush({
+          to: pushToken,
+          title: "HomeQuarters Membership",
+          body: "Your membership has been suspended. Please contact support for more information.",
           data: { type: "membership_suspended" },
         });
       } catch (err) {
@@ -782,12 +879,10 @@ export const onNewMessage = onDocumentCreated(
     const text = (message.text as string) || "Sent a photo";
 
     try {
-      await getMessaging().send({
-        token: recipient.push_token as string,
-        notification: {
-          title: message.sender_name as string,
-          body: text.length > 100 ? text.slice(0, 97) + "..." : text,
-        },
+      await sendExpoPush({
+        to: recipient.push_token as string,
+        title: message.sender_name as string,
+        body: text.length > 100 ? text.slice(0, 97) + "..." : text,
         data: {
           type: "message",
           conversationId,
@@ -921,14 +1016,15 @@ export const handleWebApplication = onRequest(
       return;
     }
 
-    const body = req.body as Record<string, unknown>;
-    const first_name     = body.first_name     as string | undefined;
-    const last_name      = body.last_name      as string | undefined;
-    const email          = body.email          as string | undefined;
-    const instagram      = body.instagram      as string | undefined;
-    const linkedin       = body.linkedin       as string | undefined;
-    const about          = body.about          as string | undefined;
-    const marketing_opt_in = body.marketing_opt_in;
+    const {
+      first_name,
+      last_name,
+      email,
+      instagram,
+      linkedin,
+      about,
+      marketing_opt_in,
+    } = req.body as Record<string, string | undefined>;
 
     // Validate required fields
     if (!first_name?.trim() || !last_name?.trim()) {
@@ -954,7 +1050,7 @@ export const handleWebApplication = onRequest(
         instagram: (instagram as string)?.trim() ?? null,
         linkedin: (linkedin as string)?.trim() ?? null,
         about: (about as string)?.trim() ?? null,
-        marketing_opt_in: marketing_opt_in === true || marketing_opt_in === "true",
+        marketing_opt_in: marketing_opt_in === "true",
         source: "website",
         submitted_at: new Date().toISOString(),
         status: "received",
@@ -982,38 +1078,6 @@ export const handleWebApplication = onRequest(
     res.json({ ok: true });
   }
 );
-
-// ─────────────────────────────────────────────
-// handleSubscribe
-// HTTP POST — newsletter sign-up from the website popup.
-// Saves the email to newsletter_subscribers/{email} (idempotent upsert).
-// Exposed via Firebase Hosting rewrite at /api/subscribe.
-// ─────────────────────────────────────────────
-export const handleSubscribe = onRequest({ cors: true }, async (req, res) => {
-  if (req.method !== "POST") {
-    res.status(405).json({ error: "Method not allowed" });
-    return;
-  }
-  const { email } = req.body as Record<string, string | undefined>;
-  if (!email?.trim() || !email.includes("@")) {
-    res.status(400).json({ error: "A valid email address is required." });
-    return;
-  }
-  const sanitized = email.trim().toLowerCase();
-  try {
-    const db = getFirestore();
-    // Use email as doc ID so duplicate sign-ups are idempotent
-    await db.collection("newsletter_subscribers").doc(sanitized).set({
-      email: sanitized,
-      subscribed_at: new Date().toISOString(),
-      source: "website_popup",
-    }, { merge: true });
-    res.json({ ok: true });
-  } catch (err) {
-    console.error("handleSubscribe error:", err);
-    res.status(500).json({ error: "Could not save subscription." });
-  }
-});
 
 // ─────────────────────────────────────────────
 // stripeWebhook
@@ -1163,6 +1227,24 @@ export const stripeWebhook = onRequest(
             stripe_subscription_id: null,
             current_period_end: null,
           });
+
+          // Win-back email — plain text from Valentine, scheduled 24h later
+          const profile = snap.docs[0].data();
+          if (profile.email && typeof profile.email === "string") {
+            const firstName = (profile.first_name as string) ?? "there";
+            try {
+              await sendEmail({
+                from: FOUNDER_EMAIL,
+                to: profile.email,
+                subject: "From me, personally",
+                text: subscriptionCancelledText({ firstName }),
+                apiKey: resendApiKey.value(),
+                scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              });
+            } catch (err) {
+              console.error("Failed to schedule win-back email:", err);
+            }
+          }
           break;
         }
 
@@ -1220,6 +1302,34 @@ export const stripeWebhook = onRequest(
           await snap.docs[0].ref.update({ subscription_status: "past_due" });
 
           const profile = snap.docs[0].data();
+
+          // Payment failed email — urgent, directs to Stripe portal to update card
+          if (profile.email && typeof profile.email === "string") {
+            const firstName = (profile.first_name as string) ?? "there";
+            const stripe2 = new Stripe(stripeSecretKey.value());
+            let portalUrl = `${process.env.APP_BASE_URL ?? "https://thehomequarters.com"}/billing`;
+            try {
+              const portalSession = await stripe2.billingPortal.sessions.create({
+                customer: custId,
+                return_url: process.env.APP_BASE_URL ?? "https://thehomequarters.com",
+              });
+              portalUrl = portalSession.url;
+            } catch {
+              // Non-fatal — fall back to app billing page
+            }
+            try {
+              await sendEmail({
+                to: profile.email,
+                subject: "Action required: your HomeQuarters payment failed",
+                html: paymentFailedHtml({ firstName, portalUrl }),
+                text: paymentFailedText({ firstName, portalUrl }),
+                apiKey: resendApiKey.value(),
+              });
+            } catch (err) {
+              console.error("Failed to send payment failed email:", err);
+            }
+          }
+
           const priceId = invoice.lines?.data[0]?.price?.id ?? "";
           const tier = tierFromPriceId(priceId);
 
@@ -1263,6 +1373,56 @@ export const stripeWebhook = onRequest(
 //   https://dashboard.stripe.com/settings/billing/portal
 // ─────────────────────────────────────────────
 // ─────────────────────────────────────────────
+// handleSubscribe
+// HTTP POST — newsletter sign-up from the website popup.
+// Saves the email to newsletter_subscribers/{email} (idempotent upsert).
+// Sends a branded welcome email to the subscriber.
+// Exposed via Firebase Hosting rewrite at /api/subscribe.
+// ─────────────────────────────────────────────
+export const handleSubscribe = onRequest(
+  { cors: true, secrets: [resendApiKey] },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+    const { email, first_name } = req.body as { email?: string; first_name?: string };
+    if (!email?.trim() || !email.includes("@")) {
+      res.status(400).json({ error: "A valid email address is required." });
+      return;
+    }
+    const sanitized = email.trim().toLowerCase();
+    const firstName = first_name?.trim() || undefined;
+    const db = getFirestore();
+    try {
+      await db.collection("newsletter_subscribers").doc(sanitized).set({
+        email: sanitized,
+        first_name: firstName ?? null,
+        subscribed_at: new Date().toISOString(),
+        source: "website_popup",
+      }, { merge: true });
+    } catch (err) {
+      console.error("handleSubscribe error:", err);
+      res.status(500).json({ error: "Could not save subscription." });
+      return;
+    }
+    // Send welcome confirmation (non-fatal if it fails)
+    try {
+      await sendEmail({
+        to: sanitized,
+        subject: "You're on the HomeQuarters list",
+        html: newsletterWelcomeHtml({ firstName }),
+        text: newsletterWelcomeText({ firstName }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send newsletter welcome email:", err);
+    }
+    res.json({ ok: true });
+  }
+);
+
+// ─────────────────────────────────────────────
 // verifyRedemption
 // Public HTTP endpoint — no auth required (security comes from venue PIN + expiring token).
 // Called by the /verify page when staff scan a member's QR code.
@@ -1280,7 +1440,7 @@ export const stripeWebhook = onRequest(
 //
 // On success: writes a confirmed redemption and returns member/deal info for the UI.
 // ─────────────────────────────────────────────
-export const verifyRedemption = onRequest({ cors: true }, async (req, res) => {
+export const verifyRedemption = onRequest({ cors: true, secrets: [resendApiKey] }, async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Method not allowed" });
     return;
@@ -1392,6 +1552,35 @@ export const verifyRedemption = onRequest({ cors: true }, async (req, res) => {
     member_tier: profile.membership_tier ?? null,
   });
 
+  // Notify venue contact if opt-in is enabled
+  const venueDoc = await db.doc(`venues/${venue_id}`).get();
+  const venue = venueDoc.data();
+  if (venue?.notify_on_redemption && typeof venue.contact_email === "string") {
+    const dealTitle = dealDoc.data()!.title as string;
+    const venueName = (venue.name as string | undefined) ??
+      (pinDoc.data()!.venue_name as string | undefined) ??
+      (payload.venue_name as string | undefined) ?? "";
+    const redeemedAt = new Date().toLocaleString("en-GB", {
+      day: "numeric", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit", timeZone: "Africa/Harare",
+    });
+    try {
+      await sendEmail({
+        to: venue.contact_email,
+        subject: `HomeQuarters member redeemed a benefit at ${venueName}`,
+        text: venueRedemptionNotificationText({
+          venueName,
+          dealTitle,
+          memberTier: profile.membership_tier ?? "gold_card",
+          redeemedAt,
+        }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send venue redemption notification:", err);
+    }
+  }
+
   res.json({
     ok: true,
     member_name: memberName,
@@ -1436,7 +1625,6 @@ export const sendBroadcastNotification = onCall(async (request) => {
   const snap = await db
     .collection("profiles")
     .where("membership_status", "==", "active")
-    .where("push_token", "!=", null)
     .get();
 
   const tokens = snap.docs
@@ -1447,29 +1635,12 @@ export const sendBroadcastNotification = onCall(async (request) => {
     return { sent: 0, failed: 0 };
   }
 
-  // Chunk into batches of 500 (FCM multicast limit)
-  const chunks: string[][] = [];
-  for (let i = 0; i < tokens.length; i += 500) {
-    chunks.push(tokens.slice(i, i + 500));
-  }
-
-  let totalSent = 0;
-  let totalFailed = 0;
-
-  for (const chunk of chunks) {
-    try {
-      const result = await getMessaging().sendEachForMulticast({
-        tokens: chunk,
-        notification: { title: title.trim(), body: body.trim() },
-        data: { type, ...(extraData ?? {}) },
-      });
-      totalSent += result.successCount;
-      totalFailed += result.failureCount;
-    } catch (err) {
-      console.error("FCM multicast error:", err);
-      totalFailed += chunk.length;
-    }
-  }
+  const { sent: totalSent, failed: totalFailed } = await sendExpoPush({
+    to: tokens,
+    title: title.trim(),
+    body: body.trim(),
+    data: { type, ...(extraData ?? {}) },
+  });
 
   // Log the broadcast
   await db.collection("broadcast_notifications").add({
@@ -1518,5 +1689,198 @@ export const getStripePortalUrl = onCall(
     });
 
     return { url: session.url };
+  }
+);
+
+// ─────────────────────────────────────────────
+// onRedemptionCreated
+// Fires when a new document is created in the redemptions collection.
+// Covers both PIN-verified (verifyRedemption) and manual (client-side) redemptions.
+// Sends the member a warm thank-you email with a review + social share nudge
+// to support the partner venue.
+// ─────────────────────────────────────────────
+export const onRedemptionCreated = onDocumentCreated(
+  { document: "redemptions/{redemptionId}", secrets: [resendApiKey] },
+  async (event) => {
+    const redemption = event.data?.data();
+    if (!redemption) return;
+
+    const { member_id, deal_id } = redemption as {
+      member_id?: string;
+      deal_id?: string;
+    };
+    if (!member_id || !deal_id) return;
+
+    const db = getFirestore();
+
+    // Fetch member profile for email + first name
+    const profileDoc = await db.doc(`profiles/${member_id}`).get();
+    const profile = profileDoc.data();
+    if (!profile?.email || typeof profile.email !== "string") return;
+
+    const firstName = (profile.first_name as string) ?? "there";
+
+    // Fetch deal title
+    let dealTitle = "your benefit";
+    try {
+      const dealDoc = await db.doc(`deals/${deal_id}`).get();
+      dealTitle = (dealDoc.data()?.title as string | undefined) ?? dealTitle;
+    } catch { /* non-fatal */ }
+
+    // Fetch venue name
+    let venueName = "our partner venue";
+    const venueId = redemption.venue_id as string | undefined;
+    if (venueId) {
+      try {
+        const venueDoc = await db.doc(`venues/${venueId}`).get();
+        venueName = (venueDoc.data()?.name as string | undefined) ?? venueName;
+      } catch { /* non-fatal */ }
+    }
+
+    try {
+      await sendEmail({
+        to: profile.email,
+        subject: `Hope you enjoyed ${venueName} — a small favour`,
+        html: memberRedemptionThankYouHtml({ firstName, venueName, dealTitle }),
+        text: memberRedemptionThankYouText({ firstName, venueName, dealTitle }),
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send redemption thank-you email:", err);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// sendMonthlyVenueDigests
+// Runs on the 1st of every month at 09:00 London time.
+// Sends a partner report email to every active venue that has a contact_email.
+// Report covers the previous full calendar month:
+//   — total redemptions, per-deal breakdown, member tier split, month-on-month change.
+// ─────────────────────────────────────────────
+export const sendMonthlyVenueDigests = onSchedule(
+  { schedule: "0 9 1 * *", timeZone: "Europe/London", secrets: [resendApiKey] },
+  async () => {
+    const db = getFirestore();
+
+    // Calculate previous calendar month date range
+    const now = new Date();
+    const startOfThisMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const startOfLastMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    const startOfTwoMonthsAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1));
+
+    const monthLabel = startOfLastMonth.toLocaleDateString("en-GB", {
+      month: "long", year: "numeric", timeZone: "UTC",
+    });
+
+    // Fetch all active venues with a contact email
+    const venuesSnap = await db.collection("venues")
+      .where("is_active", "==", true)
+      .get();
+
+    const venues = venuesSnap.docs.filter((d) => {
+      const ce = d.data().contact_email;
+      return typeof ce === "string" && ce.includes("@");
+    });
+
+    if (venues.length === 0) {
+      console.log("sendMonthlyVenueDigests: no venues with contact_email, skipping.");
+      return;
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    await Promise.allSettled(
+      venues.map(async (venueDoc) => {
+        const venue = venueDoc.data();
+        const venueId = venueDoc.id;
+        const contactEmail = venue.contact_email as string;
+        const venueName = (venue.name as string | undefined) ?? "Your Venue";
+
+        try {
+          // Fetch redemptions for last month and the month before (for comparison)
+          const [lastMonthSnap, prevMonthSnap] = await Promise.all([
+            db.collection("redemptions")
+              .where("venue_id", "==", venueId)
+              .where("redeemed_at", ">=", startOfLastMonth.toISOString())
+              .where("redeemed_at", "<", startOfThisMonth.toISOString())
+              .get(),
+            db.collection("redemptions")
+              .where("venue_id", "==", venueId)
+              .where("redeemed_at", ">=", startOfTwoMonthsAgo.toISOString())
+              .where("redeemed_at", "<", startOfLastMonth.toISOString())
+              .get(),
+          ]);
+
+          const totalRedemptions = lastMonthSnap.size;
+          const prevMonthTotal: number | null = prevMonthSnap.size > 0 ? prevMonthSnap.size : null;
+
+          // Aggregate tier split
+          let gold = 0;
+          let platinum = 0;
+          const dealCounts = new Map<string, number>();
+
+          for (const r of lastMonthSnap.docs) {
+            const data = r.data();
+            if (data.member_tier === "platinum_card") platinum++;
+            else gold++;
+            const dealId = data.deal_id as string;
+            if (dealId) dealCounts.set(dealId, (dealCounts.get(dealId) ?? 0) + 1);
+          }
+
+          // Fetch deal titles for all unique deal IDs
+          const dealTitleMap = new Map<string, string>();
+          const uniqueDealIds = [...dealCounts.keys()];
+          await Promise.all(
+            uniqueDealIds.map(async (dealId) => {
+              try {
+                const dealDoc = await db.doc(`deals/${dealId}`).get();
+                const title = dealDoc.data()?.title as string | undefined;
+                dealTitleMap.set(dealId, title ?? "Unnamed deal");
+              } catch {
+                dealTitleMap.set(dealId, "Unnamed deal");
+              }
+            })
+          );
+
+          const deals = [...dealCounts.entries()]
+            .map(([id, count]) => ({ title: dealTitleMap.get(id) ?? "Unnamed deal", count }))
+            .sort((a, b) => b.count - a.count);
+
+          // Only send if there were redemptions OR it's the first month (encourage engagement)
+          // We send regardless — even 0 is useful feedback to the venue.
+          await sendEmail({
+            to: contactEmail,
+            subject: `Your HomeQuarters partner report — ${monthLabel}`,
+            html: venueMonthlyDigestHtml({
+              venueName,
+              month: monthLabel,
+              totalRedemptions,
+              deals,
+              tierBreakdown: { gold, platinum },
+              prevMonthTotal,
+            }),
+            text: venueMonthlyDigestText({
+              venueName,
+              month: monthLabel,
+              totalRedemptions,
+              deals,
+              tierBreakdown: { gold, platinum },
+              prevMonthTotal,
+            }),
+            apiKey: resendApiKey.value(),
+          });
+
+          sent++;
+          console.log(`sendMonthlyVenueDigests: sent to ${contactEmail} (${venueName})`);
+        } catch (err) {
+          failed++;
+          console.error(`sendMonthlyVenueDigests: failed for venue ${venueId}:`, err);
+        }
+      })
+    );
+
+    console.log(`sendMonthlyVenueDigests: ${sent} sent, ${failed} failed for ${monthLabel}`);
   }
 );

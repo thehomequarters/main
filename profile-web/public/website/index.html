@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HomeQuarters - A Private Members' Community</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #F5E6A0;
+      --dark: #111111;
+      --cream: #F5F2EC;
+      --stone: #7A7060;
+      --white: #FFFFFF;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--dark);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 48px;
+      background: rgba(17,17,17,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .nav-logo {
+      font-size: 11px; font-weight: 700; letter-spacing: 3.5px;
+      text-transform: uppercase; color: var(--white);
+    }
+    .nav-links { display: flex; gap: 32px; }
+    .nav-links a { font-size: 13px; color: rgba(255,255,255,0.6); transition: color .2s; }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+      background: var(--gold); color: var(--dark);
+      padding: 9px 20px; border-radius: 100px;
+      transition: opacity .2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 48px 80px;
+      background: var(--dark);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -200px; right: -200px;
+      width: 700px; height: 700px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content { max-width: 480px; z-index: 1; }
+    .hero-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 56px); font-weight: 800;
+      line-height: 1.1; letter-spacing: -1px;
+      color: var(--white); margin-bottom: 20px;
+    }
+    .hero h1 em { font-style: normal; color: var(--gold); }
+    .hero p {
+      font-size: 16px; line-height: 1.7;
+      color: rgba(255,255,255,0.55); margin-bottom: 36px;
+      max-width: 380px;
+    }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .store-btn {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px; padding: 10px 18px;
+      transition: background .2s, border-color .2s;
+    }
+    .store-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+    .store-btn svg { width: 20px; height: 20px; fill: var(--white); }
+    .store-btn-text { display: flex; flex-direction: column; }
+    .store-btn-text small { font-size: 9px; color: rgba(255,255,255,0.5); letter-spacing: 0.5px; }
+    .store-btn-text span { font-size: 13px; font-weight: 600; color: var(--white); }
+
+    .hero-phone {
+      position: absolute; right: 6%; top: 50%; transform: translateY(-50%);
+      width: clamp(220px, 28vw, 340px);
+    }
+    .phone-shell {
+      width: 100%; aspect-ratio: 9/19;
+      background: #1A1A1A;
+      border-radius: 40px;
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+      overflow: hidden; position: relative;
+    }
+    .phone-shell::before {
+      content: '';
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      width: 80px; height: 24px; background: #111;
+      border-radius: 12px; z-index: 2;
+    }
+    .phone-screen {
+      width: 100%; height: 100%;
+      background: linear-gradient(160deg, #1E1500 0%, #111 50%, #1C1C1E 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 48px 20px 20px;
+      gap: 16px;
+    }
+    .phone-card {
+      width: 100%; background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 16px; padding: 16px;
+    }
+    .phone-card-label { font-size: 8px; letter-spacing: 2px; color: var(--gold); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+    .phone-card-name { font-size: 13px; font-weight: 700; color: var(--gold-light); }
+    .phone-card-tier { font-size: 9px; color: rgba(245,230,160,0.5); margin-top: 2px; }
+    .phone-tag {
+      align-self: flex-start;
+      background: rgba(201,168,76,0.15); border-radius: 6px;
+      padding: 5px 10px; font-size: 9px; color: var(--gold);
+      font-weight: 600; letter-spacing: 0.5px;
+    }
+    .phone-venue-row { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    .phone-venue {
+      background: rgba(255,255,255,0.04); border-radius: 10px;
+      padding: 10px 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .phone-venue-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+    .phone-venue-text { font-size: 9px; color: rgba(255,255,255,0.7); }
+
+    /* ── SECTION BASE ── */
+    section { padding: 100px 48px; }
+
+    /* ── FEATURE SECTIONS ── */
+    .features { background: var(--cream); color: var(--dark); }
+    .feature-row {
+      display: flex; align-items: center; gap: 80px;
+      max-width: 1000px; margin: 0 auto 100px;
+    }
+    .feature-row:last-child { margin-bottom: 0; }
+    .feature-row.reverse { flex-direction: row-reverse; }
+    .feature-phone { flex-shrink: 0; width: 220px; }
+    .feature-phone .phone-shell {
+      background: #1A1A1A;
+      border-color: rgba(0,0,0,0.1);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.15);
+    }
+    .feature-copy { flex: 1; }
+    .feature-copy h2 {
+      font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+      color: var(--dark); margin-bottom: 14px; line-height: 1.2;
+    }
+    .feature-copy p {
+      font-size: 15px; line-height: 1.7; color: var(--stone); margin-bottom: 8px;
+    }
+
+    /* ── CTA SECTION ── */
+    .cta-section {
+      background: var(--cream);
+      padding: 80px 48px;
+      text-align: center;
+      border-top: 1px solid rgba(0,0,0,0.08);
+    }
+    .cta-section p {
+      font-size: 14px; font-weight: 600; letter-spacing: 0.2px;
+      color: var(--dark); margin-bottom: 20px;
+    }
+    .cta-section .hero-btns { justify-content: center; }
+    .cta-section .store-btn {
+      background: var(--dark);
+      border-color: var(--dark);
+    }
+    .cta-section .store-btn:hover { background: #222; }
+    .cta-section .store-btn-text small { color: rgba(255,255,255,0.45); }
+
+    /* ── PARTNERS ── */
+    .partners { background: var(--dark); text-align: center; }
+    .partners-eyebrow {
+      font-size: 11px; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      margin-bottom: 56px;
+    }
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 1px;
+      max-width: 900px; margin: 0 auto;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px; overflow: hidden;
+    }
+    .partner-cell {
+      background: rgba(255,255,255,0.02);
+      padding: 28px 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: rgba(255,255,255,0.3);
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: background .2s, color .2s;
+    }
+    .partner-cell:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); }
+
+    /* ── HOUSE RULES ── */
+    .rules { background: var(--dark); }
+    .rules-inner { max-width: 860px; margin: 0 auto; }
+    .rules-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+    }
+    .rules-heading {
+      font-size: clamp(28px, 4vw, 42px); font-weight: 800;
+      color: var(--white); letter-spacing: -0.5px; margin-bottom: 14px;
+    }
+    .rules-sub {
+      font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.45);
+      max-width: 560px; margin-bottom: 40px;
+    }
+    .rules-highlight {
+      display: flex; align-items: flex-start; gap: 20px;
+      background: rgba(201,168,76,0.07);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 16px; padding: 24px 28px; margin-bottom: 40px;
+    }
+    .rules-highlight-icon {
+      color: var(--gold); font-size: 18px; flex-shrink: 0; margin-top: 2px;
+    }
+    .rules-highlight-title {
+      font-size: 17px; font-weight: 700; color: var(--gold-light);
+      margin-bottom: 8px;
+    }
+    .rules-highlight-body {
+      font-size: 14px; line-height: 1.75; color: rgba(245,230,160,0.65);
+    }
+    .rules-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px; margin-bottom: 32px;
+    }
+    .rule-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; padding: 22px 20px;
+    }
+    .rule-card-red {
+      background: rgba(229,57,53,0.04);
+      border-color: rgba(229,57,53,0.2);
+    }
+    .rule-num {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+      color: rgba(255,255,255,0.2); margin-bottom: 10px;
+    }
+    .rule-num-red { color: rgba(229,57,53,0.5); }
+    .rule-title {
+      font-size: 14px; font-weight: 700; color: var(--white);
+      margin-bottom: 8px; line-height: 1.3;
+    }
+    .rule-title-red { color: #ef5350; }
+    .rule-body {
+      font-size: 13px; line-height: 1.7; color: rgba(255,255,255,0.4);
+    }
+    .rules-footer {
+      font-size: 12px; color: rgba(255,255,255,0.2); text-align: center;
+    }
+    @media (max-width: 768px) {
+      .rules-grid { grid-template-columns: 1fr; }
+      .rules-highlight { flex-direction: column; gap: 12px; }
+    }
+
+    /* ── CONTACT / APPLICATION ── */
+    .contact { background: var(--cream); color: var(--dark); }
+    .contact-inner { max-width: 560px; margin: 0 auto; text-align: center; }
+    .contact h2 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+    .contact .sub { font-size: 14px; color: var(--stone); margin-bottom: 36px; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .contact input, .contact textarea, .contact select {
+      width: 100%; padding: 13px 16px;
+      background: var(--white); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 10px; font-size: 14px; color: var(--dark);
+      font-family: inherit; outline: none;
+      transition: border-color .2s;
+    }
+    .contact input:focus, .contact textarea:focus { border-color: var(--gold); }
+    .contact input::placeholder, .contact textarea::placeholder { color: #BBAA99; }
+    .contact textarea { resize: vertical; min-height: 120px; margin-bottom: 12px; }
+    .contact-submit {
+      background: var(--dark); color: var(--white);
+      border: none; border-radius: 100px;
+      padding: 14px 40px; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: opacity .2s;
+    }
+    .contact-submit:hover { opacity: 0.8; }
+
+    /* ── LIFESTYLE GALLERY ── */
+    .lifestyle { background: var(--dark); padding: 80px 48px; }
+    .lifestyle-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold);
+      text-align: center; margin-bottom: 48px;
+    }
+    .lifestyle-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .lifestyle-grid img {
+      width: 100%; aspect-ratio: 4/3;
+      object-fit: cover; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+      transition: opacity .2s;
+    }
+    .lifestyle-grid img:hover { opacity: 0.85; }
+    .lifestyle-grid img:nth-child(4n+1) { grid-column: span 2; aspect-ratio: 16/9; }
+    @media (max-width: 768px) {
+      .lifestyle { padding: 60px 24px; }
+      .lifestyle-grid { grid-template-columns: 1fr 1fr; }
+      .lifestyle-grid img:nth-child(4n+1) { grid-column: span 1; aspect-ratio: 4/3; }
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark);
+      padding: 48px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      text-align: center;
+    }
+    .footer-links { display: flex; justify-content: center; gap: 28px; margin-bottom: 24px; flex-wrap: wrap; }
+    .footer-links a { font-size: 12px; color: rgba(255,255,255,0.35); transition: color .2s; }
+    .footer-links a:hover { color: rgba(255,255,255,0.7); }
+    .footer-store { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; }
+    .footer-store .store-btn { padding: 8px 14px; }
+    .footer-store .store-btn svg { width: 16px; height: 16px; }
+    .footer-store .store-btn-text span { font-size: 11px; }
+    .footer-copy { font-size: 11px; color: rgba(255,255,255,0.2); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      section { padding: 64px 24px; }
+      .hero { padding: 100px 24px 64px; min-height: auto; }
+      .hero-phone { display: none; }
+      .feature-row, .feature-row.reverse { flex-direction: column; gap: 40px; }
+      .feature-phone { width: 180px; margin: 0 auto; }
+      .plans-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      footer { padding: 40px 24px; }
+      /* Contact section — left-align on mobile, full-width submit */
+      .contact-inner { text-align: left; }
+      .contact h2 { text-align: left; }
+      .contact .sub { text-align: left; }
+      .contact-submit { width: 100%; padding: 16px; }
+      .footer-links { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">HomeQuarters</div>
+    <div class="nav-links">
+      <a href="#features">About</a>
+      <a href="#rules">House Rules</a>
+      <a href="#apply">Apply</a>
+    </div>
+    <a href="#apply" class="nav-cta">Apply</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow" id="cms-hero-eyebrow">A private members' community</div>
+      <h1><span id="cms-hero-line1">Built for the diaspora.</span><br><em id="cms-hero-line2">By invitation only.</em></h1>
+      <p id="cms-hero-body">HomeQuarters brings together a curated community of Zimbabweans in the UK. Membership is by invitation from a current member. Applications are rarely considered.</p>
+      <div class="hero-btns">
+        <a href="#" class="store-btn">
+          <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+          <div class="store-btn-text">
+            <small>Download on the</small>
+            <span>App Store</span>
+          </div>
+        </a>
+        <a href="#" class="store-btn">
+          <svg viewBox="0 0 24 24"><path d="M3.18 23.76c.3.17.65.19.98.07l12.39-6.76-2.61-2.61-10.76 9.3zM.35 1.34C.13 1.7 0 2.14 0 2.67v18.67c0 .53.13.97.35 1.33l.07.07L10.5 12.5v-.24L.42 1.27l-.07.07zM20.97 10.06l-2.79-1.52-2.94 2.94 2.94 2.94 2.81-1.53c.8-.44.8-1.39-.02-1.83zM3.18.24L15.57 7l-2.61 2.61L.19.31C.52.19.87.21 1.2.38l1.98-.14z"/></svg>
+          <div class="store-btn-text">
+            <small>Get it on</small>
+            <span>Google Play</span>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Phone mockup -->
+    <div class="hero-phone">
+      <div class="phone-shell">
+        <div class="phone-screen">
+          <div class="phone-card">
+            <div class="phone-card-label">HQ Membership</div>
+            <div class="phone-card-name">Gold Member</div>
+            <div class="phone-card-tier">Active · Renews monthly</div>
+          </div>
+          <div class="phone-tag">15+ UK venues</div>
+          <div class="phone-venue-row">
+            <div class="phone-venue"><div class="phone-venue-dot"></div><div class="phone-venue-text">Venue deal · 20% off</div></div>
+            <div class="phone-venue"><div class="phone-venue-dot" style="background:#888"></div><div class="phone-venue-text">Members event · Thu</div></div>
+            <div class="phone-venue"><div class="phone-venue-dot"></div><div class="phone-venue-text">New venue · Harare</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="features">
+
+    <div class="feature-row">
+      <div class="feature-phone">
+        <div class="phone-shell">
+          <div class="phone-screen">
+            <div class="phone-card">
+              <div class="phone-card-label">Partner Venues</div>
+              <div class="phone-card-name">15+ locations across the UK</div>
+            </div>
+            <div class="phone-venue-row">
+              <div class="phone-venue"><div class="phone-venue-dot"></div><div class="phone-venue-text">Restaurant · London · 20% off</div></div>
+              <div class="phone-venue"><div class="phone-venue-dot"></div><div class="phone-venue-text">Bar · Manchester · Free entry</div></div>
+              <div class="phone-venue"><div class="phone-venue-dot"></div><div class="phone-venue-text">Lounge · Birmingham · Priority</div></div>
+              <div class="phone-venue"><div class="phone-venue-dot"></div><div class="phone-venue-text">Restaurant · Leeds · 15% off</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feature-copy">
+        <h2 id="cms-f1-headline">Discover exclusive deals at top UK venues.</h2>
+        <p id="cms-f1-p1">Access members-only pricing at restaurants, bars, and lounges across the UK.</p>
+        <p id="cms-f1-p2">Exceptional offers you won't find anywhere else - from dozens of top-tier venues.</p>
+      </div>
+    </div>
+
+    <div class="feature-row reverse">
+      <div class="feature-phone">
+        <div class="phone-shell">
+          <div class="phone-screen" style="background: linear-gradient(160deg, #111 0%, #1a1a1a 100%);">
+            <div class="phone-card" style="background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08);">
+              <div class="phone-card-label" style="color: rgba(255,255,255,0.4);">Community</div>
+              <div class="phone-card-name" style="color: rgba(255,255,255,0.8);">Connect with members</div>
+            </div>
+            <div class="phone-venue-row">
+              <div class="phone-venue"><div class="phone-venue-dot" style="background:#888"></div><div class="phone-venue-text">Members event · Sat night</div></div>
+              <div class="phone-venue"><div class="phone-venue-dot" style="background:#888"></div><div class="phone-venue-text">Connect · 240 members</div></div>
+              <div class="phone-venue"><div class="phone-venue-dot" style="background:#888"></div><div class="phone-venue-text">Nominate a friend</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feature-copy">
+        <h2 id="cms-f2-headline">Membership is by invitation.</h2>
+        <p id="cms-f2-p1">Access to HomeQuarters requires a personal invitation from a current member. Invitations are non-transferable and strictly confidential.</p>
+        <p id="cms-f2-p2">On rare occasions, outstanding applications without a code are reviewed. If you believe you're a fit, you're welcome to apply below.</p>
+      </div>
+    </div>
+
+    <div class="feature-row">
+      <div class="feature-phone">
+        <div class="phone-shell">
+          <div class="phone-screen" style="background: linear-gradient(160deg, #1C1C1E 0%, #111 100%);">
+            <div class="phone-card" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1);">
+              <div class="phone-card-label" style="color: rgba(255,255,255,0.4);">Platinum</div>
+              <div class="phone-card-name" style="color: #fff;">Zimbabwe Pass</div>
+              <div class="phone-card-tier" style="color: rgba(255,255,255,0.35);">Harare · Bulawayo · Vic Falls</div>
+            </div>
+            <div class="phone-tag" style="background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5);">Telecel eSIM included</div>
+            <div class="phone-venue-row">
+              <div class="phone-venue"><div class="phone-venue-dot" style="background:#ccc"></div><div class="phone-venue-text">Restaurant · Harare · 25% off</div></div>
+              <div class="phone-venue"><div class="phone-venue-dot" style="background:#ccc"></div><div class="phone-venue-text">Lounge · Borrowdale · Access</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feature-copy">
+        <h2 id="cms-f3-headline">Access restaurants, clubs, and more with Platinum.</h2>
+        <p id="cms-f3-p1">Upgrade to Platinum for £15/mo. For members heading back to Zimbabwe - unlock the best of Harare.</p>
+        <p id="cms-f3-p2">It's optional and you can cancel anytime.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <p>Have an invitation? Download the app to apply.</p>
+    <div class="hero-btns" style="justify-content:center">
+      <a href="#" class="store-btn" style="background:#111; border-color:#111;">
+        <svg viewBox="0 0 24 24" style="fill:#fff; width:20px; height:20px;"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <div class="store-btn-text">
+          <small style="color:rgba(255,255,255,0.45)">Download on the</small>
+          <span style="color:#fff">App Store</span>
+        </div>
+      </a>
+      <a href="#" class="store-btn" style="background:#111; border-color:#111;">
+        <svg viewBox="0 0 24 24" style="fill:#fff; width:20px; height:20px;"><path d="M3.18 23.76c.3.17.65.19.98.07l12.39-6.76-2.61-2.61-10.76 9.3zM.35 1.34C.13 1.7 0 2.14 0 2.67v18.67c0 .53.13.97.35 1.33l.07.07L10.5 12.5v-.24L.42 1.27l-.07.07zM20.97 10.06l-2.79-1.52-2.94 2.94 2.94 2.94 2.81-1.53c.8-.44.8-1.39-.02-1.83zM3.18.24L15.57 7l-2.61 2.61L.19.31C.52.19.87.21 1.2.38l1.98-.14z"/></svg>
+        <div class="store-btn-text">
+          <small style="color:rgba(255,255,255,0.45)">Get it on</small>
+          <span style="color:#fff">Google Play</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- PARTNERS -->
+  <section class="partners">
+    <div class="partners-eyebrow">Members pricing from exceptional venues including</div>
+    <div class="partners-grid" id="cms-partners-grid">
+      <div class="partner-cell">Venue One</div>
+      <div class="partner-cell">The Grand</div>
+      <div class="partner-cell">Harare Club</div>
+      <div class="partner-cell">Meikles</div>
+      <div class="partner-cell">Borrowdale</div>
+      <div class="partner-cell">The Boma</div>
+      <div class="partner-cell">Amanzi</div>
+      <div class="partner-cell">Avondale</div>
+      <div class="partner-cell">Nomad</div>
+      <div class="partner-cell">Circa</div>
+      <div class="partner-cell">Veranda</div>
+      <div class="partner-cell">The Tap</div>
+      <div class="partner-cell">Zim Lounge</div>
+      <div class="partner-cell">HQ Bar</div>
+      <div class="partner-cell">Members Co.</div>
+    </div>
+  </section>
+
+  <!-- LIFESTYLE GALLERY (hidden until CMS images are set) -->
+  <section class="lifestyle" id="cms-lifestyle" style="display:none;">
+    <div class="lifestyle-eyebrow">Life at HomeQuarters</div>
+    <div class="lifestyle-grid" id="cms-lifestyle-grid"></div>
+  </section>
+
+  <!-- HOUSE RULES -->
+  <section class="rules" id="rules">
+    <div class="rules-inner">
+      <div class="rules-eyebrow">The Code We Live By</div>
+      <h2 class="rules-heading">House Rules.</h2>
+      <p class="rules-sub">HomeQuarters is more than an app - it's a community. These rules exist to protect the culture we're building together.</p>
+
+      <div class="rules-highlight">
+        <div class="rules-highlight-icon">✦</div>
+        <div>
+          <p class="rules-highlight-title">Friendship first, always.</p>
+          <p class="rules-highlight-body">HQ is not a networking platform. Do not cold-message members for jobs, business opportunities, or unsolicited pitches. We are here because of a shared passion for our homelands - let genuine friendship be the foundation of every connection.</p>
+        </div>
+      </div>
+
+      <div class="rules-grid">
+        <div class="rule-card">
+          <div class="rule-num">01</div>
+          <p class="rule-title">Respect Every Member</p>
+          <p class="rule-body">Treat every member, guest, and venue staff with courtesy and dignity. Discrimination, harassment, or intimidation of any kind will not be tolerated.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">02</div>
+          <p class="rule-title">Honour the Space</p>
+          <p class="rule-body">Our partner venues open their doors to us - treat them as you would your own home. Leave spaces as you found them, respect venue rules, and tip generously.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">03</div>
+          <p class="rule-title">Keep It Confidential</p>
+          <p class="rule-body">What happens at HQ stays at HQ. Do not share other members' personal information, conversations, or photos without their explicit consent.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">04</div>
+          <p class="rule-title">Redeem Responsibly</p>
+          <p class="rule-body">Member benefits are for personal use only. Do not abuse, resell, or share your QR codes. One redemption per benefit per visit unless stated otherwise.</p>
+        </div>
+        <div class="rule-card">
+          <div class="rule-num">05</div>
+          <p class="rule-title">Represent the Culture</p>
+          <p class="rule-body">As an HQ member, you represent the community. Whether at events or partner venues, carry yourself with pride and embody the values of the diaspora.</p>
+        </div>
+        <div class="rule-card rule-card-red">
+          <div class="rule-num rule-num-red">06</div>
+          <p class="rule-title rule-title-red">Membership Can Be Revoked</p>
+          <p class="rule-body">Violation of these rules may result in immediate suspension or permanent revocation - regardless of tier. Access is a privilege upheld by your conduct, not a right.</p>
+        </div>
+      </div>
+
+      <p class="rules-footer">These rules apply equally to all membership tiers. Last updated March 2026.</p>
+    </div>
+  </section>
+
+  <!-- APPLICATION FORM -->
+  <section class="contact" id="apply">
+    <div class="contact-inner">
+      <h2>Request consideration.</h2>
+      <p class="sub">HomeQuarters is by invitation only. On special occasions, outstanding applications without a code are reviewed. Share your details and we'll be in touch if there's a fit.</p>
+      <form id="applyForm">
+        <div class="form-row">
+          <input type="text" name="first_name" placeholder="First name" required />
+          <input type="text" name="last_name" placeholder="Last name" required />
+        </div>
+        <input type="email" name="email" placeholder="Email address" required style="width:100%; margin-bottom:12px;" />
+        <input type="text" name="instagram" placeholder="Instagram handle (@username)" style="width:100%; margin-bottom:12px;" />
+        <input type="text" name="linkedin" placeholder="LinkedIn URL or handle" style="width:100%; margin-bottom:12px;" />
+        <textarea name="about" placeholder="Tell us about yourself - who you are, what you do, and why HomeQuarters."></textarea>
+        <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer;width:100%;text-align:left;">
+          <input type="checkbox" name="marketing_opt_in" style="margin-top:3px;accent-color:var(--gold);flex-shrink:0;" />
+          <span style="font-size:12px;color:var(--stone);line-height:18px;">Keep me updated on HomeQuarters events, news, and announcements.</span>
+        </label>
+        <button type="submit" class="contact-submit" id="applySubmitBtn">Submit Application</button>
+        <p id="applyError" style="display:none;margin-top:12px;color:#c0392b;font-size:13px;text-align:center;"></p>
+      </form>
+      <div id="applySuccess" style="display:none;text-align:center;padding:32px 0;">
+        <p style="color:var(--gold);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">APPLICATION RECEIVED</p>
+        <p style="color:var(--dark);font-size:20px;font-weight:800;margin:0 0 12px;">Thank you.</p>
+        <p style="color:var(--stone);font-size:14px;line-height:22px;margin:0;">We've received your application and sent a confirmation to your email. We'll be in touch if there's a match.</p>
+      </div>
+      <p style="font-size:12px; color:var(--stone); margin-top:16px; text-align:center;">
+        Have an invitation code? <a href="#" style="color:var(--dark); font-weight:600; text-decoration:underline;">Download the app</a> to apply directly.
+      </p>
+    </div>
+  </section>
+  <script>
+    document.getElementById('applyForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('applySubmitBtn');
+      var errEl = document.getElementById('applyError');
+      var form = e.target;
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      errEl.style.display = 'none';
+      var data = {
+        first_name: form.first_name.value,
+        last_name: form.last_name.value,
+        email: form.email.value,
+        instagram: form.instagram.value,
+        linkedin: form.linkedin.value,
+        about: form.about.value,
+        marketing_opt_in: form.marketing_opt_in.checked,
+      };
+      try {
+        var res = await fetch('/api/webApplication', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          form.style.display = 'none';
+          document.getElementById('applySuccess').style.display = 'block';
+        } else {
+          var json = await res.json().catch(function() { return {}; });
+          errEl.textContent = json.error || 'Something went wrong. Please try again.';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Submit Application';
+        }
+      } catch (err) {
+        errEl.textContent = 'Network error. Please check your connection and try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Submit Application';
+      }
+    });
+  </script>
+
+  <!-- CMS HYDRATION - fetches content from /api/content and updates the page -->
+  <script>
+    (function() {
+      function set(id, text) {
+        var el = document.getElementById(id);
+        if (el && text) el.textContent = text;
+      }
+      fetch('/api/content')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(c) {
+          if (!c) return;
+          // Hero
+          if (c.hero) {
+            set('cms-hero-eyebrow', c.hero.eyebrow);
+            set('cms-hero-line1', c.hero.headline_line1);
+            set('cms-hero-line2', c.hero.headline_line2);
+            set('cms-hero-body', c.hero.body);
+          }
+          // Features
+          ['f1','f2','f3'].forEach(function(f, i) {
+            var key = 'feature' + (i + 1);
+            if (c[key]) {
+              set('cms-' + f + '-headline', c[key].headline);
+              set('cms-' + f + '-p1', c[key].p1);
+              set('cms-' + f + '-p2', c[key].p2);
+            }
+          });
+          // Partners
+          if (c.partners && c.partners.length) {
+            var grid = document.getElementById('cms-partners-grid');
+            if (grid) {
+              grid.innerHTML = c.partners.map(function(p) {
+                return '<div class="partner-cell">' + p.replace(/</g,'&lt;') + '</div>';
+              }).join('');
+            }
+          }
+          // Lifestyle gallery
+          if (c.lifestyle_images && c.lifestyle_images.length) {
+            var section = document.getElementById('cms-lifestyle');
+            var lgrid = document.getElementById('cms-lifestyle-grid');
+            if (section && lgrid) {
+              lgrid.innerHTML = c.lifestyle_images.map(function(url) {
+                return '<img src="' + url.replace(/"/g,'') + '" alt="HQ lifestyle" loading="lazy" />';
+              }).join('');
+              section.style.display = '';
+            }
+          }
+        })
+        .catch(function() {});
+    })();
+  </script>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-links">
+      <a href="#apply">Apply</a>
+      <a href="mailto:hello@thehomequarters.com">Contact</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </div>
+    <div class="footer-store">
+      <a href="#" class="store-btn">
+        <svg viewBox="0 0 24 24" style="fill:#fff"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <div class="store-btn-text"><small>App Store</small><span>Download</span></div>
+      </a>
+      <a href="#" class="store-btn">
+        <svg viewBox="0 0 24 24" style="fill:#fff"><path d="M3.18 23.76c.3.17.65.19.98.07l12.39-6.76-2.61-2.61-10.76 9.3zM.35 1.34C.13 1.7 0 2.14 0 2.67v18.67c0 .53.13.97.35 1.33l.07.07L10.5 12.5v-.24L.42 1.27l-.07.07zM20.97 10.06l-2.79-1.52-2.94 2.94 2.94 2.94 2.81-1.53c.8-.44.8-1.39-.02-1.83zM3.18.24L15.57 7l-2.61 2.61L.19.31C.52.19.87.21 1.2.38l1.98-.14z"/></svg>
+        <div class="store-btn-text"><small>Google Play</small><span>Download</span></div>
+      </a>
+    </div>
+    <div class="footer-copy">© 2026 HomeQuarters. All rights reserved.</div>
+  </footer>
+
+  <!-- SUBSCRIBE POPUP -->
+  <style>
+    #hq-subscribe-popup {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      width: 320px;
+      background: #1A1A1A;
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+      pointer-events: none;
+    }
+    #hq-subscribe-popup.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #hq-subscribe-popup .sp-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.3); font-size: 18px; line-height: 1;
+      transition: color 0.2s;
+    }
+    #hq-subscribe-popup .sp-close:hover { color: rgba(255,255,255,0.7); }
+    #hq-subscribe-popup .sp-eyebrow {
+      font-size: 9px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+    }
+    #hq-subscribe-popup .sp-title {
+      font-size: 16px; font-weight: 800; color: #FFFFFF;
+      line-height: 22px; margin-bottom: 6px;
+    }
+    #hq-subscribe-popup .sp-sub {
+      font-size: 12px; color: rgba(255,255,255,0.45);
+      line-height: 18px; margin-bottom: 16px;
+    }
+    #hq-subscribe-popup .sp-row {
+      display: flex; gap: 8px;
+    }
+    #hq-subscribe-popup input[type="email"] {
+      flex: 1; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 100px; padding: 10px 14px;
+      font-size: 13px; color: #fff; outline: none;
+      transition: border-color 0.2s;
+    }
+    #hq-subscribe-popup input[type="email"]:focus {
+      border-color: rgba(201,168,76,0.5);
+    }
+    #hq-subscribe-popup input[type="email"]::placeholder { color: rgba(255,255,255,0.3); }
+    #hq-subscribe-popup .sp-btn {
+      background: var(--gold); color: #111; border: none;
+      border-radius: 100px; padding: 10px 16px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: opacity 0.2s;
+    }
+    #hq-subscribe-popup .sp-btn:hover { opacity: 0.85; }
+    #hq-subscribe-popup .sp-btn:disabled { opacity: 0.5; cursor: default; }
+    #hq-subscribe-popup .sp-msg {
+      display: none; text-align: center; padding: 8px 0 0;
+      font-size: 12px; color: rgba(255,255,255,0.5); line-height: 18px;
+    }
+    #hq-subscribe-popup .sp-msg strong { color: var(--gold); display: block; font-size: 14px; margin-bottom: 2px; }
+    @media (max-width: 400px) {
+      #hq-subscribe-popup { left: 12px; right: 12px; width: auto; bottom: 16px; }
+    }
+  </style>
+
+  <div id="hq-subscribe-popup" role="dialog" aria-label="Stay in the loop">
+    <button class="sp-close" id="spClose" aria-label="Dismiss">&times;</button>
+    <p class="sp-eyebrow">✦ Stay in the loop</p>
+    <p class="sp-title">News &amp; open events.</p>
+    <p class="sp-sub">Sign up to hear about what&rsquo;s on and when applications open.</p>
+    <div id="spForm">
+      <div class="sp-row">
+        <input type="email" id="spEmail" placeholder="Your email address" autocomplete="email" />
+        <button class="sp-btn" id="spBtn">Sign up</button>
+      </div>
+      <p id="spError" style="display:none;margin-top:8px;font-size:11px;color:#e57373;"></p>
+    </div>
+    <div class="sp-msg" id="spSuccess">
+      <strong>You&rsquo;re on the list.</strong>
+      We&rsquo;ll be in touch with news and upcoming events.
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var STORAGE_KEY = 'hq_sub_dismissed';
+      if (localStorage.getItem(STORAGE_KEY)) return;
+
+      var popup = document.getElementById('hq-subscribe-popup');
+      var closeBtn = document.getElementById('spClose');
+      var emailInput = document.getElementById('spEmail');
+      var submitBtn = document.getElementById('spBtn');
+      var errorEl = document.getElementById('spError');
+      var successEl = document.getElementById('spSuccess');
+      var formEl = document.getElementById('spForm');
+
+      function dismiss() {
+        popup.classList.remove('visible');
+        localStorage.setItem(STORAGE_KEY, '1');
+      }
+
+      closeBtn.addEventListener('click', dismiss);
+
+      setTimeout(function() { popup.classList.add('visible'); }, 4000);
+
+      submitBtn.addEventListener('click', async function() {
+        var email = emailInput.value.trim();
+        if (!email || !email.includes('@')) {
+          errorEl.textContent = 'Please enter a valid email address.';
+          errorEl.style.display = 'block';
+          return;
+        }
+        errorEl.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.textContent = '…';
+        try {
+          var res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email }),
+          });
+          if (res.ok) {
+            formEl.style.display = 'none';
+            successEl.style.display = 'block';
+            localStorage.setItem(STORAGE_KEY, '1');
+            setTimeout(function() { popup.classList.remove('visible'); }, 4000);
+          } else {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Sign up';
+            errorEl.textContent = 'Something went wrong. Please try again.';
+            errorEl.style.display = 'block';
+          }
+        } catch (e) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign up';
+          errorEl.textContent = 'Network error. Please try again.';
+          errorEl.style.display = 'block';
+        }
+      });
+
+      emailInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') submitBtn.click();
+      });
+    })();
+  </script>
+
+</body>
+</html>

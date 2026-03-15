@@ -16,7 +16,6 @@ import {
   DMSans_600SemiBold,
   DMSans_700Bold,
 } from "@expo-google-fonts/dm-sans";
-import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 

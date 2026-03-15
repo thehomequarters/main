@@ -819,7 +819,457 @@ HomeQuarters`;
 }
 
 // ─────────────────────────────────────────────
-// 16. Founding Member designation
+// 16. Payment Confirmed
+// Sent when a member completes their first payment (grace period ends early
+// or they pay on day 0). Replaces silence with a warm confirmation.
+// ─────────────────────────────────────────────
+export function paymentConfirmedHtml(opts: {
+  firstName: string;
+  memberCode: string;
+  tier: string;
+  nextBillingDate: string;
+}): string {
+  const tierLabel = opts.tier === "platinum_card" ? "Platinum" : "Gold";
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">MEMBERSHIP CONFIRMED</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">You&rsquo;re a full<br/>HQ member, ${opts.firstName}.</h1>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Your payment was successful. Your <strong style="color:#1C1C1E;">${tierLabel}</strong> membership is now active — thank you for being part of this community.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:600;">Your membership details</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${infoRow("MEMBER CODE", opts.memberCode)}
+      ${infoRow("TIER", tierLabel.toUpperCase())}
+      ${infoRow("NEXT BILLING DATE", opts.nextBillingDate)}
+    </table>
+    ${goldDivider()}
+    <p style="margin:0 0 20px;color:#9A8E82;font-size:13px;line-height:21px;">
+      You have full access to partner venues, deals, events, and the member community. Your QR code is in the app whenever you need it.
+    </p>
+    ${ctaButton("Open HomeQuarters", BASE_URL)}
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Questions about billing? Visit Account &rsaquo; Billing in the app, or reply to this email. You can manage or cancel your subscription at any time.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function paymentConfirmedText(opts: {
+  firstName: string;
+  memberCode: string;
+  tier: string;
+  nextBillingDate: string;
+}): string {
+  const tierLabel = opts.tier === "platinum_card" ? "Platinum" : "Gold";
+  return `Hi ${opts.firstName},
+
+Your payment was successful. Your ${tierLabel} HomeQuarters membership is now active.
+
+Member code: ${opts.memberCode}
+Tier: ${tierLabel}
+Next billing date: ${opts.nextBillingDate}
+
+You have full access to partner venues, deals, events, and the member community.
+
+Open the app: ${BASE_URL}
+
+Questions about billing? Reply to this email or visit Account > Billing in the app.
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 17. Payment Failed
+// Sent when invoice.payment_failed fires. Urgent but not alarmist.
+// Directs member to the Stripe portal to update their card.
+// ─────────────────────────────────────────────
+export function paymentFailedHtml(opts: {
+  firstName: string;
+  portalUrl: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#E53935;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">ACTION REQUIRED</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Your payment<br/>didn&rsquo;t go through.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, we weren&rsquo;t able to process your HomeQuarters subscription payment. This is usually because a card has expired or a billing detail has changed — it happens.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Please update your payment method to keep your membership active. It only takes a minute.
+    </p>
+    ${ctaButton("Update payment method", opts.portalUrl, "#E53935")}
+    ${goldDivider()}
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:13px;line-height:21px;">
+      Stripe will automatically retry your payment in the next few days. If the retry also fails, your membership will be suspended until payment is resolved.
+    </p>
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      If you&rsquo;re having trouble, reply to this email and we&rsquo;ll sort it out together.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function paymentFailedText(opts: {
+  firstName: string;
+  portalUrl: string;
+}): string {
+  return `Hi ${opts.firstName},
+
+We weren't able to process your HomeQuarters subscription payment. This is usually a card expiry or billing detail change.
+
+Please update your payment method to keep your membership active:
+${opts.portalUrl}
+
+Stripe will retry automatically in the next few days. If the retry also fails, your membership will be suspended.
+
+Reply to this email if you need help.
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 18. Subscription Cancelled (Win-Back)
+// Sent 24 hours after customer.subscription.deleted fires.
+// Plain-text style from Valentine — warm, no hard sell.
+// ─────────────────────────────────────────────
+export function subscriptionCancelledText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+Your HomeQuarters membership has ended. I wanted to reach out personally.
+
+Thank you for being part of the community — even briefly. I hope it was worth your time, and I'm sorry if it wasn't everything you were hoping for.
+
+If there's something we got wrong, or something we could do better, I genuinely want to know. Reply to this email — I read every one.
+
+If life just got in the way and you'd like to come back when the time is right, the door is always open. You won't need to reapply — just reach out.
+
+With warmth,
+
+Valentine Eluwasi
+Founder, HomeQuarters
+hello@thehomequarters.com`;
+}
+
+// ─────────────────────────────────────────────
+// 19. Newsletter Subscriber Welcome
+// Sent immediately when someone subscribes via the website popup.
+// Warm confirmation + soft membership CTA.
+// ─────────────────────────────────────────────
+export function newsletterWelcomeHtml(opts: { firstName?: string }): string {
+  const greeting = opts.firstName ? `Hi ${opts.firstName},` : "Hello,";
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">YOU&rsquo;RE ON THE LIST</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Welcome to the<br/>HQ community.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      ${greeting} you&rsquo;re now subscribed to HomeQuarters updates. We&rsquo;ll be in touch occasionally with community news, events, and what&rsquo;s happening across our partner venues.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      We keep things intentional — you won&rsquo;t hear from us unless we have something worth saying.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 16px;color:#1C1C1E;font-size:13px;font-weight:700;">Interested in full membership?</p>
+    <p style="margin:0 0 20px;color:#9A8E82;font-size:13px;line-height:21px;">
+      HomeQuarters is a private members&rsquo; community — by invitation. If you know a current member, ask them for an invitation code and apply directly in the app. Or keep an eye on your inbox — we occasionally open applications to our waitlist.
+    </p>
+    ${ctaButton("Learn more", BASE_URL)}
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      To unsubscribe at any time, reply to this email with &ldquo;unsubscribe&rdquo; in the subject line.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function newsletterWelcomeText(opts: { firstName?: string }): string {
+  const greeting = opts.firstName ? `Hi ${opts.firstName},` : "Hello,";
+  return `${greeting}
+
+You're now subscribed to HomeQuarters updates. We'll be in touch occasionally with community news, events, and what's happening at our partner venues.
+
+We keep it intentional — you won't hear from us unless we have something worth saying.
+
+INTERESTED IN FULL MEMBERSHIP?
+HomeQuarters is a private members' community, by invitation. If you know a current member, ask them for an invitation code and apply in the app. Or keep an eye on your inbox — we occasionally open applications to our waitlist.
+
+Learn more: ${BASE_URL}
+
+To unsubscribe, reply with "unsubscribe" in the subject.
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 20. Welcome Journey — Day 30: Invite a friend
+// Sent 30 days after membership becomes active.
+// The community grows through members — this is the viral nudge.
+// ─────────────────────────────────────────────
+export function welcomeInviteNudgeHtml(opts: { firstName: string }): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">ONE MONTH IN</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Who would belong<br/>here, ${opts.firstName}?</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      You&rsquo;ve been a HomeQuarters member for a month now. We hope it&rsquo;s been everything we promised.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      The people you bring in are the people who shape what this community becomes. If someone comes to mind — a friend, a colleague, someone you&rsquo;d want to run into at a venue — consider inviting them.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 16px;color:#1C1C1E;font-size:13px;font-weight:700;">How to invite someone</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">1 &nbsp;&nbsp;Open the app and go to <strong style="color:#1C1C1E;">Account</strong></p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">2 &nbsp;&nbsp;Tap <strong style="color:#1C1C1E;">Nominate a Member</strong></p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;">
+          <p style="margin:0;color:#9A8E82;font-size:13px;line-height:20px;">3 &nbsp;&nbsp;Your personal invitation code will be generated — share it with them directly</p>
+        </td>
+      </tr>
+    </table>
+    ${ctaButton("Nominate a member", BASE_URL)}
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Your nomination is a personal endorsement — it means you&rsquo;re vouching for this person. Only invite people you genuinely believe would add to the community.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function welcomeInviteNudgeText(opts: { firstName: string }): string {
+  return `Hi ${opts.firstName},
+
+You've been a HomeQuarters member for a month. We hope it's been everything we promised.
+
+The people you bring in shape what this community becomes. If someone comes to mind — a friend, a colleague, someone you'd want to run into at a venue — consider inviting them.
+
+HOW TO INVITE SOMEONE
+1. Open the app and go to Account
+2. Tap "Nominate a Member"
+3. Your personal invitation code will be generated — share it with them directly
+
+Your nomination is a personal endorsement. Only invite people you genuinely believe belong here.
+
+Open the app: ${BASE_URL}
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 21. Venue Redemption Notification (instant, plain text)
+// Sent to venue contact_email when notify_on_redemption is true
+// and a verified redemption is recorded via verifyRedemption.
+// ─────────────────────────────────────────────
+export function venueRedemptionNotificationText(opts: {
+  venueName: string;
+  dealTitle: string;
+  memberTier: string;
+  redeemedAt: string;
+}): string {
+  const tierLabel = opts.memberTier === "platinum_card" ? "Platinum Card" : "Gold Card";
+  return `A HomeQuarters member just redeemed a benefit at ${opts.venueName}.
+
+Deal: ${opts.dealTitle}
+Member tier: ${tierLabel}
+Time: ${opts.redeemedAt}
+
+This is an automated notification from HomeQuarters.
+To manage your notification preferences, contact hello@thehomequarters.com`;
+}
+
+// ─────────────────────────────────────────────
+// 22. Venue Monthly Partner Digest
+// Sent automatically on the 1st of each month to venue contact_email.
+// Shows redemption stats for the previous calendar month.
+// ─────────────────────────────────────────────
+export function venueMonthlyDigestHtml(opts: {
+  venueName: string;
+  month: string;
+  totalRedemptions: number;
+  deals: { title: string; count: number }[];
+  tierBreakdown: { gold: number; platinum: number };
+  prevMonthTotal: number | null;
+}): string {
+  const changeText = (() => {
+    if (opts.prevMonthTotal === null) return "First month on record.";
+    if (opts.prevMonthTotal === 0) return opts.totalRedemptions > 0 ? "Up from 0 last month." : "No change from last month.";
+    const pct = Math.round(((opts.totalRedemptions - opts.prevMonthTotal) / opts.prevMonthTotal) * 100);
+    if (pct > 0) return `+${pct}% vs last month.`;
+    if (pct < 0) return `${pct}% vs last month.`;
+    return "Same as last month.";
+  })();
+
+  const dealsRows = opts.deals.length > 0
+    ? opts.deals.map((d) => `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #F0E8DC;color:#1C1C1E;font-size:13px;">${d.title}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #F0E8DC;color:#C9A84C;font-size:13px;font-weight:700;text-align:right;">${d.count}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="2" style="padding:10px 0;color:#9A8E82;font-size:13px;">No deal redemptions this month.</td></tr>`;
+
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">YOUR MONTHLY PARTNER REPORT</p>
+    <h1 style="margin:0 0 8px;color:#1C1C1E;font-size:26px;font-weight:800;line-height:32px;letter-spacing:-0.3px;">${opts.venueName}</h1>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;">${opts.month}</p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#F9F5F0;border-radius:12px;padding:24px;margin-bottom:28px;">
+      <tr>
+        <td>
+          <p style="margin:0 0 4px;color:#9A8E82;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;">HQ MEMBERS THIS MONTH</p>
+          <p style="margin:0 0 8px;color:#1C1C1E;font-size:48px;font-weight:800;line-height:1;letter-spacing:-2px;">${opts.totalRedemptions}</p>
+          <p style="margin:0;color:#9A8E82;font-size:12px;">${changeText}</p>
+        </td>
+      </tr>
+    </table>
+
+    ${goldDivider()}
+
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:700;">Deal breakdown</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      ${dealsRows}
+    </table>
+
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:13px;font-weight:700;">Member tier split</p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+      ${infoRow("GOLD CARD", String(opts.tierBreakdown.gold))}
+      ${infoRow("PLATINUM CARD", String(opts.tierBreakdown.platinum))}
+    </table>
+
+    ${goldDivider()}
+
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:13px;line-height:21px;">
+      HQ members discover your venue and browse your benefits directly in the HomeQuarters app. The members who visited you this month are part of a curated, invite-only community.
+    </p>
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Questions, or want to update your venue listing or deals? Simply reply to this email.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function venueMonthlyDigestText(opts: {
+  venueName: string;
+  month: string;
+  totalRedemptions: number;
+  deals: { title: string; count: number }[];
+  tierBreakdown: { gold: number; platinum: number };
+  prevMonthTotal: number | null;
+}): string {
+  const changeText = (() => {
+    if (opts.prevMonthTotal === null) return "First month on record.";
+    if (opts.prevMonthTotal === 0) return opts.totalRedemptions > 0 ? "Up from 0 last month." : "No change from last month.";
+    const pct = Math.round(((opts.totalRedemptions - opts.prevMonthTotal) / opts.prevMonthTotal) * 100);
+    if (pct > 0) return `+${pct}% vs last month.`;
+    if (pct < 0) return `${pct}% vs last month.`;
+    return "Same as last month.";
+  })();
+
+  const dealLines = opts.deals.length > 0
+    ? opts.deals.map((d) => `  ${d.title}: ${d.count}`).join("\n")
+    : "  No deal redemptions this month.";
+
+  return `YOUR MONTHLY PARTNER REPORT — ${opts.venueName}
+${opts.month}
+
+HQ MEMBERS THIS MONTH: ${opts.totalRedemptions}
+${changeText}
+
+DEAL BREAKDOWN
+${dealLines}
+
+MEMBER TIER SPLIT
+  Gold Card: ${opts.tierBreakdown.gold}
+  Platinum Card: ${opts.tierBreakdown.platinum}
+
+HQ members discover your venue and browse your benefits directly in the HomeQuarters app.
+
+Questions or want to update your listing? Reply to this email.
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 23. Member Redemption Thank-You
+// Sent to the member after they redeem a deal (verified by venue staff).
+// Warm appreciation + social/review nudge to support the partner venue.
+// ─────────────────────────────────────────────
+export function memberRedemptionThankYouHtml(opts: {
+  firstName: string;
+  venueName: string;
+  dealTitle: string;
+}): string {
+  const body = `
+    <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">THANK YOU</p>
+    <h1 style="margin:0 0 20px;color:#1C1C1E;font-size:28px;font-weight:800;line-height:34px;letter-spacing:-0.3px;">Hope you enjoyed<br/>${opts.venueName}.</h1>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Hi ${opts.firstName}, we hope your visit was everything it should have been.
+    </p>
+    <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
+      Every one of our partner venues is genuinely proud to host HomeQuarters members. They set aside exclusive benefits for you because they believe in what this community stands for &mdash; and because they want to earn your loyalty.
+    </p>
+    ${goldDivider()}
+    <p style="margin:0 0 12px;color:#1C1C1E;font-size:14px;font-weight:700;line-height:22px;">A small favour, if you&rsquo;re happy to.</p>
+    <p style="margin:0 0 16px;color:#9A8E82;font-size:14px;line-height:22px;">
+      In exchange for the exclusive member benefits they provide, we&rsquo;d be incredibly grateful if you could:
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #F0E8DC;">
+          <p style="margin:0;color:#1C1C1E;font-size:13px;line-height:20px;">
+            <strong>Leave a positive review.</strong>
+            <span style="color:#9A8E82;"> A few kind words on Google or TripAdvisor go a long way for a small business. It only takes a minute and it means the world to them.</span>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:12px 0;">
+          <p style="margin:0;color:#1C1C1E;font-size:13px;line-height:20px;">
+            <strong>Share on social.</strong>
+            <span style="color:#9A8E82;"> A post, a story, a tag &mdash; it helps bring real people through their door. This is how we keep the cashflow moving in our community and support the brands, businesses, and institutions we genuinely love.</span>
+          </p>
+        </td>
+      </tr>
+    </table>
+    ${goldDivider()}
+    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
+      Thank you for being part of this. See you at the next one.
+    </p>
+  `;
+  return wrap(body);
+}
+
+export function memberRedemptionThankYouText(opts: {
+  firstName: string;
+  venueName: string;
+  dealTitle: string;
+}): string {
+  return `Hi ${opts.firstName},
+
+We hope your visit to ${opts.venueName} was everything it should have been.
+
+Every one of our partner venues is genuinely proud to host HomeQuarters members. They set aside exclusive benefits because they believe in what this community stands for — and because they want to earn your loyalty.
+
+A SMALL FAVOUR, IF YOU'RE HAPPY TO
+
+In exchange for the exclusive member benefits they provide, we'd be incredibly grateful if you could:
+
+Leave a positive review — a few kind words on Google or TripAdvisor means the world to a small business. It only takes a minute.
+
+Share on social — a post, a story, a tag. It helps bring real people through their door. This is how we keep cashflow moving in our community and support the brands, businesses, and institutions we genuinely love.
+
+Thank you for being part of this. See you at the next one.
+
+HomeQuarters`;
+}
+
+// ─────────────────────────────────────────────
+// 24. Founding Member designation
 // Plain text only. From Valentine. Covers founding + committee perks.
 // ─────────────────────────────────────────────
 export function foundingMemberText(opts: { firstName: string }): string {
@@ -853,7 +1303,7 @@ hello@thehomequarters.com`;
 }
 
 // ─────────────────────────────────────────────
-// 17. Committee Member designation
+// 25. Committee Member designation
 // Plain text only. From Valentine.
 // ─────────────────────────────────────────────
 export function committeeMemberText(opts: { firstName: string }): string {
