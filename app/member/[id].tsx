@@ -350,28 +350,39 @@ export default function MemberProfileScreen() {
           )}
 
           {/* Places */}
-          {!isMasked && !member.hide_venue_log && visitedVenues.length > 0 && (
+          {!isMasked && !member.hide_venue_log && (visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
             <View style={styles.card}>
               <Text style={styles.cardLabel}>PLACES</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={{ marginHorizontal: -18 }}
-                contentContainerStyle={{ paddingHorizontal: 18, gap: 10 }}
-              >
-                {visitedVenues.map((venue) => (
-                  <Pressable
-                    key={venue.id}
-                    onPress={() => router.push(`/venue/${venue.id}` as any)}
-                    style={styles.venueChip}
-                  >
-                    {venue.logo_url ? (
-                      <Image source={{ uri: venue.logo_url }} style={styles.venueChipLogo} />
-                    ) : null}
-                    <Text style={styles.venueChipText}>{venue.name}</Text>
-                  </Pressable>
-                ))}
-              </ScrollView>
+              {visitedVenues.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -18 }}
+                  contentContainerStyle={{ paddingHorizontal: 18, gap: 10 }}
+                >
+                  {visitedVenues.map((venue) => (
+                    <Pressable
+                      key={venue.id}
+                      onPress={() => router.push(`/venue/${venue.id}` as any)}
+                      style={styles.venueChip}
+                    >
+                      {venue.logo_url ? (
+                        <Image source={{ uri: venue.logo_url }} style={styles.venueChipLogo} />
+                      ) : null}
+                      <Text style={styles.venueChipText}>{venue.name}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
+              {(member.custom_places?.length ?? 0) > 0 && (
+                <View style={[styles.tags, visitedVenues.length > 0 ? { marginTop: 12 } : {}]}>
+                  {member.custom_places!.map((place) => (
+                    <View key={place} style={styles.tag}>
+                      <Text style={styles.tagText}>{place}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 

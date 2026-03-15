@@ -100,6 +100,9 @@ export default function ProfileScreen() {
   const [interestsText, setInterestsText] = useState(
     (profile?.interests ?? []).join(", ")
   );
+  const [customPlacesText, setCustomPlacesText] = useState(
+    (profile?.custom_places ?? []).join(", ")
+  );
   const [instagramHandle, setInstagramHandle] = useState(
     profile?.instagram_handle ?? ""
   );
@@ -144,6 +147,7 @@ export default function ProfileScreen() {
     city !== (profile?.city ?? "") ||
     industry !== (profile?.industry ?? null) ||
     interestsText !== (profile?.interests ?? []).join(", ") ||
+    customPlacesText !== (profile?.custom_places ?? []).join(", ") ||
     instagramHandle !== (profile?.instagram_handle ?? "") ||
     linkedinHandle !== (profile?.linkedin_handle ?? "");
 
@@ -161,6 +165,10 @@ export default function ProfileScreen() {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
+      const customPlaces = customPlacesText
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
 
       await updateDoc(doc(db, "profiles", user.uid), {
         first_name: firstName.trim(),
@@ -171,6 +179,7 @@ export default function ProfileScreen() {
         city: city.trim() || null,
         industry: industry,
         interests: interests,
+        custom_places: customPlaces,
         instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
         linkedin_handle: linkedinHandle.trim() || null,
       });
@@ -506,6 +515,13 @@ export default function ProfileScreen() {
             value={interestsText}
             onChangeText={setInterestsText}
             placeholder="Photography, Music, Startups (comma separated)"
+          />
+
+          <FieldLabel label="PLACES" />
+          <FieldInput
+            value={customPlacesText}
+            onChangeText={setCustomPlacesText}
+            placeholder="Soho House, Sketch, The Ned (comma separated)"
           />
 
           <FieldLabel label="INSTAGRAM" />
