@@ -122,7 +122,7 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           50%       { transform: translateY(7px); }
         }
 
-        /* ── Card ── */
+        /* ── Card — dark luxury ── */
         .hq-card {
           width: 100%;
           height: 100%;
@@ -131,27 +131,28 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           -webkit-tap-highlight-color: transparent;
           border-radius: 3px;
           overflow: hidden;
-          background-color: #C9A84C;
+          background-color: #1A1A1C;
           background-image: repeating-linear-gradient(
             135deg,
-            rgba(0,0,0,0.08) 0,
+            rgba(0,0,0,0.22) 0,
             transparent 1px,
-            rgba(0,0,0,0.08) 2px
+            rgba(0,0,0,0.22) 2px
           );
           background-size: 3px 3px;
           box-shadow:
-            0 12px 40px rgba(0,0,0,0.65),
-            0 2px 8px rgba(0,0,0,0.4);
+            0 12px 40px rgba(0,0,0,0.72),
+            0 2px 8px rgba(0,0,0,0.5),
+            inset 0 1px 0 rgba(201,168,76,0.06);
         }
         .hq-card::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(145deg, rgba(0,0,0,0.08) 0%, transparent 55%);
+          background: linear-gradient(145deg, rgba(201,168,76,0.04) 0%, transparent 55%);
           pointer-events: none;
         }
 
-        /* ── HQ monogram watermark ── */
+        /* ── HQ monogram watermark — gold tint ── */
         .hq-monogram {
           position: absolute;
           right: -2%;
@@ -159,7 +160,7 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
           font-size: clamp(100px, 22cqw, 180px);
           font-weight: 700;
-          color: rgba(28,28,30,0.055);
+          color: rgba(201,168,76,0.07);
           line-height: 1;
           letter-spacing: -4px;
           pointer-events: none;
@@ -177,14 +178,15 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           padding: 6.5%;
         }
 
-        /* Corners */
+        /* Gold corner brackets */
         .hq-corner {
           position: absolute;
           width: 10px;
           height: 10px;
-          border-color: rgba(28,28,30,0.25);
+          border-color: #C9A84C;
           border-style: solid;
           z-index: 2;
+          opacity: 0.65;
         }
         .hq-c-tl { top: 13px; left: 13px; border-width: 1.5px 0 0 1.5px; }
         .hq-c-tr { top: 13px; right: 13px; border-width: 1.5px 1.5px 0 0; }
@@ -193,30 +195,40 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
 
         /* Top */
         .hq-top { flex: 0 0 auto; }
+        /* Wordmark above name */
+        .hq-wordmark {
+          font-family: var(--font-body), system-ui, sans-serif;
+          font-size: 7.5px;
+          font-weight: 700;
+          letter-spacing: 4px;
+          color: rgba(201,168,76,0.45);
+          text-transform: uppercase;
+          margin-bottom: 10px;
+        }
         .hq-member-name {
           font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
           font-size: 26px;
-          font-weight: 700;
-          color: #1C1C1E;
+          font-weight: 600;
+          color: #FAF8F5;
           letter-spacing: -0.2px;
           line-height: 1.1;
         }
         .hq-tier {
           display: inline-block;
-          margin-top: 3px;
+          margin-top: 4px;
           font-family: var(--font-body), system-ui, sans-serif;
           font-size: 8px;
           font-weight: 700;
           letter-spacing: 2.5px;
-          color: rgba(28,28,30,0.45);
+          color: #C9A84C;
           text-transform: uppercase;
         }
         .hq-member-title {
           font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
           font-size: 12px;
           font-style: italic;
-          color: rgba(28,28,30,0.6);
-          margin-top: 1px;
+          color: rgba(250,248,245,0.42);
+          margin-top: 2px;
         }
 
         /* Mid */
@@ -238,8 +250,9 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           font-size: 8.5px;
           font-weight: 600;
           letter-spacing: 0.5px;
-          color: #1C1C1E;
-          background: rgba(28,28,30,0.11);
+          color: rgba(201,168,76,0.75);
+          background: rgba(201,168,76,0.08);
+          border: 1px solid rgba(201,168,76,0.14);
           border-radius: 2px;
           padding: 2px 6px;
           text-transform: uppercase;
@@ -252,11 +265,11 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         .hq-social a {
           font-family: var(--font-body), system-ui, sans-serif;
           font-size: 9px;
-          color: rgba(28,28,30,0.5);
+          color: rgba(250,248,245,0.3);
           text-decoration: none;
           letter-spacing: 0.2px;
         }
-        .hq-social a:hover { color: rgba(28,28,30,0.85); text-decoration: underline; }
+        .hq-social a:hover { color: rgba(250,248,245,0.7); }
 
         /* Bottom */
         .hq-bottom {
@@ -274,13 +287,13 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           font-family: var(--font-body), system-ui, sans-serif;
           font-size: 8px;
           letter-spacing: 0.8px;
-          color: rgba(28,28,30,0.3);
+          color: rgba(250,248,245,0.15);
           text-decoration: none;
         }
-        .hq-footer-links a:hover { color: rgba(28,28,30,0.6); }
+        .hq-footer-links a:hover { color: rgba(250,248,245,0.45); }
         .hq-footer-dot {
           font-size: 7px;
-          color: rgba(28,28,30,0.2);
+          color: rgba(250,248,245,0.1);
           user-select: none;
         }
         .hq-apply-btn {
@@ -292,13 +305,13 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           font-size: 8.5px;
           font-weight: 700;
           letter-spacing: 2.5px;
-          color: #1C1C1E;
+          color: #C9A84C;
           text-transform: uppercase;
-          opacity: 0.5;
+          opacity: 0.6;
           transition: opacity 0.2s;
           -webkit-tap-highlight-color: transparent;
         }
-        .hq-apply-btn:hover { opacity: 0.9; }
+        .hq-apply-btn:hover { opacity: 1; }
 
         /* ── QR overlay ── */
         .hq-qr-overlay {
@@ -551,8 +564,9 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
 
             {/* Card content */}
             <div className="hq-inner">
-              {/* Top — name + tier + title */}
+              {/* Top — wordmark + name + tier + title */}
               <div className="hq-top">
+                <div className="hq-wordmark">The Homequarters</div>
                 <div className="hq-member-name">
                   {profile.first_name} {profile.last_name}
                 </div>
