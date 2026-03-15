@@ -7,6 +7,7 @@ import {
   FlatList,
   Image,
   StyleSheet,
+  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { colors, fonts } from "@/constants/theme";
@@ -22,24 +23,18 @@ const DEFAULT_SLIDES = [
     image: {
       uri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90",
     },
-    eyebrow: "BY INVITATION ONLY",
-    title: "Your Card.\nYour Table.",
   },
   {
     id: "2",
     image: {
       uri: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=90",
     },
-    eyebrow: "EXCLUSIVE ACCESS",
-    title: "The City's\nFinest Tables.",
   },
   {
     id: "3",
     image: {
       uri: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=90",
     },
-    eyebrow: "YOUR COMMUNITY",
-    title: "Find Your\nTribe",
   },
 ];
 
@@ -49,56 +44,60 @@ export default function OnboardingScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slides, setSlides] = useState(DEFAULT_SLIDES);
 
+  // Fade-in overlay animations — staggered cinematic reveal
+  const darkTint = useRef(new Animated.Value(0)).current;
+  const bottomScrim = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const ctaOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(darkTint, {
+        toValue: 1,
+        duration: 700,
+        delay: 0,
+        useNativeDriver: true,
+      }),
+      Animated.timing(bottomScrim, {
+        toValue: 1,
+        duration: 700,
+        delay: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(logoOpacity, {
+        toValue: 1,
+        duration: 800,
+        delay: 600,
+        useNativeDriver: true,
+      }),
+      Animated.timing(ctaOpacity, {
+        toValue: 1,
+        duration: 800,
+        delay: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
         const snap = await getDocs(
           query(collection(db, "onboarding_slides"), orderBy("order", "asc"))
         ).catch(() => null);
-        if (!snap) return;
-        if (!snap.empty) {
-          const remote = snap.docs
-            .filter((d) => d.data().is_active === true)
-            .map((d) => {
-              const data = d.data();
-              return {
-                id: d.id,
-                image: { uri: data.image_url as string },
-                eyebrow: (data.eyebrow as string) ?? "",
-                title: ((data.title as string) ?? "").replace(/\\n/g, "\n"),
-              };
-            });
-          if (remote.length > 0) setSlides(remote);
-        }
+        if (!snap || snap.empty) return;
+        const remote = snap.docs
+          .filter((d) => d.data().is_active === true)
+          .map((d) => ({
+            id: d.id,
+            image: { uri: d.data().image_url as string },
+          }));
+        if (remote.length > 0) setSlides(remote);
       } catch {
-        // Network error — keep default slides
+        // Keep default slides on network error
       }
     })();
   }, []);
-
-  const handleNext = () => {
-    if (currentIndex < slides.length - 1) {
-      flatRef.current?.scrollToIndex({
-        index: currentIndex + 1,
-        animated: true,
-      });
-    } else {
-      router.replace("/apply");
-    }
-  };
-
-  const handleBack = () => {
-    if (currentIndex > 0) {
-      flatRef.current?.scrollToIndex({
-        index: currentIndex - 1,
-        animated: true,
-      });
-    }
-  };
-
-  const handleSignIn = () => {
-    router.replace("/login");
-  };
 
   const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
     if (viewableItems.length > 0) {
@@ -106,12 +105,11 @@ export default function OnboardingScreen() {
     }
   }).current;
 
-  const isLast = currentIndex === slides.length - 1;
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
 
+      {/* Full-bleed image carousel — swipe to advance */}
       <FlatList
         ref={flatRef}
         data={slides}
@@ -123,35 +121,37 @@ export default function OnboardingScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
         renderItem={({ item }) => (
-          <View style={styles.slide}>
-            {/* Full-bleed lifestyle image */}
-            <Image
-              source={item.image}
-              style={styles.image}
-              resizeMode="cover"
-            />
-            {/* Very subtle full-screen tint */}
-            <View style={styles.vignette} />
-            {/* Dark scrim for bottom copy legibility */}
-            <View style={styles.scrim} />
-
-            {/* HQ wordmark — top left */}
-            <View style={styles.logoWrap}>
-              <Text style={styles.logoText}>HQ</Text>
-            </View>
-
-            {/* Slide text — bottom area */}
-            <View style={styles.textBlock}>
-              <Text style={styles.eyebrow}>{item.eyebrow}</Text>
-              <Text style={styles.title}>{item.title}</Text>
-            </View>
-          </View>
+          <Image
+            source={item.image}
+            style={styles.image}
+            resizeMode="cover"
+          />
         )}
       />
 
-      {/* Fixed bottom controls */}
-      <View style={styles.controls}>
-        {/* Dot indicators */}
+      {/* Overlay 1 — global dark tint, fades in first */}
+      <Animated.View
+        style={[styles.darkTint, { opacity: darkTint }]}
+        pointerEvents="none"
+      />
+
+      {/* Overlay 2 — bottom scrim for legibility, fades in second */}
+      <Animated.View
+        style={[styles.bottomScrim, { opacity: bottomScrim }]}
+        pointerEvents="none"
+      />
+
+      {/* Overlay 3 — centered logo, fades in third */}
+      <Animated.View
+        style={[styles.logoContainer, { opacity: logoOpacity }]}
+        pointerEvents="none"
+      >
+        <Text style={styles.logoText}>HQ</Text>
+        <Text style={styles.logoSubtext}>HOMEQUARTERS</Text>
+      </Animated.View>
+
+      {/* Overlay 4 — dots + CTAs, fades in last */}
+      <Animated.View style={[styles.bottomControls, { opacity: ctaOpacity }]}>
         <View style={styles.dots}>
           {slides.map((_, i) => (
             <View
@@ -164,27 +164,22 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        {/* Primary CTA */}
+        {/* Primary — cream pill */}
         <Pressable
-          onPress={handleNext}
-          style={({ pressed }) => [
-            styles.btn,
-            { opacity: pressed ? 0.88 : 1 },
-          ]}
+          onPress={() => router.replace("/login")}
+          style={({ pressed }) => [styles.signInBtn, { opacity: pressed ? 0.85 : 1 }]}
         >
-          <Text style={styles.btnText}>
-            {isLast ? "Join HomeQuarters" : "Next"}
-          </Text>
+          <Text style={styles.signInText}>Member Sign In</Text>
         </Pressable>
 
-        {/* Sign in — outlined pill */}
+        {/* Secondary — ghost outline pill */}
         <Pressable
-          onPress={handleSignIn}
-          style={({ pressed }) => [styles.signInBtn, { opacity: pressed ? 0.75 : 1 }]}
+          onPress={() => router.replace("/apply")}
+          style={({ pressed }) => [styles.applyBtn, { opacity: pressed ? 0.7 : 1 }]}
         >
-          <Text style={styles.signInText}>Already a member? Sign in</Text>
+          <Text style={styles.applyText}>Apply for Membership</Text>
         </Pressable>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -194,80 +189,75 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#0A0A0A",
   },
-  slide: {
-    width: W,
-    height: H,
-  },
   image: {
-    ...StyleSheet.absoluteFillObject,
     width: W,
     height: H,
   },
-  // Very subtle global tint — image breathes freely
-  vignette: {
+
+  // Overlay 1 — full-screen dark tint
+  darkTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.15)",
+    backgroundColor: "rgba(0,0,0,0.28)",
   },
-  // Dark scrim only at bottom for text legibility
-  scrim: {
+
+  // Overlay 2 — bottom scrim
+  bottomScrim: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: H * 0.26,
-    backgroundColor: "rgba(0,0,0,0.58)",
+    height: H * 0.52,
+    backgroundColor: "rgba(0,0,0,0.65)",
   },
-  logoWrap: {
+
+  // Overlay 3 — centered logo
+  logoContainer: {
     position: "absolute",
-    top: 48,
-    left: 28,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
   },
   logoText: {
     color: colors.white,
-    fontSize: 22,
+    fontSize: 52,
+    fontFamily: fonts.display,
+    letterSpacing: 14,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 10,
+  },
+  logoSubtext: {
+    color: colors.gold,
+    fontSize: 10,
     fontFamily: fonts.semibold,
-    letterSpacing: 8,
+    letterSpacing: 5,
     textShadowColor: "rgba(0,0,0,0.4)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
-  // Text sits at the top edge of the bottom 20% zone
-  textBlock: {
-    position: "absolute",
-    bottom: 116,
-    left: 28,
-    right: 28,
-  },
-  eyebrow: {
-    color: colors.gold,
-    fontSize: 9,
-    fontFamily: fonts.semibold,
-    letterSpacing: 3.5,
-    marginBottom: 6,
-  },
-  title: {
-    color: colors.white,
-    fontSize: 28,
-    fontFamily: fonts.display,
-    lineHeight: 34,
-    letterSpacing: -0.3,
-  },
-  controls: {
+
+  // Bottom controls
+  bottomControls: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     paddingHorizontal: 28,
-    paddingBottom: 36,
-    paddingTop: 6,
+    paddingBottom: 42,
+    paddingTop: 12,
     alignItems: "center",
+    gap: 10,
   },
   dots: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     gap: 5,
-    marginBottom: 12,
+    marginBottom: 6,
   },
   dot: {
     height: 1.5,
@@ -281,36 +271,36 @@ const styles = StyleSheet.create({
     width: 12,
     backgroundColor: "rgba(255,255,255,0.3)",
   },
-  btn: {
+
+  // Primary CTA — cream pill
+  signInBtn: {
     backgroundColor: colors.bg,
     borderRadius: 100,
-    paddingVertical: 8,
-    paddingHorizontal: 40,
+    paddingVertical: 15,
     alignItems: "center",
     alignSelf: "stretch",
-    marginBottom: 6,
-    overflow: "hidden",
   },
-  btnText: {
+  signInText: {
     color: colors.ink,
     fontSize: 12,
     fontFamily: fonts.semibold,
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
-  signInBtn: {
+
+  // Secondary CTA — ghost outline pill
+  applyBtn: {
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
-    paddingVertical: 8,
-    paddingHorizontal: 40,
+    borderColor: "rgba(255,255,255,0.22)",
+    paddingVertical: 14,
     alignItems: "center",
     alignSelf: "stretch",
   },
-  signInText: {
+  applyText: {
     color: "rgba(255,255,255,0.55)",
     fontSize: 12,
     fontFamily: fonts.body,
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
 });
