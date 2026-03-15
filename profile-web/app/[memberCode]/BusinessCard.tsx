@@ -107,8 +107,8 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: #111012;
-          padding: 24px;
+          background: #F5F2EC;
+          padding: 40px 20px 60px;
         }
 
         /* ── Wrapper ── */
@@ -140,8 +140,8 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           );
           background-size: 3px 3px;
           box-shadow:
-            0 12px 40px rgba(0,0,0,0.72),
-            0 2px 8px rgba(0,0,0,0.5),
+            0 8px 32px rgba(0,0,0,0.16),
+            0 2px 8px rgba(0,0,0,0.08),
             inset 0 1px 0 rgba(201,168,76,0.06);
         }
         .hq-card::after {
@@ -271,13 +271,31 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         }
         .hq-social a:hover { color: rgba(250,248,245,0.7); }
 
-        /* Bottom */
-        .hq-bottom {
-          flex: 0 0 auto;
+        /* ── Below-card area ── */
+        .hq-below {
           display: flex;
-          justify-content: space-between;
-          align-items: flex-end;
+          flex-direction: column;
+          align-items: center;
+          gap: 16px;
+          margin-top: 24px;
         }
+        .hq-cta-pill {
+          background: #1A1A1C;
+          color: #FAF8F5;
+          border: none;
+          border-radius: 100px;
+          padding: 14px 32px;
+          font-family: var(--font-body), system-ui, sans-serif;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 2.5px;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .hq-cta-pill:hover { background: #2c2c30; transform: translateY(-1px); }
+        .hq-cta-pill:active { transform: translateY(0); }
         .hq-footer-links {
           display: flex;
           gap: 7px;
@@ -287,31 +305,15 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           font-family: var(--font-body), system-ui, sans-serif;
           font-size: 8px;
           letter-spacing: 0.8px;
-          color: rgba(250,248,245,0.15);
+          color: rgba(28,28,30,0.28);
           text-decoration: none;
         }
-        .hq-footer-links a:hover { color: rgba(250,248,245,0.45); }
+        .hq-footer-links a:hover { color: rgba(28,28,30,0.55); }
         .hq-footer-dot {
           font-size: 7px;
-          color: rgba(250,248,245,0.1);
+          color: rgba(28,28,30,0.15);
           user-select: none;
         }
-        .hq-apply-btn {
-          background: none;
-          border: none;
-          padding: 0;
-          cursor: pointer;
-          font-family: var(--font-body), system-ui, sans-serif;
-          font-size: 8.5px;
-          font-weight: 700;
-          letter-spacing: 2.5px;
-          color: #C9A84C;
-          text-transform: uppercase;
-          opacity: 0.6;
-          transition: opacity 0.2s;
-          -webkit-tap-highlight-color: transparent;
-        }
-        .hq-apply-btn:hover { opacity: 1; }
 
         /* ── QR overlay ── */
         .hq-qr-overlay {
@@ -613,22 +615,23 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
                   )}
               </div>
 
-              {/* Bottom — footer links + apply */}
-              <div className="hq-bottom">
-                <div className="hq-footer-links">
-                  <a href="https://thehomequarters.com">thehomequarters.com</a>
-                  <span className="hq-footer-dot">·</span>
-                  <a href="https://thehomequarters.com/terms">Terms</a>
-                </div>
-                <button
-                  data-no-flip
-                  className="hq-apply-btn"
-                  onClick={openModal}
-                >
-                  Apply for membership →
-                </button>
-              </div>
             </div>
+          </div>
+        </div>
+
+        {/* ── Below-card CTA + footer ── */}
+        <div className="hq-below">
+          <button
+            data-no-flip
+            className="hq-cta-pill"
+            onClick={openModal}
+          >
+            Apply for Membership
+          </button>
+          <div className="hq-footer-links">
+            <a href="https://thehomequarters.com">thehomequarters.com</a>
+            <span className="hq-footer-dot">·</span>
+            <a href="https://thehomequarters.com/terms">Terms</a>
           </div>
         </div>
       </div>
