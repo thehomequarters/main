@@ -132,13 +132,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           border-radius: 3px;
           overflow: hidden;
           background-color: #1A1A1C;
-          background-image: repeating-linear-gradient(
-            135deg,
-            rgba(0,0,0,0.22) 0,
-            transparent 1px,
-            rgba(0,0,0,0.22) 2px
-          );
-          background-size: 3px 3px;
           box-shadow:
             0 8px 32px rgba(0,0,0,0.16),
             0 2px 8px rgba(0,0,0,0.08),
@@ -152,21 +145,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           pointer-events: none;
         }
 
-        /* ── HQ monogram watermark — gold tint ── */
-        .hq-monogram {
-          position: absolute;
-          right: -2%;
-          bottom: -8%;
-          font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
-          font-size: clamp(100px, 22cqw, 180px);
-          font-weight: 700;
-          color: rgba(201,168,76,0.07);
-          line-height: 1;
-          letter-spacing: -4px;
-          pointer-events: none;
-          user-select: none;
-          z-index: 0;
-        }
 
         /* ── Inner layout ── */
         .hq-inner {
@@ -178,20 +156,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           padding: 6.5%;
         }
 
-        /* Gold corner brackets */
-        .hq-corner {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-color: #C9A84C;
-          border-style: solid;
-          z-index: 2;
-          opacity: 0.65;
-        }
-        .hq-c-tl { top: 13px; left: 13px; border-width: 1.5px 0 0 1.5px; }
-        .hq-c-tr { top: 13px; right: 13px; border-width: 1.5px 1.5px 0 0; }
-        .hq-c-bl { bottom: 13px; left: 13px; border-width: 0 0 1.5px 1.5px; }
-        .hq-c-br { bottom: 13px; right: 13px; border-width: 0 1.5px 1.5px 0; }
 
         /* Top */
         .hq-top { flex: 0 0 auto; }
@@ -555,15 +519,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
       <div className="hq-page">
         <div className="hq-wrapper">
           <div className="hq-card" onClick={handleCardClick}>
-            {/* Corner brackets */}
-            <div className="hq-corner hq-c-tl" />
-            <div className="hq-corner hq-c-tr" />
-            <div className="hq-corner hq-c-bl" />
-            <div className="hq-corner hq-c-br" />
-
-            {/* Subtle HQ monogram watermark */}
-            <div className="hq-monogram" aria-hidden="true">HQ</div>
-
             {/* Card content */}
             <div className="hq-inner">
               {/* Top — wordmark + name + tier + title */}
