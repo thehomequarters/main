@@ -21,7 +21,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "HomeQuarters uses your camera to update your profile photo.",
         "NSPhotoLibraryUsageDescription": "HomeQuarters accesses your photo library so you can set a profile photo.",
-        "NSUserNotificationUsageDescription": "HomeQuarters sends notifications for connection requests, event reminders, and membership updates."
+        "NSUserNotificationUsageDescription": "HomeQuarters sends notifications for connection requests, event reminders, and membership updates.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -32,7 +33,9 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.homequarters.app",
-      "permissions": ["android.permission.POST_NOTIFICATIONS"]
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -40,7 +43,15 @@
     },
     "plugins": [
       "expo-router",
-      "react-native-maps"
-    ]
+      "react-native-maps",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cc080307-b9fa-4c60-b376-dd42ec09f31b"
+      }
+    },
+    "owner": "the-home-quarters"
   }
 }
