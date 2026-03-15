@@ -40,7 +40,7 @@ interface Venue {
 async function getMemberProfile(memberCode: string): Promise<Profile | null> {
   const snap = await adminDb
     .collection("profiles")
-    .where("member_code", "==", memberCode)
+    .where("member_code", "==", memberCode.toUpperCase())
     .where("membership_status", "==", "active")
     .limit(1)
     .get();
