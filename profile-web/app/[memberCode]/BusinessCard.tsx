@@ -31,8 +31,7 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 export default function BusinessCard({ profile }: { profile: Profile }) {
-  const [flipped, setFlipped] = useState(false);
-  const [tapped, setTapped] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState({
     first_name: "",
@@ -53,11 +52,14 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
   const showIndustry = !profile.hide_industry && profile.industry;
   const showSocial = !profile.hide_social_links;
 
+  // QR encodes the member's card URL
+  const profileUrl = `https://${profile.member_code.toLowerCase()}.thehomequarters.com`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&color=1C1C1E&bgcolor=F5F2EC&qzone=1&data=${encodeURIComponent(profileUrl)}`;
+
   function handleCardClick(e: React.MouseEvent) {
     const target = e.target as HTMLElement;
     if (target.closest("a") || target.closest("[data-no-flip]")) return;
-    setTapped(true);
-    setFlipped((f) => !f);
+    setShowQr(true);
   }
 
   function openModal() {
@@ -97,7 +99,7 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
 
   return (
     <>
-      {/* ── Styles ────────────────────────────────────────────────────── */}
+      {/* ── Styles ── */}
       <style>{`
         .hq-page {
           min-height: 100dvh;
@@ -113,9 +115,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         .hq-wrapper {
           width: min(680px, calc(100vw - 40px));
           aspect-ratio: 85 / 55;
-          perspective: 900px;
-        }
-        .hq-wrapper:not(.tapped) {
           animation: hq-float 3s ease-in-out infinite;
         }
         @keyframes hq-float {
@@ -128,117 +127,48 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           width: 100%;
           height: 100%;
           position: relative;
-          transform-style: preserve-3d;
-          transition: transform 0.65s cubic-bezier(.49, .23, .58, .49);
           cursor: pointer;
           -webkit-tap-highlight-color: transparent;
-        }
-        .hq-card.flipped { transform: rotateY(180deg); }
-
-        /* ── Face shared ── */
-        .hq-face {
-          position: absolute;
-          inset: 0;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
           border-radius: 3px;
           overflow: hidden;
-          box-shadow:
-            0 12px 40px rgba(0,0,0,0.65),
-            0 2px 8px rgba(0,0,0,0.4),
-            inset 0 1px 0 rgba(201,168,76,0.06);
-        }
-
-        /* ── Front ── */
-        .hq-front {
-          background-color: #1A1A1C;
-          background-image: repeating-linear-gradient(
-            135deg,
-            rgba(0,0,0,0.22) 0,
-            transparent 1px,
-            rgba(0,0,0,0.22) 2px
-          );
-          background-size: 3px 3px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 7%;
-          position: relative;
-        }
-
-        /* Corners */
-        .hq-corner {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-color: #C9A84C;
-          border-style: solid;
-        }
-        .hq-c-tl { top: 13px; left: 13px; border-width: 1.5px 0 0 1.5px; }
-        .hq-c-tr { top: 13px; right: 13px; border-width: 1.5px 1.5px 0 0; }
-        .hq-c-bl { bottom: 13px; left: 13px; border-width: 0 0 1.5px 1.5px; }
-        .hq-c-br { bottom: 13px; right: 13px; border-width: 0 1.5px 1.5px 0; }
-
-        /* Wordmark */
-        .hq-wordmark {
-          font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
-          font-size: 17px;
-          font-weight: 600;
-          letter-spacing: 8px;
-          color: #C9A84C;
-          text-transform: uppercase;
-          text-align: center;
-          user-select: none;
-          line-height: 1;
-        }
-
-        /* Front footer links */
-        .hq-front-footer {
-          position: absolute;
-          bottom: 12px;
-          left: 0; right: 0;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 7px;
-        }
-        .hq-front-footer a {
-          font-family: var(--font-body), system-ui, sans-serif;
-          font-size: 8px;
-          letter-spacing: 0.8px;
-          color: #363230;
-          text-decoration: none;
-          text-transform: lowercase;
-        }
-        .hq-front-footer a:hover { color: #5C5248; }
-        .hq-front-footer-dot {
-          font-size: 7px;
-          color: #363230;
-          user-select: none;
-        }
-
-        /* ── Back ── */
-        .hq-back {
           background-color: #C9A84C;
           background-image: repeating-linear-gradient(
             135deg,
-            rgba(0,0,0,0.1) 0,
+            rgba(0,0,0,0.08) 0,
             transparent 1px,
-            rgba(0,0,0,0.1) 2px
+            rgba(0,0,0,0.08) 2px
           );
           background-size: 3px 3px;
-          transform: rotateY(180deg);
-          position: absolute;
+          box-shadow:
+            0 12px 40px rgba(0,0,0,0.65),
+            0 2px 8px rgba(0,0,0,0.4);
         }
-        .hq-back::after {
+        .hq-card::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(145deg, rgba(0,0,0,0.09) 0%, transparent 55%);
+          background: linear-gradient(145deg, rgba(0,0,0,0.08) 0%, transparent 55%);
           pointer-events: none;
         }
 
-        .hq-back-inner {
+        /* ── HQ monogram watermark ── */
+        .hq-monogram {
+          position: absolute;
+          right: -2%;
+          bottom: -8%;
+          font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+          font-size: clamp(100px, 22cqw, 180px);
+          font-weight: 700;
+          color: rgba(28,28,30,0.055);
+          line-height: 1;
+          letter-spacing: -4px;
+          pointer-events: none;
+          user-select: none;
+          z-index: 0;
+        }
+
+        /* ── Inner layout ── */
+        .hq-inner {
           position: absolute;
           inset: 0;
           z-index: 1;
@@ -247,8 +177,22 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           padding: 6.5%;
         }
 
-        /* Back top */
-        .hq-back-top { flex: 0 0 auto; }
+        /* Corners */
+        .hq-corner {
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          border-color: rgba(28,28,30,0.25);
+          border-style: solid;
+          z-index: 2;
+        }
+        .hq-c-tl { top: 13px; left: 13px; border-width: 1.5px 0 0 1.5px; }
+        .hq-c-tr { top: 13px; right: 13px; border-width: 1.5px 1.5px 0 0; }
+        .hq-c-bl { bottom: 13px; left: 13px; border-width: 0 0 1.5px 1.5px; }
+        .hq-c-br { bottom: 13px; right: 13px; border-width: 0 1.5px 1.5px 0; }
+
+        /* Top */
+        .hq-top { flex: 0 0 auto; }
         .hq-member-name {
           font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
           font-size: 26px;
@@ -275,14 +219,13 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           margin-top: 1px;
         }
 
-        /* Back mid */
-        .hq-back-mid {
+        /* Mid */
+        .hq-mid {
           flex: 1 1 auto;
           display: flex;
           flex-direction: column;
-          justify-content: center;
+          justify-content: flex-end;
           gap: 5px;
-          overflow: hidden;
           padding: 6px 0;
         }
         .hq-pills {
@@ -301,16 +244,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           padding: 2px 6px;
           text-transform: uppercase;
         }
-        .hq-bio {
-          font-family: var(--font-body), system-ui, sans-serif;
-          font-size: 10px;
-          line-height: 1.6;
-          color: rgba(28,28,30,0.65);
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
         .hq-social {
           display: flex;
           gap: 10px;
@@ -325,12 +258,30 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         }
         .hq-social a:hover { color: rgba(28,28,30,0.85); text-decoration: underline; }
 
-        /* Back bottom */
-        .hq-back-bottom {
+        /* Bottom */
+        .hq-bottom {
           flex: 0 0 auto;
           display: flex;
-          justify-content: flex-end;
+          justify-content: space-between;
           align-items: flex-end;
+        }
+        .hq-footer-links {
+          display: flex;
+          gap: 7px;
+          align-items: center;
+        }
+        .hq-footer-links a {
+          font-family: var(--font-body), system-ui, sans-serif;
+          font-size: 8px;
+          letter-spacing: 0.8px;
+          color: rgba(28,28,30,0.3);
+          text-decoration: none;
+        }
+        .hq-footer-links a:hover { color: rgba(28,28,30,0.6); }
+        .hq-footer-dot {
+          font-size: 7px;
+          color: rgba(28,28,30,0.2);
+          user-select: none;
         }
         .hq-apply-btn {
           background: none;
@@ -343,13 +294,78 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           letter-spacing: 2.5px;
           color: #1C1C1E;
           text-transform: uppercase;
-          opacity: 0.6;
+          opacity: 0.5;
           transition: opacity 0.2s;
           -webkit-tap-highlight-color: transparent;
         }
-        .hq-apply-btn:hover { opacity: 1; }
+        .hq-apply-btn:hover { opacity: 0.9; }
 
-        /* ── Modal ── */
+        /* ── QR overlay ── */
+        .hq-qr-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(8, 7, 9, 0.88);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 300;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          padding: 20px;
+        }
+        .hq-qr-card {
+          background: #F5F2EC;
+          border-radius: 16px;
+          padding: 28px 28px 22px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0;
+          max-width: 300px;
+          width: 100%;
+          box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        }
+        .hq-qr-eyebrow {
+          font-family: var(--font-body), system-ui, sans-serif;
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          color: #C9A84C;
+          text-transform: uppercase;
+          margin-bottom: 16px;
+        }
+        .hq-qr-img {
+          width: 180px;
+          height: 180px;
+          border-radius: 8px;
+          display: block;
+        }
+        .hq-qr-name {
+          font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
+          font-size: 20px;
+          font-weight: 600;
+          color: #1C1C1E;
+          margin-top: 16px;
+          text-align: center;
+          line-height: 1.2;
+        }
+        .hq-qr-code {
+          font-family: var(--font-body), system-ui, sans-serif;
+          font-size: 9px;
+          letter-spacing: 2.5px;
+          color: rgba(28,28,30,0.4);
+          margin-top: 4px;
+          text-align: center;
+        }
+        .hq-qr-hint {
+          font-family: var(--font-body), system-ui, sans-serif;
+          font-size: 10px;
+          color: rgba(28,28,30,0.3);
+          margin-top: 18px;
+          text-align: center;
+        }
+
+        /* ── Apply Modal ── */
         .hq-modal-overlay {
           position: fixed;
           inset: 0;
@@ -485,7 +501,6 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           font-family: var(--font-body), system-ui, sans-serif;
         }
 
-        /* Success */
         .hq-success {
           text-align: center;
           padding: 8px 0 4px;
@@ -521,95 +536,113 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         }
       `}</style>
 
-      {/* ── Page ───────────────────────────────────────────────────────── */}
+      {/* ── Page ── */}
       <div className="hq-page">
-        <div className={`hq-wrapper${tapped ? " tapped" : ""}`}>
-          <div
-            className={`hq-card${flipped ? " flipped" : ""}`}
-            onClick={handleCardClick}
-          >
-            {/* ── Front ─────────────────────────────────────────────── */}
-            <div className="hq-face hq-front">
-              <div className="hq-corner hq-c-tl" />
-              <div className="hq-corner hq-c-tr" />
-              <div className="hq-corner hq-c-bl" />
-              <div className="hq-corner hq-c-br" />
-              <span className="hq-wordmark">The Homequarters</span>
-              <div className="hq-front-footer">
-                <a href="https://thehomequarters.com">thehomequarters.com</a>
-                <span className="hq-front-footer-dot">·</span>
-                <a href="https://thehomequarters.com/terms">Terms</a>
-              </div>
-            </div>
+        <div className="hq-wrapper">
+          <div className="hq-card" onClick={handleCardClick}>
+            {/* Corner brackets */}
+            <div className="hq-corner hq-c-tl" />
+            <div className="hq-corner hq-c-tr" />
+            <div className="hq-corner hq-c-bl" />
+            <div className="hq-corner hq-c-br" />
 
-            {/* ── Back ──────────────────────────────────────────────── */}
-            <div className="hq-face hq-back">
-              <div className="hq-back-inner">
-                <div className="hq-back-top">
-                  <div className="hq-member-name">
-                    {profile.first_name} {profile.last_name}
-                  </div>
-                  {tierLabel && <div className="hq-tier">{tierLabel}</div>}
-                  {profile.title && (
-                    <div className="hq-member-title">{profile.title}</div>
-                  )}
+            {/* Subtle HQ monogram watermark */}
+            <div className="hq-monogram" aria-hidden="true">HQ</div>
+
+            {/* Card content */}
+            <div className="hq-inner">
+              {/* Top — name + tier + title */}
+              <div className="hq-top">
+                <div className="hq-member-name">
+                  {profile.first_name} {profile.last_name}
                 </div>
+                {tierLabel && <div className="hq-tier">{tierLabel}</div>}
+                {profile.title && (
+                  <div className="hq-member-title">{profile.title}</div>
+                )}
+              </div>
 
-                <div className="hq-back-mid">
-                  {(showCity || showIndustry) && (
-                    <div className="hq-pills">
-                      {showCity && (
-                        <span className="hq-pill">{profile.city}</span>
+              {/* Mid — city/industry + social */}
+              <div className="hq-mid">
+                {(showCity || showIndustry) && (
+                  <div className="hq-pills">
+                    {showCity && (
+                      <span className="hq-pill">{profile.city}</span>
+                    )}
+                    {showIndustry && (
+                      <span className="hq-pill">{profile.industry}</span>
+                    )}
+                  </div>
+                )}
+                {showSocial &&
+                  (profile.instagram_handle || profile.linkedin_handle) && (
+                    <div className="hq-social">
+                      {profile.instagram_handle && (
+                        <a
+                          href={`https://instagram.com/${profile.instagram_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          @{profile.instagram_handle}
+                        </a>
                       )}
-                      {showIndustry && (
-                        <span className="hq-pill">{profile.industry}</span>
+                      {profile.linkedin_handle && (
+                        <a
+                          href={`https://linkedin.com/in/${profile.linkedin_handle}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          in/{profile.linkedin_handle}
+                        </a>
                       )}
                     </div>
                   )}
-                  {profile.bio && (
-                    <p className="hq-bio">{profile.bio}</p>
-                  )}
-                  {showSocial &&
-                    (profile.instagram_handle || profile.linkedin_handle) && (
-                      <div className="hq-social">
-                        {profile.instagram_handle && (
-                          <a
-                            href={`https://instagram.com/${profile.instagram_handle}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            @{profile.instagram_handle}
-                          </a>
-                        )}
-                        {profile.linkedin_handle && (
-                          <a
-                            href={`https://linkedin.com/in/${profile.linkedin_handle}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            in/{profile.linkedin_handle}
-                          </a>
-                        )}
-                      </div>
-                    )}
-                </div>
+              </div>
 
-                <div className="hq-back-bottom">
-                  <button
-                    data-no-flip
-                    className="hq-apply-btn"
-                    onClick={openModal}
-                  >
-                    Apply for membership →
-                  </button>
+              {/* Bottom — footer links + apply */}
+              <div className="hq-bottom">
+                <div className="hq-footer-links">
+                  <a href="https://thehomequarters.com">thehomequarters.com</a>
+                  <span className="hq-footer-dot">·</span>
+                  <a href="https://thehomequarters.com/terms">Terms</a>
                 </div>
+                <button
+                  data-no-flip
+                  className="hq-apply-btn"
+                  onClick={openModal}
+                >
+                  Apply for membership →
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Apply Modal ───────────────────────────────────────────────── */}
+      {/* ── QR Code overlay ── */}
+      {showQr && (
+        <div
+          className="hq-qr-overlay"
+          onClick={() => setShowQr(false)}
+        >
+          <div className="hq-qr-card" onClick={(e) => e.stopPropagation()}>
+            <div className="hq-qr-eyebrow">✦ Member Card</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrSrc}
+              alt="Member QR code"
+              className="hq-qr-img"
+            />
+            <div className="hq-qr-name">
+              {profile.first_name} {profile.last_name}
+            </div>
+            <div className="hq-qr-code">{profile.member_code}</div>
+            <div className="hq-qr-hint">tap outside to close</div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Apply Modal ── */}
       {modalOpen && (
         <div
           className="hq-modal-overlay"

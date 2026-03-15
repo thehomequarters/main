@@ -362,6 +362,12 @@
       .plans-grid { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
       footer { padding: 40px 24px; }
+      /* Contact section — left-align on mobile, full-width submit */
+      .contact-inner { text-align: left; }
+      .contact h2 { text-align: left; }
+      .contact .sub { text-align: left; }
+      .contact-submit { width: 100%; padding: 16px; }
+      .footer-links { gap: 16px; }
     }
   </style>
 </head>
@@ -613,7 +619,7 @@
         <input type="text" name="instagram" placeholder="Instagram handle (@username)" style="width:100%; margin-bottom:12px;" />
         <input type="text" name="linkedin" placeholder="LinkedIn URL or handle" style="width:100%; margin-bottom:12px;" />
         <textarea name="about" placeholder="Tell us about yourself - who you are, what you do, and why HomeQuarters."></textarea>
-        <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer;">
+        <label style="display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;cursor:pointer;width:100%;text-align:left;">
           <input type="checkbox" name="marketing_opt_in" style="margin-top:3px;accent-color:var(--gold);flex-shrink:0;" />
           <span style="font-size:12px;color:var(--stone);line-height:18px;">Keep me updated on HomeQuarters events, news, and announcements.</span>
         </label>
