@@ -130,9 +130,12 @@ export default function AccountTab() {
   };
 
   const handleShareProfile = async () => {
+    const code = profile?.member_code?.toLowerCase();
+    const url = `https://${code}.thehomequarters.com`;
     try {
       await Share.share({
-        message: `Connect with me on HomeQuarters! I'm ${profile?.first_name} ${profile?.last_name} (${profile?.member_code}).`,
+        message: url,
+        url,
       });
     } catch (e: any) {
       // User cancelled - non-critical
