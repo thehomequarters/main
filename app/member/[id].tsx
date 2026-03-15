@@ -349,10 +349,23 @@ export default function MemberProfileScreen() {
             </View>
           )}
 
+          {/* My HQ */}
+          {!isMasked && member.favourite_hq_venue ? (
+            <View style={styles.card}>
+              <Text style={styles.cardLabel}>MY HQ</Text>
+              <Text style={styles.hqVenue}>{member.favourite_hq_venue}</Text>
+            </View>
+          ) : null}
+
           {/* Places */}
-          {!isMasked && !member.hide_venue_log && (visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
+          {!isMasked && !member.hide_venue_log && (isSelf || visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
             <View style={styles.card}>
               <Text style={styles.cardLabel}>PLACES</Text>
+              {visitedVenues.length === 0 && (member.custom_places?.length ?? 0) === 0 ? (
+                <Text style={[styles.bio, { color: colors.stone }]}>
+                  No places logged yet. Visit a venue and tap "Been here" to add it.
+                </Text>
+              ) : null}
               {visitedVenues.length > 0 && (
                 <ScrollView
                   horizontal
@@ -395,11 +408,8 @@ export default function MemberProfileScreen() {
                   onPress={() => Linking.openURL(`https://instagram.com/${member.instagram_handle}`)}
                   style={styles.socialRow}
                 >
-                  <View style={[styles.socialIcon, { backgroundColor: "rgba(225,48,108,0.1)" }]}>
-                    <Ionicons name="logo-instagram" size={17} color="#E1306C" />
-                  </View>
+                  <Text style={styles.socialPlatform}>INSTAGRAM</Text>
                   <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.stone} style={{ marginLeft: "auto" }} />
                 </Pressable>
               ) : null}
               {member.linkedin_handle ? (
@@ -412,15 +422,12 @@ export default function MemberProfileScreen() {
                   }}
                   style={[styles.socialRow, { borderBottomWidth: 0 }]}
                 >
-                  <View style={[styles.socialIcon, { backgroundColor: "rgba(0,119,181,0.1)" }]}>
-                    <Ionicons name="logo-linkedin" size={17} color="#0077B5" />
-                  </View>
+                  <Text style={styles.socialPlatform}>LINKEDIN</Text>
                   <Text style={styles.socialHandle}>
                     {member.linkedin_handle!.startsWith("http")
                       ? (member.linkedin_handle!.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "").replace(/\/$/, "") || "LinkedIn Profile")
                       : member.linkedin_handle}
                   </Text>
-                  <Ionicons name="chevron-forward" size={14} color={colors.stone} style={{ marginLeft: "auto" }} />
                 </Pressable>
               ) : null}
             </View>
@@ -624,22 +631,26 @@ const styles = StyleSheet.create({
   socialRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
+    justifyContent: "space-between",
+    paddingVertical: 11,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  socialIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
+  socialPlatform: {
+    color: colors.stone,
+    fontSize: 10,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.5,
   },
   socialHandle: {
     color: colors.dark,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: fonts.medium,
+  },
+  hqVenue: {
+    color: colors.dark,
+    fontSize: 18,
+    fontFamily: fonts.display,
   },
   venueChip: {
     flexDirection: "row",

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Animated,
   StyleSheet,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -258,9 +259,15 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Welcome-back splash — fades in over cream bg, then fades out */}
+      {/* Welcome-back splash — fades in over dark image bg, then fades out */}
       {showWelcome && (
         <Animated.View style={[styles.welcomeOverlay, { opacity: welcomeFade }]}>
+          <Image
+            source={{ uri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90" }}
+            style={StyleSheet.absoluteFillObject}
+            resizeMode="cover"
+          />
+          <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.52)" }]} />
           <Text style={styles.welcomeHq}>HQ</Text>
           <Text style={styles.welcomeLabel}>Welcome back,</Text>
           <Text style={styles.welcomeName}>{welcomeName}</Text>
@@ -406,7 +413,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   welcomeOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.bg,
+    backgroundColor: "#0A0A0A",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
@@ -417,10 +424,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     letterSpacing: 10,
     marginBottom: 32,
-    opacity: 0.7,
+    opacity: 0.85,
   },
   welcomeLabel: {
-    color: colors.stone,
+    color: "rgba(255,255,255,0.65)",
     fontSize: 13,
     fontFamily: fonts.medium,
     letterSpacing: 3,
@@ -428,7 +435,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   welcomeName: {
-    color: colors.ink,
+    color: "#FFFFFF",
     fontSize: 48,
     fontFamily: fonts.display,
     letterSpacing: -0.5,

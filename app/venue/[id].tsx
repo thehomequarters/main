@@ -59,22 +59,27 @@ export default function VenueDetailScreen() {
 
   useEffect(() => {
     const fetchVenue = async () => {
-      const venueSnap = await getDoc(doc(db, "venues", id));
-      if (venueSnap.exists()) {
-        setVenue({ id: venueSnap.id, ...venueSnap.data() } as Venue);
-        const dealsQuery = query(
-          collection(db, "deals"),
-          where("venue_id", "==", id),
-          where("is_active", "==", true)
-        );
-        const dealsSnap = await getDocs(dealsQuery);
-        setDeals(dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
-        if (profile?.id) {
-          const visitSnap = await getDoc(doc(db, "venue_visits", `${profile.id}_${id}`));
-          setIsVisited(visitSnap.exists());
+      try {
+        const venueSnap = await getDoc(doc(db, "venues", id));
+        if (venueSnap.exists()) {
+          setVenue({ id: venueSnap.id, ...venueSnap.data() } as Venue);
+          const dealsQuery = query(
+            collection(db, "deals"),
+            where("venue_id", "==", id),
+            where("is_active", "==", true)
+          );
+          const dealsSnap = await getDocs(dealsQuery);
+          setDeals(dealsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Deal));
+          if (profile?.id) {
+            const visitSnap = await getDoc(doc(db, "venue_visits", `${profile.id}_${id}`));
+            setIsVisited(visitSnap.exists());
+          }
         }
+      } catch (e) {
+        console.warn("fetchVenue error:", e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchVenue();
   }, [id]);
