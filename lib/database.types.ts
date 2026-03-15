@@ -38,6 +38,7 @@ export interface Profile {
   city: string | null;
   industry: MemberIndustry | null;
   interests: string[];
+  custom_places?: string[];  // user-entered places (in addition to auto-tracked venue visits)
   // Social handles
   instagram_handle: string | null;
   linkedin_handle: string | null;

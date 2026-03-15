@@ -111,8 +111,7 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
 
         /* ── Wrapper ── */
         .hq-wrapper {
-          width: 100%;
-          max-width: 420px;
+          width: min(680px, calc(100vw - 40px));
           aspect-ratio: 85 / 55;
           perspective: 900px;
         }
@@ -183,9 +182,9 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         /* Wordmark */
         .hq-wordmark {
           font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
-          font-size: 14px;
+          font-size: 17px;
           font-weight: 600;
-          letter-spacing: 7px;
+          letter-spacing: 8px;
           color: #C9A84C;
           text-transform: uppercase;
           text-align: center;
@@ -229,7 +228,7 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
           );
           background-size: 3px 3px;
           transform: rotateY(180deg);
-          position: relative;
+          position: absolute;
         }
         .hq-back::after {
           content: '';
@@ -252,7 +251,7 @@ export default function BusinessCard({ profile }: { profile: Profile }) {
         .hq-back-top { flex: 0 0 auto; }
         .hq-member-name {
           font-family: var(--font-display), 'Cormorant Garamond', Georgia, serif;
-          font-size: 22px;
+          font-size: 26px;
           font-weight: 700;
           color: #1C1C1E;
           letter-spacing: -0.2px;
