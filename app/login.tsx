@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,14 +9,17 @@ import {
   Platform,
   Modal,
   ActivityIndicator,
+  Animated,
+  StyleSheet,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import { doc, getDoc } from "firebase/firestore";
 import * as Haptics from "expo-haptics";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useToast } from "@/components/Toast";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -28,6 +31,29 @@ export default function LoginScreen() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+
+  // Welcome-back splash
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
+  const welcomeFade = useRef(new Animated.Value(0)).current;
+
+  const triggerWelcomeSplash = (name: string) => {
+    setWelcomeName(name);
+    setShowWelcome(true);
+    Animated.sequence([
+      Animated.timing(welcomeFade, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1200),
+      Animated.timing(welcomeFade, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start(() => router.replace("/"));
+  };
 
   const handlePasswordReset = async () => {
     const addr = resetEmail.trim().toLowerCase();
@@ -67,12 +93,17 @@ export default function LoginScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(
+      const credential = await signInWithEmailAndPassword(
         auth,
         email.trim().toLowerCase(),
         password
       );
-      router.replace("/");
+      // Fetch first name for the welcome splash
+      const profileSnap = await getDoc(doc(db, "profiles", credential.user.uid));
+      const firstName = profileSnap.exists()
+        ? ((profileSnap.data().first_name as string) ?? "")
+        : "";
+      triggerWelcomeSplash(firstName || "Member");
     } catch (error: any) {
       const msg =
         error.code === "auth/invalid-credential"
@@ -88,142 +119,153 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          justifyContent: "center",
-          paddingHorizontal: 28,
-          paddingVertical: 60,
-        }}
-        keyboardShouldPersistTaps="handled"
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {/* HQ Logo */}
-        <Text
-          style={{
-            color: colors.dark,
-            fontSize: 40,
-            fontWeight: "700",
-            letterSpacing: 8,
-            textAlign: "center",
-            marginBottom: 48,
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingHorizontal: 28,
+            paddingVertical: 60,
           }}
+          keyboardShouldPersistTaps="handled"
         >
-          HQ
-        </Text>
-
-        <Text
-          style={{
-            color: colors.dark,
-            fontSize: 24,
-            fontWeight: "700",
-            textAlign: "center",
-            marginBottom: 12,
-          }}
-        >
-          Welcome Back
-        </Text>
-
-        <Text
-          style={{
-            color: colors.stone,
-            fontSize: 15,
-            textAlign: "center",
-            lineHeight: 22,
-            marginBottom: 40,
-          }}
-        >
-          Sign in with your email and password.
-        </Text>
-
-        <View style={{ gap: 16 }}>
-          <TextInput
-            placeholder="Email address"
-            placeholderTextColor={colors.stone}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={{
-              backgroundColor: colors.white,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.dark,
-              fontSize: 15,
-            }}
-          />
-
-          <TextInput
-            placeholder="Password"
-            placeholderTextColor={colors.stone}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            style={{
-              backgroundColor: colors.white,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.dark,
-              fontSize: 15,
-            }}
-          />
-        </View>
-
-        <Pressable
-          onPress={() => { setResetEmail(email); setResetVisible(true); }}
-          style={{ alignSelf: "flex-end", marginTop: 10 }}
-        >
-          <Text style={{ color: colors.stone, fontSize: 13 }}>
-            Forgot password?
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={handleLogin}
-          disabled={loading}
-          style={{
-            backgroundColor: loading ? "rgba(28,28,30,0.5)" : colors.dark,
-            borderRadius: 10,
-            paddingVertical: 16,
-            marginTop: 24,
-          }}
-        >
+          {/* HQ Logo */}
           <Text
             style={{
-              color: colors.white,
-              fontSize: 16,
-              fontWeight: "700",
+              color: colors.dark,
+              fontSize: 40,
+              fontFamily: fonts.display,
+              letterSpacing: 8,
               textAlign: "center",
-              letterSpacing: 0.5,
+              marginBottom: 48,
             }}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            HQ
           </Text>
-        </Pressable>
 
-        <Pressable onPress={() => router.back()} style={{ marginTop: 24 }}>
+          <Text
+            style={{
+              color: colors.dark,
+              fontSize: 24,
+              fontFamily: fonts.bold,
+              textAlign: "center",
+              marginBottom: 12,
+            }}
+          >
+            Welcome Back
+          </Text>
+
           <Text
             style={{
               color: colors.stone,
-              fontSize: 13,
+              fontSize: 15,
               textAlign: "center",
+              lineHeight: 22,
+              marginBottom: 40,
             }}
           >
-            Don't have an account?{" "}
-            <Text style={{ color: colors.dark, fontWeight: "600" }}>Apply</Text>
+            Sign in with your email and password.
           </Text>
-        </Pressable>
-      </ScrollView>
+
+          <View style={{ gap: 16 }}>
+            <TextInput
+              placeholder="Email address"
+              placeholderTextColor={colors.stone}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={{
+                backgroundColor: colors.white,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 10,
+                paddingHorizontal: 16,
+                paddingVertical: 16,
+                color: colors.dark,
+                fontSize: 15,
+              }}
+            />
+
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor={colors.stone}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={{
+                backgroundColor: colors.white,
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: 10,
+                paddingHorizontal: 16,
+                paddingVertical: 16,
+                color: colors.dark,
+                fontSize: 15,
+              }}
+            />
+          </View>
+
+          <Pressable
+            onPress={() => { setResetEmail(email); setResetVisible(true); }}
+            style={{ alignSelf: "flex-end", marginTop: 10 }}
+          >
+            <Text style={{ color: colors.stone, fontSize: 13 }}>
+              Forgot password?
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleLogin}
+            disabled={loading}
+            style={{
+              backgroundColor: loading ? "rgba(28,28,30,0.5)" : colors.dark,
+              borderRadius: 10,
+              paddingVertical: 16,
+              marginTop: 24,
+            }}
+          >
+            <Text
+              style={{
+                color: colors.white,
+                fontSize: 16,
+                fontFamily: fonts.bold,
+                textAlign: "center",
+                letterSpacing: 0.5,
+              }}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={() => router.back()} style={{ marginTop: 24 }}>
+            <Text
+              style={{
+                color: colors.stone,
+                fontSize: 13,
+                textAlign: "center",
+              }}
+            >
+              Don't have an account?{" "}
+              <Text style={{ color: colors.dark, fontFamily: fonts.semibold }}>Apply</Text>
+            </Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Welcome-back splash — fades in over cream bg, then fades out */}
+      {showWelcome && (
+        <Animated.View style={[styles.welcomeOverlay, { opacity: welcomeFade }]}>
+          <Text style={styles.welcomeHq}>HQ</Text>
+          <Text style={styles.welcomeLabel}>Welcome back,</Text>
+          <Text style={styles.welcomeName}>{welcomeName}</Text>
+        </Animated.View>
+      )}
 
       {/* Forgot Password Modal */}
       <Modal
@@ -253,7 +295,7 @@ export default function LoginScreen() {
                 style={{
                   color: colors.dark,
                   fontSize: 20,
-                  fontWeight: "700",
+                  fontFamily: fonts.bold,
                   marginBottom: 10,
                 }}
               >
@@ -280,7 +322,7 @@ export default function LoginScreen() {
                 }}
               >
                 <Text
-                  style={{ color: colors.white, fontWeight: "700", fontSize: 15 }}
+                  style={{ color: colors.white, fontFamily: fonts.bold, fontSize: 15 }}
                 >
                   Done
                 </Text>
@@ -292,7 +334,7 @@ export default function LoginScreen() {
                 style={{
                   color: colors.dark,
                   fontSize: 20,
-                  fontWeight: "700",
+                  fontFamily: fonts.bold,
                   marginBottom: 6,
                 }}
               >
@@ -345,7 +387,7 @@ export default function LoginScreen() {
                   <Text
                     style={{
                       color: colors.white,
-                      fontWeight: "700",
+                      fontFamily: fonts.bold,
                       fontSize: 15,
                     }}
                   >
@@ -357,6 +399,39 @@ export default function LoginScreen() {
           )}
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  welcomeOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.bg,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+  welcomeHq: {
+    color: colors.gold,
+    fontSize: 36,
+    fontFamily: fonts.display,
+    letterSpacing: 10,
+    marginBottom: 32,
+    opacity: 0.7,
+  },
+  welcomeLabel: {
+    color: colors.stone,
+    fontSize: 13,
+    fontFamily: fonts.medium,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  welcomeName: {
+    color: colors.ink,
+    fontSize: 48,
+    fontFamily: fonts.display,
+    letterSpacing: -0.5,
+    lineHeight: 54,
+  },
+});
