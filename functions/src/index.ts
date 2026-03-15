@@ -27,6 +27,8 @@ import {
   welcomeDiscoverNudgeHtml, welcomeDiscoverNudgeText,
   membershipAcceptedHtml, membershipAcceptedText,
   graceReminderHtml, graceReminderText,
+  foundingMemberText,
+  committeeMemberText,
   paymentConfirmedHtml, paymentConfirmedText,
   paymentFailedHtml, paymentFailedText,
   subscriptionCancelledText,
@@ -799,6 +801,51 @@ export const onMemberSuspended = onDocumentUpdated(
 );
 
 // ─────────────────────────────────────────────
+// onMembershipTierChanged
+// Fires when a profile's membership_tier is updated.
+// Sends a plain-text email from Valentine when tier becomes
+// "founding_member" or "committee_member".
+// ─────────────────────────────────────────────
+export const onMembershipTierChanged = onDocumentUpdated(
+  { document: "profiles/{userId}", secrets: [resendApiKey] },
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+
+    if (!before || !after) return;
+    if (before.membership_tier === after.membership_tier) return;
+
+    const tier = after.membership_tier as string | undefined;
+    if (tier !== "founding_member" && tier !== "committee_member") return;
+
+    const email = after.email as string | undefined;
+    if (!email) return;
+
+    const firstName = (after.first_name as string) ?? "there";
+
+    const subject = tier === "founding_member"
+      ? "You're a Founding Member of HomeQuarters"
+      : "You've been appointed to the HomeQuarters Committee";
+
+    const text = tier === "founding_member"
+      ? foundingMemberText({ firstName })
+      : committeeMemberText({ firstName });
+
+    try {
+      await sendEmail({
+        from: FOUNDER_EMAIL,
+        to: email,
+        subject,
+        text,
+        apiKey: resendApiKey.value(),
+      });
+    } catch (err) {
+      console.error("Failed to send membership tier email:", err);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
 // onNewMessage
 // Fires when a new message is created in a conversation.
 // Sends a push notification to the recipient.
@@ -880,25 +927,31 @@ export const onVouchReceived = onDocumentUpdated(
     const addedUid = newVouchers.find((uid) => !prevVouchers.includes(uid));
 
     let voucherName = "A HomeQuarters member";
+    let voucherIsElevated = false;
     if (addedUid) {
       try {
         const voucherDoc = await db.doc(`profiles/${addedUid}`).get();
         const voucherData = voucherDoc.data();
         if (voucherData) {
           voucherName = `${voucherData.first_name ?? ""} ${voucherData.last_name ?? ""}`.trim() || voucherName;
+          const tier = voucherData.membership_tier as string | undefined;
+          voucherIsElevated = tier === "founding_member" || tier === "committee_member";
         }
       } catch {
         // Non-fatal — use default name
       }
     }
 
+    // Committee/founding members count as a single sufficient vouch
+    const effectiveRequired = voucherIsElevated ? 1 : REQUIRED_VOUCHES;
+
     // Send vouch notification
     try {
       await sendEmail({
         to: after.email,
         subject: `${voucherName} vouched for your HomeQuarters application`,
-        html: vouchReceivedHtml({ firstName, voucherName, voucherCount: newCount, requiredVouches: REQUIRED_VOUCHES, applicationCode }),
-        text: vouchReceivedText({ firstName, voucherName, voucherCount: newCount, requiredVouches: REQUIRED_VOUCHES, applicationCode }),
+        html: vouchReceivedHtml({ firstName, voucherName, voucherCount: newCount, requiredVouches: effectiveRequired, applicationCode }),
+        text: vouchReceivedText({ firstName, voucherName, voucherCount: newCount, requiredVouches: effectiveRequired, applicationCode }),
         apiKey: resendApiKey.value(),
       });
     } catch (err) {
@@ -906,7 +959,7 @@ export const onVouchReceived = onDocumentUpdated(
     }
 
     // If just crossed the threshold, also send "application complete" email
-    if (prevCount < REQUIRED_VOUCHES && newCount >= REQUIRED_VOUCHES) {
+    if (prevCount < effectiveRequired && newCount >= effectiveRequired) {
       try {
         await sendEmail({
           to: after.email,

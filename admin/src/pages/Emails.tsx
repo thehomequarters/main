@@ -42,7 +42,7 @@ interface EmailEntry {
   id: string;
   label: string;
   trigger: string;
-  category: "application" | "membership" | "social" | "welcome" | "account" | "venue";
+  category: "application" | "membership" | "social" | "welcome" | "account" | "role" | "venue";
   html: () => string;
   text: () => string;
 }
@@ -260,6 +260,23 @@ const EMAILS: EmailEntry[] = [
     html: () => T.memberRedemptionThankYouHtml(SAMPLE),
     text: () => T.memberRedemptionThankYouText(SAMPLE),
   },
+  // ── Role assignment ──────────────────────────────────────────────────────
+  {
+    id: "founding-member",
+    label: "Founding Member",
+    trigger: "Admin assigns founding_member role in Members panel",
+    category: "role",
+    html: () => `<pre style="font-family:Georgia,serif;font-size:15px;line-height:1.8;color:#1C1C1E;white-space:pre-wrap;padding:40px;max-width:560px;margin:0 auto;background:#F2EBE0;">${T.foundingMemberText(SAMPLE)}</pre>`,
+    text: () => T.foundingMemberText(SAMPLE),
+  },
+  {
+    id: "committee-member",
+    label: "Committee Member",
+    trigger: "Admin assigns committee_member role in Members panel",
+    category: "role",
+    html: () => `<pre style="font-family:Georgia,serif;font-size:15px;line-height:1.8;color:#1C1C1E;white-space:pre-wrap;padding:40px;max-width:560px;margin:0 auto;background:#F2EBE0;">${T.committeeMemberText(SAMPLE)}</pre>`,
+    text: () => T.committeeMemberText(SAMPLE),
+  },
 ];
 
 const CATEGORY_LABELS: Record<EmailEntry["category"], string> = {
@@ -268,6 +285,7 @@ const CATEGORY_LABELS: Record<EmailEntry["category"], string> = {
   social: "Social",
   welcome: "Welcome Journey",
   account: "Account",
+  role: "Role Assignment",
   venue: "Venue & Partner",
 };
 
@@ -277,6 +295,7 @@ const CATEGORY_COLOR: Record<EmailEntry["category"], string> = {
   social: "text-green-400 bg-green-400/10 border-green-400/20",
   welcome: "text-purple-400 bg-purple-400/10 border-purple-400/20",
   account: "text-gray-400 bg-white/5 border-white/10",
+  role: "text-amber-400 bg-amber-400/10 border-amber-400/20",
   venue: "text-orange-400 bg-orange-400/10 border-orange-400/20",
 };
 
