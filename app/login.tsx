@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -34,9 +34,20 @@ export default function LoginScreen() {
   const [resetSent, setResetSent] = useState(false);
 
   // Welcome-back splash
+  const WELCOME_SPLASH_FALLBACK = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90";
+  const [welcomeSplashUrl, setWelcomeSplashUrl] = useState(WELCOME_SPLASH_FALLBACK);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
   const welcomeFade = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    getDoc(doc(db, "app_settings", "welcome_splash")).then((snap) => {
+      if (snap.exists()) {
+        const url = snap.data().image_url as string;
+        if (url) setWelcomeSplashUrl(url);
+      }
+    }).catch(() => {});
+  }, []);
 
   const triggerWelcomeSplash = (name: string) => {
     setWelcomeName(name);
@@ -263,7 +274,7 @@ export default function LoginScreen() {
       {showWelcome && (
         <Animated.View style={[styles.welcomeOverlay, { opacity: welcomeFade }]}>
           <Image
-            source={{ uri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90" }}
+            source={{ uri: welcomeSplashUrl }}
             style={StyleSheet.absoluteFillObject}
             resizeMode="cover"
           />
