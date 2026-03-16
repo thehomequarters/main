@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 /**
- * Patches expo-router's iOS LinkPreview files so they compile against
- * react-native-screens versions that don't yet ship RNSBottomTabs* classes
- * or the screenIds / screenId properties.
+ * Unified postinstall patch script for iOS native compatibility fixes.
  *
- * This replaces a patch-package patch which was too brittle (line-number
- * sensitive). This script uses string matching so it survives minor upstream
- * changes to the file.
+ * 1. expo-router iOS LinkPreview files — stubs for RNSBottomTabs* classes and
+ *    screenIds/screenId properties that don't exist in react-native-screens < 4.x
+ *
+ * 2. expo-image-picker MediaHandler.swift — removes Swift "if expression" syntax
+ *    with #available(iOS 26.0, *) that requires Xcode 16 / Swift 5.9+
+ *
+ * 3. @react-navigation/routers TabRouter.js — guards against undefined partialState
+ *
+ * Uses string matching throughout, not line numbers, so it survives minor
+ * upstream changes between patch versions.
  */
 
 const fs = require("fs");
@@ -189,4 +194,80 @@ if (fs.existsSync(H_PATH)) {
   console.warn("expo-router: .h file not found, skipping patch");
 }
 
-console.log("expo-router iOS patch complete.");
+// ─── Patch expo-image-picker MediaHandler.swift ───────────────────────────────
+//
+// expo-image-picker@55.0.10+ uses Swift "if expression" syntax
+// (let x = if #available(iOS 26.0, *) { … } else { … }) which requires
+// Xcode 16 / Swift 5.9+. Replace both occurrences with the safe fallback form.
+
+const MEDIA_HANDLER_PATH = path.join(
+  __dirname,
+  "..",
+  "node_modules",
+  "expo-image-picker",
+  "ios",
+  "MediaHandler.swift"
+);
+
+if (fs.existsSync(MEDIA_HANDLER_PATH)) {
+  let swift = fs.readFileSync(MEDIA_HANDLER_PATH, "utf8");
+
+  if (swift.includes("#available(iOS 26.0, *)")) {
+    // Block 1: getMimeType(from asset: PHAsset?, ...)
+    swift = swift.replace(
+      `    let utType: UTType? = if #available(iOS 26.0, *) {\n      asset?.contentType ?? UTType(filenameExtension: fileExtension)\n    } else {\n      UTType(filenameExtension: fileExtension)\n    }`,
+      `    let utType: UTType? = UTType(filenameExtension: fileExtension)`
+    );
+
+    // Block 2: getMimeType(from resource: PHAssetResource, ...)
+    swift = swift.replace(
+      `    let utType: UTType? = if #available(iOS 26.0, *) {\n      resource.contentType\n    } else {\n      UTType(resource.uniformTypeIdentifier) ?? UTType(filenameExtension: fileExtension)\n    }`,
+      `    let utType: UTType? = UTType(resource.uniformTypeIdentifier) ?? UTType(filenameExtension: fileExtension)`
+    );
+
+    fs.writeFileSync(MEDIA_HANDLER_PATH, swift, "utf8");
+    console.log("expo-image-picker: removed iOS 26.0 if-expression from MediaHandler.swift");
+  } else {
+    console.log("expo-image-picker: MediaHandler.swift already patched, skipping");
+  }
+} else {
+  console.warn("expo-image-picker: MediaHandler.swift not found, skipping patch");
+}
+
+// ─── Patch @react-navigation/routers TabRouter.js ────────────────────────────
+//
+// Guards against undefined/null partialState which causes a crash when
+// navigating to a tab route before state is initialised.
+
+const TAB_ROUTER_PATH = path.join(
+  __dirname,
+  "..",
+  "node_modules",
+  "@react-navigation",
+  "routers",
+  "lib",
+  "module",
+  "TabRouter.js"
+);
+
+if (fs.existsSync(TAB_ROUTER_PATH)) {
+  let tabRouter = fs.readFileSync(TAB_ROUTER_PATH, "utf8");
+
+  if (
+    tabRouter.includes("const state = partialState;") &&
+    !tabRouter.includes("partialState ??")
+  ) {
+    tabRouter = tabRouter.replace(
+      "const state = partialState;",
+      `const state = partialState ?? { stale: true, routes: [], index: 0 };`
+    );
+    fs.writeFileSync(TAB_ROUTER_PATH, tabRouter, "utf8");
+    console.log("@react-navigation/routers: guarded partialState in TabRouter.js");
+  } else {
+    console.log("@react-navigation/routers: TabRouter.js already patched, skipping");
+  }
+} else {
+  console.warn("@react-navigation/routers: TabRouter.js not found, skipping patch");
+}
+
+console.log("postinstall patches complete.");
