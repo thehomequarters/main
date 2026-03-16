@@ -3,1137 +3,409 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HomeQuarters — Brand Standards</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <title>HomeQuarters — Brand Assets</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --dark:   #1C1C1E;
-      --gold:   #C9A84C;
-      --cream:  #F2EBE0;
-      --stone:  #9A8E82;
-      --rule:   rgba(0,0,0,0.12);
-      --rule-light: rgba(255,255,255,0.1);
+      --dark:  #1C1C1E;
+      --gold:  #C9A84C;
+      --cream: #F2EBE0;
+      --stone: #9A8E82;
+      --gold2: #E8C97A;
     }
-
-    html { font-size: 16px; }
 
     body {
-      background: var(--cream);
-      color: var(--dark);
+      background: #111;
+      color: var(--cream);
       font-family: 'DM Sans', sans-serif;
-      font-weight: 400;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── COVER ── */
-    .cover {
-      background: var(--dark);
+      padding: 60px 40px;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 60px;
-    }
-    .cover-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-    .cover-label {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.68rem;
-      font-weight: 500;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--stone);
-    }
-    .cover-monogram {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 600;
-      font-size: clamp(8rem, 20vw, 18rem);
-      color: var(--gold);
-      line-height: 0.85;
-      letter-spacing: 0.04em;
-      display: block;
-      text-align: left;
-      margin: auto 0;
-      padding: 80px 0 40px;
-    }
-    .cover-bottom {
-      border-top: 1px solid var(--rule-light);
-      padding-top: 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-    }
-    .cover-wordmark {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--cream);
-    }
-    .cover-meta {
-      text-align: right;
-    }
-    .cover-meta p {
-      font-size: 0.7rem;
-      color: var(--stone);
-      letter-spacing: 0.08em;
-      line-height: 1.8;
     }
 
-    /* ── SECTION SHELL ── */
-    .section {
-      padding: 96px 60px;
-      border-bottom: 1px solid var(--rule);
-    }
-    .section.dark {
-      background: var(--dark);
-      border-bottom: 1px solid var(--rule-light);
-    }
-    .section-header {
-      display: flex;
-      align-items: baseline;
-      gap: 20px;
-      margin-bottom: 64px;
-    }
-    .section-num {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.2em;
-      color: var(--stone);
-      text-transform: uppercase;
-      min-width: 28px;
-    }
-    .section-title {
+    h1 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      font-weight: 300;
-      letter-spacing: 0.04em;
-      color: var(--dark);
-      line-height: 1;
-    }
-    .section.dark .section-title { color: var(--cream); }
-    .section.dark .section-num   { color: var(--stone); }
-
-    /* ── BRAND ESSENCE ── */
-    .essence-statement {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
-      font-weight: 300;
-      line-height: 1.4;
-      color: var(--dark);
-      max-width: 780px;
-      margin-bottom: 72px;
-    }
-    .essence-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--rule);
-      border: 1px solid var(--rule);
-    }
-    .essence-item {
-      background: var(--cream);
-      padding: 36px 32px;
-    }
-    .essence-item-num {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      color: var(--gold);
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .essence-item-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      color: var(--dark);
-      margin-bottom: 12px;
-    }
-    .essence-item-body {
-      font-size: 0.82rem;
+      font-size: 2.4rem;
       font-weight: 400;
-      line-height: 1.7;
-      color: var(--stone);
-    }
-
-    /* ── LOGO ── */
-    .logo-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px;
-      background: var(--rule);
-      margin-bottom: 60px;
-    }
-    .logo-cell {
-      padding: 64px 48px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 48px;
-    }
-    .logo-cell.on-dark  { background: var(--dark); }
-    .logo-cell.on-cream { background: var(--cream); }
-    .logo-cell.on-gold  { background: var(--gold); }
-    .logo-cell-label {
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-    .on-dark  .logo-cell-label { color: var(--stone); }
-    .on-cream .logo-cell-label { color: var(--stone); }
-    .on-gold  .logo-cell-label { color: rgba(28,28,30,0.5); }
-    .wordmark {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
-    }
-    .on-dark  .wordmark { color: var(--gold); }
-    .on-cream .wordmark { color: var(--dark); }
-    .on-gold  .wordmark { color: var(--dark); }
-
-    .logo-rules {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 40px;
-    }
-    .logo-rule-item h4 {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--stone);
-      margin-bottom: 10px;
-    }
-    .logo-rule-item p {
-      font-size: 0.82rem;
-      line-height: 1.7;
-      color: var(--dark);
-    }
-
-    /* ── MONOGRAM ── */
-    .monogram-display {
-      display: flex;
-      align-items: flex-start;
-      gap: 64px;
-      flex-wrap: wrap;
-      margin-bottom: 60px;
-    }
-    .monogram-box {
-      background: var(--dark);
-      border-radius: 22.5%;
-      width: 260px;
-      height: 260px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .monogram-box .hq {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 600;
-      font-size: 8.8rem;
-      color: var(--gold);
-      letter-spacing: 0.08em;
-      line-height: 0.82;
-      transform: translateY(-6%);
-      display: block;
-    }
-    .monogram-flat {
-      background: var(--cream);
-      border: 1px solid var(--rule);
-      border-radius: 22.5%;
-      width: 260px;
-      height: 260px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .monogram-flat .hq {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 600;
-      font-size: 8.8rem;
-      color: var(--dark);
-      letter-spacing: 0.08em;
-      line-height: 0.82;
-      transform: translateY(-6%);
-      display: block;
-    }
-    .monogram-info {
-      max-width: 400px;
-      padding-top: 8px;
-    }
-    .monogram-info h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      color: var(--dark);
-      margin-bottom: 16px;
-    }
-    .section.dark .monogram-info h3 { color: var(--cream); }
-    .monogram-info p {
-      font-size: 0.82rem;
-      line-height: 1.8;
-      color: var(--stone);
-      margin-bottom: 28px;
-    }
-    .monogram-usage {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .monogram-usage-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 0.78rem;
-      color: var(--stone);
-    }
-    .section.dark .monogram-usage-item { color: var(--stone); }
-    .monogram-usage-item::before {
-      content: '';
-      width: 16px;
-      height: 1px;
-      background: var(--gold);
-      flex-shrink: 0;
-    }
-
-    /* ── COLOUR ── */
-    .palette {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 2px;
-      background: var(--rule);
-      margin-bottom: 60px;
-    }
-    .swatch {
-      display: flex;
-      flex-direction: column;
-    }
-    .swatch-block {
-      height: 200px;
-    }
-    .swatch-info {
-      padding: 20px;
-      background: var(--cream);
-    }
-    .swatch-name {
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--dark);
-      margin-bottom: 4px;
-    }
-    .swatch-hex {
-      font-size: 0.7rem;
-      color: var(--stone);
-      font-family: 'DM Sans', monospace;
-      margin-bottom: 10px;
-    }
-    .swatch-role {
-      font-size: 0.73rem;
-      line-height: 1.5;
-      color: var(--stone);
-    }
-    .colour-principles {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-    }
-    .colour-principle h4 {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--gold);
-      margin-bottom: 10px;
-    }
-    .colour-principle p {
-      font-size: 0.82rem;
-      line-height: 1.8;
-      color: var(--stone);
-    }
-
-    /* ── TYPOGRAPHY ── */
-    .type-specimen {
-      margin-bottom: 60px;
-    }
-    .type-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      border-bottom: 1px solid var(--rule);
-      padding-bottom: 12px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .type-meta-name {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--stone);
-    }
-    .type-meta-detail {
-      font-size: 0.65rem;
-      letter-spacing: 0.08em;
-      color: var(--stone);
-    }
-    .type-display {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2.4rem, 6vw, 5rem);
-      font-weight: 600;
-      color: var(--dark);
-      line-height: 1.05;
-      letter-spacing: 0.01em;
-    }
-    .type-display-italic {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 5vw, 4rem);
-      font-weight: 300;
-      font-style: italic;
-      color: var(--gold);
-      line-height: 1.15;
-    }
-    .type-body {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 1rem;
-      font-weight: 400;
-      line-height: 1.75;
-      color: var(--dark);
-    }
-    .type-ui {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 500;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--dark);
-    }
-    .type-scale-row {
-      display: flex;
-      align-items: baseline;
-      gap: 24px;
-      border-bottom: 1px solid var(--rule);
-      padding: 16px 0;
-    }
-    .type-scale-label {
-      min-width: 100px;
-      font-size: 0.62rem;
-      font-weight: 600;
       letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--stone);
-    }
-    .type-scale-sample {
-      font-family: 'Cormorant Garamond', serif;
-      font-weight: 600;
-      color: var(--dark);
-    }
-    .type-pairing {
-      margin-top: 60px;
-      background: var(--dark);
-      padding: 48px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-    }
-    .type-pairing h4 {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--stone);
-      margin-bottom: 20px;
-    }
-    .pairing-sample-heading {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--cream);
-      margin-bottom: 10px;
-      letter-spacing: 0.02em;
-    }
-    .pairing-sample-body {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.82rem;
-      font-weight: 300;
-      color: var(--stone);
-      line-height: 1.75;
-    }
-
-    /* ── VOICE ── */
-    .voice-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px;
-      background: var(--rule);
-      margin-bottom: 60px;
-    }
-    .voice-cell {
-      padding: 40px;
-      background: var(--cream);
-    }
-    .voice-cell h4 {
-      font-size: 0.65rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--stone);
-      margin-bottom: 24px;
-    }
-    .voice-example {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .voice-line {
-      padding: 16px 20px;
-      border-left: 2px solid var(--rule);
-    }
-    .voice-line.good  { border-color: var(--gold); }
-    .voice-line.bad   { border-color: #9A8E82; opacity: 0.5; }
-    .voice-line-flag {
-      font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--stone);
+      color: var(--gold);
       margin-bottom: 6px;
     }
-    .voice-line.good .voice-line-flag { color: var(--gold); }
-    .voice-line-text {
+    .subtitle { color: var(--stone); font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 60px; }
+
+    section { margin-bottom: 70px; }
+    h2 {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1.05rem;
-      font-weight: 400;
-      color: var(--dark);
-      line-height: 1.5;
-    }
-    .voice-principles {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 40px;
-      margin-top: 0;
-    }
-    .voice-principle h4 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      color: var(--dark);
-      margin-bottom: 10px;
-    }
-    .voice-principle p {
-      font-size: 0.8rem;
-      line-height: 1.75;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
       color: var(--stone);
+      border-bottom: 1px solid #2a2a2a;
+      padding-bottom: 12px;
+      margin-bottom: 32px;
     }
 
-    /* ── IMAGERY ── */
-    .imagery-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      background: var(--rule);
-      margin-bottom: 60px;
+    /* ── ICON PREVIEW ── */
+    .icon-grid {
+      display: flex;
+      align-items: flex-end;
+      gap: 32px;
+      flex-wrap: wrap;
     }
-    .imagery-cell {
-      background: var(--dark);
-      padding: 40px 32px;
-      min-height: 220px;
+    .icon-wrap {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
     }
-    .imagery-cell h4 {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
+    .icon-wrap span { font-size: 0.72rem; color: var(--stone); letter-spacing: 0.06em; }
+
+    /* The actual icon SVG — rendered at different sizes */
+    .hq-icon {
+      border-radius: 22.5%;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* ── EXPORT BUTTON ── */
+    .btn-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 36px; }
+    button {
+      background: var(--gold);
+      color: #111;
+      border: none;
+      padding: 12px 28px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover { background: var(--gold2); }
+    button.outline {
+      background: transparent;
       color: var(--gold);
-      margin-bottom: 16px;
+      border: 1px solid var(--gold);
     }
-    .imagery-cell p {
-      font-size: 0.8rem;
-      line-height: 1.75;
-      color: var(--stone);
-    }
-    .imagery-do-dont {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2px;
-      background: var(--rule);
-    }
-    .imagery-col {
-      padding: 36px;
-      background: var(--cream);
-    }
-    .imagery-col h4 {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      margin-bottom: 20px;
-    }
-    .imagery-col.do   h4 { color: var(--gold); }
-    .imagery-col.dont h4 { color: var(--stone); }
-    .imagery-col ul {
-      list-style: none;
+    button.outline:hover { background: rgba(201,168,76,0.08); }
+
+    /* ── COLOUR PALETTE ── */
+    .palette { display: flex; gap: 20px; flex-wrap: wrap; }
+    .swatch {
+      width: 100px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .imagery-col li {
-      font-size: 0.8rem;
-      color: var(--stone);
-      line-height: 1.6;
-      padding-left: 20px;
-      position: relative;
+    .swatch-block {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.06);
     }
-    .imagery-col.do li::before {
-      content: '—';
-      position: absolute;
-      left: 0;
-      color: var(--gold);
-    }
-    .imagery-col.dont li::before {
-      content: '×';
-      position: absolute;
-      left: 0;
-      color: var(--stone);
-      opacity: 0.5;
-    }
+    .swatch-name { font-size: 0.75rem; font-weight: 500; color: var(--cream); letter-spacing: 0.04em; }
+    .swatch-hex  { font-size: 0.68rem; color: var(--stone); font-family: monospace; }
 
-    /* ── MISUSE ── */
-    .misuse-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2px;
-      background: var(--rule);
-    }
-    .misuse-cell {
-      background: var(--cream);
-      padding: 36px 32px;
-    }
-    .misuse-cell .example {
-      background: #f7f3ee;
-      border: 1px solid var(--rule);
-      padding: 24px;
-      margin-bottom: 16px;
-      min-height: 80px;
+    /* ── TYPOGRAPHY ── */
+    .type-row { margin-bottom: 28px; }
+    .type-label { font-size: 0.7rem; color: var(--stone); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+    .display-sample { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-weight: 600; color: var(--cream); line-height: 1; }
+    .display-italic  { font-family: 'Cormorant Garamond', serif; font-size: 3rem; font-style: italic; color: var(--gold); line-height: 1; }
+    .body-sample     { font-family: 'DM Sans', sans-serif; font-size: 1rem; color: var(--cream); line-height: 1.6; margin-top: 6px; }
+
+    /* ── LOGO VARIANTS ── */
+    .logo-row { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+    .logo-dark, .logo-light {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 12px;
+      padding: 24px 36px;
+      border-radius: 8px;
     }
-    .misuse-cell h4 {
-      font-size: 0.62rem;
-      font-weight: 600;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--stone);
-      margin-bottom: 8px;
-    }
-    .misuse-cell p {
-      font-size: 0.76rem;
-      line-height: 1.6;
-      color: var(--stone);
-    }
-
-    /* ── FOOTER ── */
-    .footer {
-      background: var(--dark);
-      padding: 48px 60px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    .footer-wordmark {
+    .logo-dark  { background: var(--dark); }
+    .logo-light { background: var(--cream); }
+    .logo-wordmark {
       font-family: 'Cormorant Garamond', serif;
-      font-size: 1rem;
+      font-size: 1.6rem;
       font-weight: 600;
       letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--gold);
     }
-    .footer-meta {
-      font-size: 0.68rem;
+    .logo-dark  .logo-wordmark { color: var(--gold); }
+    .logo-light .logo-wordmark { color: var(--dark); }
+
+    /* tiny badge */
+    .badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       color: var(--stone);
-      letter-spacing: 0.08em;
-      text-align: right;
-      line-height: 1.8;
+      border: 1px solid #2a2a2a;
+      padding: 2px 8px;
+      border-radius: 2px;
+      margin-bottom: 20px;
     }
 
-    @media (max-width: 768px) {
-      .cover { padding: 36px 24px; }
-      .section { padding: 60px 24px; }
-      .logo-grid, .voice-grid, .imagery-do-dont { grid-template-columns: 1fr; }
-      .misuse-grid, .imagery-grid, .essence-grid, .voice-principles { grid-template-columns: 1fr; }
-      .palette { grid-template-columns: repeat(2, 1fr); }
-      .type-pairing { grid-template-columns: 1fr; padding: 32px 24px; }
-      .colour-principles { grid-template-columns: 1fr; }
-      .logo-rules { grid-template-columns: 1fr; }
-      .monogram-display { flex-direction: column; }
-      .footer { flex-direction: column; align-items: flex-start; }
-      .footer-meta { text-align: left; }
-      .cover-monogram { font-size: 22vw; }
-    }
+    /* hidden canvas for export */
+    #exportCanvas { display: none; }
   </style>
 </head>
 <body>
 
-  <!-- ── COVER ── -->
-  <div class="cover">
-    <div class="cover-top">
-      <span class="cover-label">Brand Standards</span>
-      <span class="cover-label">Version 1.0 · 2025</span>
-    </div>
+  <p class="badge">Brand Kit 1.0</p>
+  <h1>HomeQuarters</h1>
+  <p class="subtitle">Brand Assets &amp; Design System</p>
 
-    <span class="cover-monogram">HQ</span>
+  <!-- ── 1. ICON ── -->
+  <section>
+    <h2>App Icon</h2>
 
-    <div class="cover-bottom">
-      <div class="cover-wordmark">HomeQuarters</div>
-      <div class="cover-meta">
-        <p>Private Members' Community</p>
-        <p>hello@thehomequarters.com</p>
-        <p>thehomequarters.com</p>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ── 01 BRAND ESSENCE ── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-num">01</span>
-      <h2 class="section-title">Brand Essence</h2>
-    </div>
-
-    <p class="essence-statement">
-      HomeQuarters is where the global African diaspora finds its table. Not a platform. Not an app. A community that holds space for people who have built lives across borders — and deserve a room of their own in every city.
-    </p>
-
-    <div class="essence-grid">
-      <div class="essence-item">
-        <div class="essence-item-num">01 — Belonging</div>
-        <div class="essence-item-title">You are already home.</div>
-        <p class="essence-item-body">Every touchpoint — from onboarding to the moment a member walks into a partner venue — should feel like being welcomed, not processed. HQ removes the friction of being a newcomer.</p>
-      </div>
-      <div class="essence-item">
-        <div class="essence-item-num">02 — Discernment</div>
-        <div class="essence-item-title">Curated, never crowded.</div>
-        <p class="essence-item-body">Membership is by invitation only. Partners are selected, not solicited. Every recommendation carries the weight of genuine consideration. We do not optimise for volume.</p>
-      </div>
-      <div class="essence-item">
-        <div class="essence-item-num">03 — Warmth</div>
-        <div class="essence-item-title">Luxury that is human.</div>
-        <p class="essence-item-body">HomeQuarters sits between the polish of a private members' club and the ease of a friend's recommendation. Elevated, never cold. Considered, never formal.</p>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ── 02 LOGO & WORDMARK ── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-num">02</span>
-      <h2 class="section-title">Logo &amp; Wordmark</h2>
-    </div>
-
-    <div class="logo-grid">
-      <div class="logo-cell on-dark">
-        <span class="logo-cell-label">Primary — On Dark</span>
-        <span class="wordmark">HomeQuarters</span>
-      </div>
-      <div class="logo-cell on-cream">
-        <span class="logo-cell-label">Reversed — On Cream</span>
-        <span class="wordmark">HomeQuarters</span>
-      </div>
-      <div class="logo-cell on-dark" style="padding: 40px 48px;">
-        <span class="logo-cell-label">Wordmark — Monogram form</span>
-        <span class="wordmark" style="font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: 0.1em;">HQ</span>
-      </div>
-      <div class="logo-cell on-gold" style="padding: 40px 48px;">
-        <span class="logo-cell-label">On Gold — use sparingly</span>
-        <span class="wordmark">HomeQuarters</span>
-      </div>
-    </div>
-
-    <div class="logo-rules">
-      <div class="logo-rule-item">
-        <h4>Clear space</h4>
-        <p>Always maintain clear space equal to the cap-height of the 'H' on all sides of the wordmark. Do not crowd the logo with other elements.</p>
-      </div>
-      <div class="logo-rule-item">
-        <h4>Minimum size</h4>
-        <p>Digital: no smaller than 120px wide. Print: no smaller than 30mm wide. Below these thresholds use the monogram mark instead.</p>
-      </div>
-      <div class="logo-rule-item">
-        <h4>Approved colours</h4>
-        <p>Gold on Dark. Dark on Cream. Dark on Gold. White on Dark in exceptional circumstances only. Never apply a drop shadow or glow effect.</p>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ── 03 MONOGRAM ── -->
-  <section class="section dark">
-    <div class="section-header">
-      <span class="section-num">03</span>
-      <h2 class="section-title">Monogram Mark</h2>
-    </div>
-
-    <div class="monogram-display">
-      <div>
-        <div style="margin-bottom: 12px;">
-          <div class="monogram-box">
-            <span class="hq">HQ</span>
-          </div>
+    <div class="icon-grid">
+      <div class="icon-wrap">
+        <div id="hqIconSvg" class="hq-icon" style="
+          width:256px; height:256px;
+          background: linear-gradient(135deg,#242424,#1C1C1E);
+          border-radius: 22.5%;
+          display:flex; align-items:center; justify-content:center;
+          position:relative; flex-shrink:0;
+        ">
+          <!-- corner frame lines -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" viewBox="0 0 256 256">
+            <path d="M20,20 h36 M20,20 v36"  stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+            <path d="M236,20 h-36 M236,20 v36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+            <path d="M20,236 h36 M20,236 v-36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+            <path d="M236,236 h-36 M236,236 v-36" stroke="#C9A84C" stroke-width="1.5" opacity="0.5" fill="none"/>
+          </svg>
+          <span style="
+            font-family:'Cinzel',Georgia,serif;
+            font-weight:700;
+            font-size:5.6rem;
+            color:#C9A84C;
+            letter-spacing:0.08em;
+            line-height:1;
+            background: linear-gradient(135deg,#EDD07E 0%,#C9A84C 50%,#9E7820 100%);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            background-clip:text;
+          ">HQ</span>
         </div>
-        <p style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--stone);text-align:center;">App icon · Roundel</p>
+        <span>Preview</span>
+      </div>
+
+      <!-- 128px -->
+      <div class="icon-wrap">
+        <div class="hq-icon" style="
+          width:128px; height:128px;
+          background:linear-gradient(135deg,#242424,#1C1C1E);
+          border-radius:22.5%;
+          display:flex;align-items:center;justify-content:center;
+        ">
+          <span style="font-family:'Cinzel',Georgia,serif;font-weight:700;font-size:2.8rem;letter-spacing:0.08em;line-height:1;background:linear-gradient(135deg,#EDD07E,#C9A84C,#9E7820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">HQ</span>
+        </div>
+        <span>128 × 128</span>
+      </div>
+
+      <!-- 60px -->
+      <div class="icon-wrap">
+        <div class="hq-icon" style="
+          width:60px;height:60px;
+          background:linear-gradient(135deg,#242424,#1C1C1E);
+          border-radius:22.5%;
+          display:flex;align-items:center;justify-content:center;
+        ">
+          <span style="font-family:'Cinzel',Georgia,serif;font-weight:700;font-size:1.35rem;letter-spacing:0.06em;line-height:1;background:linear-gradient(135deg,#EDD07E,#C9A84C,#9E7820);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">HQ</span>
+        </div>
+        <span>60 × 60</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button onclick="exportIcon(1024)">Export PNG 1024×1024</button>
+      <button class="outline" onclick="exportIcon(1024)" style="margin-left:0">Export PNG (uses font)</button>
+    </div>
+  </section>
+
+  <!-- ── 2. LOGO WORDMARK ── -->
+  <section>
+    <h2>Wordmark</h2>
+    <div class="logo-row">
+      <div>
+        <p class="type-label" style="margin-bottom:10px">On Dark</p>
+        <div class="logo-dark">
+          <span class="logo-wordmark">HomeQuarters</span>
+        </div>
       </div>
       <div>
-        <div style="margin-bottom: 12px;">
-          <div class="monogram-flat">
-            <span class="hq">HQ</span>
-          </div>
+        <p class="type-label" style="margin-bottom:10px">On Light</p>
+        <div class="logo-light">
+          <span class="logo-wordmark" style="color:var(--dark)">HomeQuarters</span>
         </div>
-        <p style="font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--stone);text-align:center;">On Cream · Print use</p>
       </div>
-
-      <div class="monogram-info">
-        <h3>The HQ mark</h3>
-        <p>The monogram is distilled from the wordmark — Cormorant Garamond SemiBold, tracked at +8. It is the compact identity of HomeQuarters: used where the full wordmark cannot breathe, where space demands brevity, where recognition must work at a glance.</p>
-        <p>The rounded square format (corner radius 22.5%) is reserved for the app icon only. All other uses of the monogram appear as letterforms only, without a containing shape.</p>
-        <div class="monogram-usage">
-          <div class="monogram-usage-item">App icon (iOS, Android)</div>
-          <div class="monogram-usage-item">Favicon and browser tab</div>
-          <div class="monogram-usage-item">Embossing and wax seal</div>
-          <div class="monogram-usage-item">Member card reverse</div>
-          <div class="monogram-usage-item">Social profile avatar</div>
-          <div class="monogram-usage-item">Watermark on photography</div>
+      <div>
+        <p class="type-label" style="margin-bottom:10px">Monogram</p>
+        <div class="logo-dark" style="padding:24px;">
+          <span class="logo-wordmark" style="font-size:2.4rem;letter-spacing:0.1em">HQ</span>
         </div>
       </div>
     </div>
   </section>
 
-
-  <!-- ── 04 COLOUR ── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-num">04</span>
-      <h2 class="section-title">Colour</h2>
+  <!-- ── SCREENSHOT THIS ── -->
+  <section>
+    <h2>Icon — Screenshot This</h2>
+    <p style="color:var(--stone);font-size:0.8rem;margin-bottom:32px;">Screenshot the box below at 1:1, then replace assets/icon.png. The Q tail is intentionally clipped to keep the monogram clean.</p>
+    <div style="
+      width: 600px; height: 600px;
+      background: #1C1C1E;
+      border-radius: 22.5%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    ">
+      <span style="
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-weight: 600;
+        font-size: 19rem;
+        color: #C9A84C;
+        letter-spacing: 0.08em;
+        line-height: 0.82;
+        transform: translateY(-6%);
+        display: block;
+      ">HQ</span>
     </div>
+  </section>
 
+
+  <!-- ── 3. COLOUR PALETTE ── -->
+  <section>
+    <h2>Colour Palette</h2>
     <div class="palette">
       <div class="swatch">
-        <div class="swatch-block" style="background:#1C1C1E;"></div>
-        <div class="swatch-info">
-          <div class="swatch-name">Dark</div>
-          <div class="swatch-hex">#1C1C1E</div>
-          <div class="swatch-role">Primary background. Authority. Night.</div>
-        </div>
+        <div class="swatch-block" style="background:#1C1C1E"></div>
+        <div class="swatch-name">Dark</div>
+        <div class="swatch-hex">#1C1C1E</div>
       </div>
       <div class="swatch">
-        <div class="swatch-block" style="background:#C9A84C;"></div>
-        <div class="swatch-info">
-          <div class="swatch-name">Gold</div>
-          <div class="swatch-hex">#C9A84C</div>
-          <div class="swatch-role">Accent. Distinction. Use sparingly.</div>
-        </div>
+        <div class="swatch-block" style="background:#C9A84C"></div>
+        <div class="swatch-name">Gold</div>
+        <div class="swatch-hex">#C9A84C</div>
       </div>
       <div class="swatch">
-        <div class="swatch-block" style="background:#F2EBE0; border-top: 1px solid rgba(0,0,0,0.08);"></div>
-        <div class="swatch-info">
-          <div class="swatch-name">Cream</div>
-          <div class="swatch-hex">#F2EBE0</div>
-          <div class="swatch-role">Light backgrounds. Space. Warmth.</div>
-        </div>
+        <div class="swatch-block" style="background:#F2EBE0; border-color:rgba(255,255,255,0.15)"></div>
+        <div class="swatch-name">Cream</div>
+        <div class="swatch-hex">#F2EBE0</div>
       </div>
       <div class="swatch">
-        <div class="swatch-block" style="background:#9A8E82;"></div>
-        <div class="swatch-info">
-          <div class="swatch-name">Stone</div>
-          <div class="swatch-hex">#9A8E82</div>
-          <div class="swatch-role">Secondary text. Supporting elements.</div>
-        </div>
+        <div class="swatch-block" style="background:#9A8E82"></div>
+        <div class="swatch-name">Stone</div>
+        <div class="swatch-hex">#9A8E82</div>
       </div>
       <div class="swatch">
-        <div class="swatch-block" style="background:#E8C97A;"></div>
-        <div class="swatch-info">
-          <div class="swatch-name">Gold Light</div>
-          <div class="swatch-hex">#E8C97A</div>
-          <div class="swatch-role">Hover states. Gradients. Highlights.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="colour-principles">
-      <div class="colour-principle">
-        <h4>Gold is a privilege, not a default</h4>
-        <p>Reserve gold for the most significant moments: membership tier indicators, calls to action, the wordmark on dark. When everything is gold, nothing is. Used with restraint it commands attention; used freely it becomes noise.</p>
-      </div>
-      <div class="colour-principle">
-        <h4>Dark and Cream do the work</h4>
-        <p>The primary palette is intentionally limited. Dark backgrounds project authority and exclusivity. Cream provides warmth and legibility for long-form content. Together they carry 90% of the visual language — gold completes it.</p>
+        <div class="swatch-block" style="background:#E8C97A"></div>
+        <div class="swatch-name">Gold Light</div>
+        <div class="swatch-hex">#E8C97A</div>
       </div>
     </div>
   </section>
 
-
-  <!-- ── 05 TYPOGRAPHY ── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-num">05</span>
-      <h2 class="section-title">Typography</h2>
+  <!-- ── 4. TYPOGRAPHY ── -->
+  <section>
+    <h2>Typography</h2>
+    <div class="type-row">
+      <p class="type-label">Display — Cormorant Garamond 600</p>
+      <div class="display-sample">The City's Finest Tables</div>
     </div>
-
-    <div class="type-specimen">
-      <div class="type-meta">
-        <span class="type-meta-name">Cormorant Garamond — Display</span>
-        <span class="type-meta-detail">SemiBold 600 · Light 300 · Light Italic 300i · Google Fonts</span>
-      </div>
-      <div class="type-display" style="margin-bottom: 12px;">The City's Finest Tables</div>
-      <div class="type-display-italic">Where belonging is never negotiated.</div>
+    <div class="type-row">
+      <p class="type-label">Display Italic — Cormorant Garamond 400</p>
+      <div class="display-italic">Your Card. Your Table.</div>
     </div>
-
-    <div class="type-specimen">
-      <div class="type-meta">
-        <span class="type-meta-name">DM Sans — Interface &amp; Body</span>
-        <span class="type-meta-detail">Light 300 · Regular 400 · Medium 500 · SemiBold 600 · Google Fonts</span>
-      </div>
-      <p class="type-body" style="margin-bottom: 16px;">An invitation-only membership for the global African diaspora. Connect, dine, and discover with people who share your world. Every partner venue is hand-selected. Every deal is a gesture of welcome.</p>
-      <p class="type-ui">Gold Card Member · Join the Waitlist · View Benefits</p>
-    </div>
-
-    <div class="type-meta" style="margin-bottom: 0; margin-top: 48px;">
-      <span class="type-meta-name">Type Scale</span>
-    </div>
-    <div class="type-scale-row">
-      <span class="type-scale-label">Display / 56</span>
-      <span class="type-scale-sample" style="font-size:3.5rem; line-height:1.05;">HomeQuarters</span>
-    </div>
-    <div class="type-scale-row">
-      <span class="type-scale-label">Heading / 32</span>
-      <span class="type-scale-sample" style="font-size:2rem;">Partner Venues</span>
-    </div>
-    <div class="type-scale-row">
-      <span class="type-scale-label">Title / 22</span>
-      <span class="type-scale-sample" style="font-size:1.375rem;">Gold Card Membership</span>
-    </div>
-    <div class="type-scale-row">
-      <span class="type-scale-label">Body / 16</span>
-      <span class="type-scale-sample" style="font-size:1rem; font-family:'DM Sans',sans-serif; font-weight:400;">Available to invited members and their guests.</span>
-    </div>
-    <div class="type-scale-row" style="border-bottom:none;">
-      <span class="type-scale-label">Caption / 11</span>
-      <span class="type-scale-sample" style="font-size:0.688rem; font-family:'DM Sans',sans-serif; font-weight:500; letter-spacing:0.12em; text-transform:uppercase;">GOLD CARD · PLATINUM CARD</span>
-    </div>
-
-    <div class="type-pairing">
-      <div>
-        <h4>In the app</h4>
-        <div class="pairing-sample-heading">Enjoy your evening.</div>
-        <p class="pairing-sample-body">Your Gold Card benefit at Chez Olivia has been redeemed. The team has been notified. Enjoy your evening.</p>
-      </div>
-      <div>
-        <h4>In the email</h4>
-        <div class="pairing-sample-heading">Your membership has been approved.</div>
-        <p class="pairing-sample-body">Welcome to HomeQuarters. You now have access to exclusive benefits at our partner venues across London. Your card is ready in the app.</p>
-      </div>
+    <div class="type-row">
+      <p class="type-label">Body — DM Sans 400</p>
+      <div class="body-sample">An invitation-only membership for the diaspora. Connect, dine, and discover with people who share your world.</div>
     </div>
   </section>
 
+  <!-- hidden canvas -->
+  <canvas id="exportCanvas"></canvas>
 
-  <!-- ── 06 VOICE & TONE ── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-num">06</span>
-      <h2 class="section-title">Voice &amp; Tone</h2>
-    </div>
+  <script>
+    async function exportIcon(size) {
+      const el = document.getElementById('hqIconSvg');
+      const canvas = await html2canvas(el, {
+        width: el.offsetWidth, height: el.offsetHeight,
+        scale: size / el.offsetWidth,
+        backgroundColor: null,
+        useCORS: true,
+        logging: false,
+      });
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `hq-icon-${size}.png`;
+      a.click();
+    }
 
-    <div class="voice-grid">
-      <div class="voice-cell">
-        <h4>Write like this</h4>
-        <div class="voice-example">
-          <div class="voice-line good">
-            <div class="voice-line-flag">Approval</div>
-            <div class="voice-line-text">Your application has been approved. Welcome to HomeQuarters.</div>
-          </div>
-          <div class="voice-line good">
-            <div class="voice-line-flag">Redemption</div>
-            <div class="voice-line-text">Your benefit has been redeemed. The team at Rivington knows to expect you.</div>
-          </div>
-          <div class="voice-line good">
-            <div class="voice-line-flag">Rejection</div>
-            <div class="voice-line-text">We're not able to offer membership at this time. You're welcome to apply again in six months.</div>
-          </div>
-        </div>
-      </div>
-      <div class="voice-cell">
-        <h4>Not like this</h4>
-        <div class="voice-example">
-          <div class="voice-line bad">
-            <div class="voice-line-flag">Too excitable</div>
-            <div class="voice-line-text">Congrats!! You're officially IN! 🎉 Welcome to the HQ fam!</div>
-          </div>
-          <div class="voice-line bad">
-            <div class="voice-line-flag">Too corporate</div>
-            <div class="voice-line-text">Your redemption transaction has been successfully processed. Reference: TXN-00291.</div>
-          </div>
-          <div class="voice-line bad">
-            <div class="voice-line-flag">Too cold</div>
-            <div class="voice-line-text">Application rejected. You do not meet current criteria.</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    function exportIconOLD(size) {
+      const canvas = document.getElementById('exportCanvas');
+      canvas.width  = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const s = size / 1024;
 
-    <div class="voice-principles">
-      <div class="voice-principle">
-        <h4>Warm, not effusive</h4>
-        <p>We speak with the ease of a trusted friend, not the enthusiasm of a brand. Say the thing simply. A warm sentence lands harder than three excited ones.</p>
-      </div>
-      <div class="voice-principle">
-        <h4>Precise, not cold</h4>
-        <p>Clarity is a form of respect. Be specific — name the venue, name the benefit, name the person. Never hide behind generic copy when the real thing is available.</p>
-      </div>
-      <div class="voice-principle">
-        <h4>Confident, not boastful</h4>
-        <p>HQ does not need to tell people it is exclusive. The experience communicates it. Write with the quiet authority of something that does not need to shout.</p>
-      </div>
-    </div>
-  </section>
+      const gold = () => {
+        const g = ctx.createLinearGradient(72*s, 280*s, 952*s, 780*s);
+        g.addColorStop(0,   '#EDD07E');
+        g.addColorStop(0.5, '#C9A84C');
+        g.addColorStop(1,   '#9E7820');
+        return g;
+      };
 
+      // Background
+      const bg = ctx.createLinearGradient(0, 0, size, size);
+      bg.addColorStop(0, '#242424'); bg.addColorStop(1, '#1C1C1E');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, size, size);
 
-  <!-- ── 07 IMAGERY ── -->
-  <section class="section">
-    <div class="section-header">
-      <span class="section-num">07</span>
-      <h2 class="section-title">Photography &amp; Imagery</h2>
-    </div>
+      // Circle border
+      ctx.strokeStyle = 'rgba(201,168,76,0.28)'; ctx.lineWidth = 2*s;
+      ctx.beginPath(); ctx.arc(512*s, 512*s, 468*s, 0, Math.PI*2); ctx.stroke();
 
-    <div class="imagery-grid">
-      <div class="imagery-cell">
-        <h4>Light &amp; Atmosphere</h4>
-        <p>Warm, low ambient light. Golden hour in dining rooms. Candle-lit tables. Rich shadows. The visual texture of a place worth being. No bright studio flash. No artificial fill that flattens depth.</p>
-      </div>
-      <div class="imagery-cell">
-        <h4>People</h4>
-        <p>Diaspora represented naturally — in conversation, laughing, leaning in — never posed, never performing for the camera. Real moments of connection, never stock archetypes. Always dignified.</p>
-      </div>
-      <div class="imagery-cell">
-        <h4>Food &amp; Venues</h4>
-        <p>Food as context, not subject. Shoot a table mid-meal, not a styled dish on white. Show the room, not just the plate. The venue should feel lived-in and worth seeking out.</p>
-      </div>
-    </div>
+      // H — left bar
+      ctx.fillStyle = gold();
+      ctx.beginPath(); ctx.roundRect(72*s, 280*s, 70*s, 464*s, 6*s); ctx.fill();
+      // H — right bar
+      ctx.fillStyle = gold();
+      ctx.beginPath(); ctx.roundRect(362*s, 280*s, 70*s, 464*s, 6*s); ctx.fill();
+      // H — crossbar
+      ctx.fillStyle = gold();
+      ctx.beginPath(); ctx.roundRect(72*s, 477*s, 360*s, 70*s, 6*s); ctx.fill();
 
-    <div class="imagery-do-dont">
-      <div class="imagery-col do">
-        <h4>Do</h4>
-        <ul>
-          <li>Natural light or warm artificial light</li>
-          <li>Authentic candid moments between people</li>
-          <li>Rich, saturated colour grading — deep shadows</li>
-          <li>African diaspora represented as protagonists, not tokens</li>
-          <li>Editorial framing: wide shots that establish place</li>
-          <li>Imperfect, lived-in environments</li>
-        </ul>
-      </div>
-      <div class="imagery-col dont">
-        <h4>Don't</h4>
-        <ul>
-          <li>Stock photography or generic lifestyle imagery</li>
-          <li>Over-lit, flat, bright white backgrounds</li>
-          <li>Food photography divorced from its context</li>
-          <li>Tokenistic or exoticising representation</li>
-          <li>Filters or effects that feel Instagram-generic</li>
-          <li>Logos or watermarks other than the HQ monogram</li>
-        </ul>
-      </div>
-    </div>
-  </section>
+      // Q ring (donut arc with gap 30°–60°)
+      ctx.fillStyle = gold();
+      ctx.beginPath();
+      ctx.arc(720*s, 512*s, 232*s, 0, Math.PI*2);           // outer CW full
+      ctx.arc(720*s, 512*s, 162*s, Math.PI*2, 0, true);     // inner CCW full (hole)
+      ctx.fill('evenodd');
+      // Erase the gap 30°–60° using background colour
+      ctx.fillStyle = '#1E1E1E';
+      ctx.beginPath();
+      ctx.moveTo(720*s, 512*s);
+      ctx.arc(720*s, 512*s, 240*s, 30*Math.PI/180, 60*Math.PI/180);
+      ctx.closePath(); ctx.fill();
 
+      // Q tail
+      ctx.strokeStyle = gold(); ctx.lineWidth = 70*s; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(816*s, 628*s); ctx.lineTo(966*s, 778*s); ctx.stroke();
 
-  <!-- ── 08 MISUSE ── -->
-  <section class="section" style="border-bottom: none;">
-    <div class="section-header">
-      <span class="section-num">08</span>
-      <h2 class="section-title">Logo Misuse</h2>
-    </div>
-
-    <div class="misuse-grid">
-      <div class="misuse-cell">
-        <div class="example">
-          <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.4rem;letter-spacing:0.22em;text-transform:uppercase;color:#C9A84C;text-shadow:2px 2px 6px rgba(0,0,0,0.4);">HomeQuarters</span>
-        </div>
-        <h4>No shadows or effects</h4>
-        <p>Drop shadows, glows, and gradients on the wordmark are never permitted. The logo needs no embellishment.</p>
-      </div>
-      <div class="misuse-cell">
-        <div class="example">
-          <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.4rem;letter-spacing:0.22em;text-transform:uppercase;color:#7B9FD0;">HomeQuarters</span>
-        </div>
-        <h4>No unauthorised colours</h4>
-        <p>The wordmark must only appear in Gold, Dark, Cream, or pure White. Never in blue, red, or any other colour.</p>
-      </div>
-      <div class="misuse-cell">
-        <div class="example">
-          <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.4rem;letter-spacing:0.22em;text-transform:uppercase;color:#1C1C1E;transform:scaleX(1.4);display:inline-block;">HomeQuarters</span>
-        </div>
-        <h4>No stretching or distorting</h4>
-        <p>Never scale the wordmark non-uniformly. The letterform proportions of Cormorant Garamond are fixed and should never be altered.</p>
-      </div>
-      <div class="misuse-cell">
-        <div class="example">
-          <span style="font-family:'Georgia',serif;font-weight:700;font-size:1.4rem;letter-spacing:0.22em;text-transform:uppercase;color:#C9A84C;">HomeQuarters</span>
-        </div>
-        <h4>No font substitutions</h4>
-        <p>The wordmark is always set in Cormorant Garamond SemiBold. Georgia, Times New Roman, and other serif substitutes are not acceptable.</p>
-      </div>
-      <div class="misuse-cell">
-        <div class="example" style="background:#FF6B6B;">
-          <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.4rem;letter-spacing:0.22em;text-transform:uppercase;color:#FFFFFF;">HomeQuarters</span>
-        </div>
-        <h4>No unapproved backgrounds</h4>
-        <p>Do not place the wordmark on colourful, patterned, or photographic backgrounds unless Gold or Dark contrast can be guaranteed.</p>
-      </div>
-      <div class="misuse-cell">
-        <div class="example">
-          <span style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.4rem;letter-spacing:0.22em;text-transform:uppercase;color:#C9A84C;opacity:0.3;">HomeQuarters</span>
-        </div>
-        <h4>No low-opacity treatments</h4>
-        <p>Do not use the wordmark as a watermark or background texture. If legibility cannot be maintained, use the monogram instead.</p>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- ── FOOTER ── -->
-  <footer class="footer">
-    <span class="footer-wordmark">HomeQuarters</span>
-    <div class="footer-meta">
-      <p>Brand Standards 1.0</p>
-      <p>For queries: hello@thehomequarters.com</p>
-      <p>© 2025 HomeQuarters. All rights reserved.</p>
-    </div>
-  </footer>
-
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png'); a.download = `hq-icon-${size}.png`; a.click();
+    }
+  </script>
 </body>
 </html>
