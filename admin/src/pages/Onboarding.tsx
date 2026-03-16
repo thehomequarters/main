@@ -6,6 +6,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import ConfirmModal from "../components/ConfirmModal";
@@ -42,6 +44,38 @@ export default function Onboarding() {
   }>({ open: false, title: "", message: "", onConfirm: () => {} });
   const closeConfirm = () => setConfirmState((s) => ({ ...s, open: false }));
   const [previewIndex, setPreviewIndex] = useState(0);
+
+  // Welcome back splash config
+  const [splashUrl, setSplashUrl] = useState("");
+  const [splashInput, setSplashInput] = useState("");
+  const [splashSaving, setSplashSaving] = useState(false);
+
+  useEffect(() => {
+    getDoc(doc(db, "app_settings", "welcome_splash")).then((snap) => {
+      if (snap.exists()) {
+        const url = snap.data().image_url as string;
+        setSplashUrl(url);
+        setSplashInput(url);
+      }
+    });
+  }, []);
+
+  const handleSaveSplash = async () => {
+    if (!splashInput.trim() || !isValidImageUrl(splashInput)) return;
+    setSplashSaving(true);
+    try {
+      await setDoc(doc(db, "app_settings", "welcome_splash"), {
+        image_url: splashInput.trim(),
+        updated_at: new Date().toISOString(),
+      });
+      setSplashUrl(splashInput.trim());
+      toast("Welcome splash updated");
+    } catch {
+      toast("Failed to save", "error");
+    } finally {
+      setSplashSaving(false);
+    }
+  };
 
   useEffect(() => {
     const unsub = onSnapshot(
@@ -163,6 +197,61 @@ export default function Onboarding() {
       />
 
       <div>
+
+        {/* Welcome Back Splash config */}
+        <div className="bg-dark border border-dark-border rounded-2xl p-5 mb-8">
+          <div className="mb-4">
+            <h2 className="text-white font-bold text-base">Welcome Back Splash</h2>
+            <p className="text-gray-500 text-xs mt-0.5">
+              Full-screen image shown to members immediately after signing in.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="text-gray-500 text-xs font-semibold uppercase tracking-wider block mb-1.5">
+                Image URL
+              </label>
+              <input
+                value={splashInput}
+                onChange={(e) => setSplashInput(e.target.value)}
+                placeholder="https://images.unsplash.com/…"
+                className={`w-full bg-black border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50 ${
+                  splashInput && !isValidImageUrl(splashInput)
+                    ? "border-red-500/50"
+                    : "border-dark-border"
+                }`}
+              />
+              {splashInput && !isValidImageUrl(splashInput) && (
+                <p className="text-red-400 text-xs mt-1">Must be a valid https:// image URL</p>
+              )}
+            </div>
+            {splashInput && isValidImageUrl(splashInput) && (
+              <img
+                src={splashInput}
+                alt="splash preview"
+                className="w-full h-28 object-cover rounded-xl border border-dark-border"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+              />
+            )}
+            <div className="flex items-center justify-between gap-3">
+              {splashUrl ? (
+                <p className="text-gray-600 text-xs truncate flex-1">
+                  Current: <span className="text-gray-500">{splashUrl}</span>
+                </p>
+              ) : (
+                <p className="text-gray-600 text-xs flex-1">No custom image set — app uses built-in default.</p>
+              )}
+              <button
+                onClick={handleSaveSplash}
+                disabled={splashSaving || !splashInput.trim() || !isValidImageUrl(splashInput) || splashInput === splashUrl}
+                className="flex-shrink-0 px-5 py-2.5 bg-gold text-black font-bold text-xs rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-40"
+              >
+                {splashSaving ? "Saving…" : "Save Image"}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-white">Onboarding Slides</h1>

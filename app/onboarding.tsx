@@ -73,7 +73,7 @@ export default function OnboardingScreen() {
       Animated.timing(ctaOpacity, {
         toValue: 1,
         duration: 800,
-        delay: 1000,
+        delay: 800,
         useNativeDriver: true,
       }),
     ]).start();
@@ -141,17 +141,17 @@ export default function OnboardingScreen() {
         pointerEvents="none"
       />
 
-      {/* Overlay 3 — centered logo, fades in third */}
-      <Animated.View
-        style={[styles.logoContainer, { opacity: logoOpacity }]}
-        pointerEvents="none"
-      >
-        <Text style={styles.logoText}>HQ</Text>
-        <Text style={styles.logoSubtext}>HOMEQUARTERS</Text>
-      </Animated.View>
-
-      {/* Overlay 4 — dots + CTAs, fades in last */}
+      {/* Overlay 3 — dots + CTAs + subtle branding, fades in last */}
       <Animated.View style={[styles.bottomControls, { opacity: ctaOpacity }]}>
+        {/* Subtle branding above dots */}
+        <Animated.View
+          style={[styles.brandingBlock, { opacity: logoOpacity }]}
+          pointerEvents="none"
+        >
+          <Text style={styles.logoText}>HQ</Text>
+          <Text style={styles.logoSubtext}>HOMEQUARTERS</Text>
+        </Animated.View>
+
         <View style={styles.dots}>
           {slides.map((_, i) => (
             <View
@@ -210,34 +210,23 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.65)",
   },
 
-  // Overlay 3 — centered logo
-  logoContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
+  // Subtle branding block above dots
+  brandingBlock: {
     alignItems: "center",
-    gap: 8,
+    marginBottom: 14,
+    gap: 4,
   },
   logoText: {
-    color: colors.white,
-    fontSize: 52,
+    color: "rgba(255,255,255,0.40)",
+    fontSize: 13,
     fontFamily: fonts.display,
-    letterSpacing: 14,
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    letterSpacing: 8,
   },
   logoSubtext: {
-    color: colors.gold,
-    fontSize: 10,
+    color: "rgba(201,168,76,0.50)",
+    fontSize: 7,
     fontFamily: fonts.semibold,
     letterSpacing: 5,
-    textShadowColor: "rgba(0,0,0,0.4)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
   },
 
   // Bottom controls

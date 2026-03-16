@@ -42,6 +42,7 @@ export interface Profile {
   // Social handles
   instagram_handle: string | null;
   linkedin_handle: string | null;
+  favourite_hq_venue?: string | null;
   // Push notifications
   push_token: string | null;
   // Privacy settings (all default to false / "everyone" = visible)

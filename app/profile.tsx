@@ -109,6 +109,9 @@ export default function ProfileScreen() {
   const [linkedinHandle, setLinkedinHandle] = useState(
     profile?.linkedin_handle ?? ""
   );
+  const [favouriteHqVenue, setFavouriteHqVenue] = useState(
+    profile?.favourite_hq_venue ?? ""
+  );
   const [saving, setSaving] = useState(false);
   const [avatarLocal, setAvatarLocal] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -149,7 +152,8 @@ export default function ProfileScreen() {
     interestsText !== (profile?.interests ?? []).join(", ") ||
     customPlacesText !== (profile?.custom_places ?? []).join(", ") ||
     instagramHandle !== (profile?.instagram_handle ?? "") ||
-    linkedinHandle !== (profile?.linkedin_handle ?? "");
+    linkedinHandle !== (profile?.linkedin_handle ?? "") ||
+    favouriteHqVenue !== (profile?.favourite_hq_venue ?? "");
 
   const handleSave = async () => {
     if (!user?.uid) return;
@@ -182,6 +186,7 @@ export default function ProfileScreen() {
         custom_places: customPlaces,
         instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
         linkedin_handle: linkedinHandle.trim() || null,
+        favourite_hq_venue: favouriteHqVenue.trim() || null,
       });
       await refreshProfile();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -460,6 +465,13 @@ export default function ProfileScreen() {
             onChangeText={setBio}
             placeholder="Tell members about yourself..."
             multiline
+          />
+
+          <FieldLabel label="MY HQ VENUE / CITY" />
+          <FieldInput
+            value={favouriteHqVenue}
+            onChangeText={setFavouriteHqVenue}
+            placeholder="e.g. Barcelona, Lisbon, London…"
           />
 
           <FieldLabel label="CITY" />

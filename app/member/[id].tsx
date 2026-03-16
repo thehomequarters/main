@@ -25,9 +25,9 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
 import * as Haptics from "expo-haptics";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import type { Profile, Connection } from "@/lib/database.types";
+import type { Profile, Connection, Venue } from "@/lib/database.types";
 
 export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -39,6 +39,7 @@ export default function MemberProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [visitedVenues, setVisitedVenues] = useState<Venue[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -57,6 +58,14 @@ export default function MemberProfileScreen() {
         if (!cSnap.empty) {
           setConnection({ id: cSnap.docs[0].id, ...cSnap.docs[0].data() } as Connection);
         }
+      }
+      const visitsSnap = await getDocs(
+        query(collection(db, "venue_visits"), where("member_id", "==", id))
+      );
+      const venueIds = [...new Set(visitsSnap.docs.map((d) => d.data().venue_id as string))];
+      if (venueIds.length > 0) {
+        const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
+        setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
       }
       setLoading(false);
     };
@@ -296,6 +305,56 @@ export default function MemberProfileScreen() {
           </View>
         )}
 
+        {/* My HQ */}
+        {!isMasked && member.favourite_hq_venue ? (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>MY HQ</Text>
+            <Text style={styles.hqVenue}>{member.favourite_hq_venue}</Text>
+          </View>
+        ) : null}
+
+        {/* Places */}
+        {!isMasked && !member.hide_venue_log && (isSelf || visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
+          <View style={styles.card}>
+            <Text style={styles.cardLabel}>PLACES</Text>
+            {visitedVenues.length === 0 && (member.custom_places?.length ?? 0) === 0 ? (
+              <Text style={[styles.bio, { color: colors.stone }]}>
+                No places logged yet. Visit a venue and tap "Been here" to add it.
+              </Text>
+            ) : null}
+            {visitedVenues.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginHorizontal: -18 }}
+                contentContainerStyle={{ paddingHorizontal: 18, gap: 10 }}
+              >
+                {visitedVenues.map((venue) => (
+                  <Pressable
+                    key={venue.id}
+                    onPress={() => router.push(`/venue/${venue.id}` as any)}
+                    style={styles.venueChip}
+                  >
+                    {venue.logo_url ? (
+                      <Image source={{ uri: venue.logo_url }} style={styles.venueChipLogo} />
+                    ) : null}
+                    <Text style={styles.venueChipText}>{venue.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+            {(member.custom_places?.length ?? 0) > 0 && (
+              <View style={[styles.tags, visitedVenues.length > 0 ? { marginTop: 12 } : {}]}>
+                {member.custom_places!.map((place) => (
+                  <View key={place} style={styles.tag}>
+                    <Text style={styles.tagText}>{place}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Social */}
         {!isMasked && !member.hide_social_links && (member.instagram_handle || member.linkedin_handle) && (
           <View style={styles.card}>
@@ -305,11 +364,8 @@ export default function MemberProfileScreen() {
                 onPress={() => Linking.openURL(`https://instagram.com/${member.instagram_handle}`)}
                 style={styles.socialRow}
               >
-                <View style={[styles.socialIcon, { backgroundColor: "rgba(225,48,108,0.1)" }]}>
-                  <Ionicons name="logo-instagram" size={17} color="#E1306C" />
-                </View>
+                <Text style={styles.socialPlatform}>INSTAGRAM</Text>
                 <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.stone} style={{ marginLeft: "auto" }} />
               </Pressable>
             ) : null}
             {member.linkedin_handle ? (
@@ -322,15 +378,12 @@ export default function MemberProfileScreen() {
                 }}
                 style={[styles.socialRow, { borderBottomWidth: 0 }]}
               >
-                <View style={[styles.socialIcon, { backgroundColor: "rgba(0,119,181,0.1)" }]}>
-                  <Ionicons name="logo-linkedin" size={17} color="#0077B5" />
-                </View>
+                <Text style={styles.socialPlatform}>LINKEDIN</Text>
                 <Text style={styles.socialHandle}>
                   {member.linkedin_handle!.startsWith("http")
                     ? (member.linkedin_handle!.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "").replace(/\/$/, "") || "LinkedIn Profile")
                     : member.linkedin_handle}
                 </Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.stone} style={{ marginLeft: "auto" }} />
               </Pressable>
             ) : null}
           </View>
@@ -538,22 +591,47 @@ const styles = StyleSheet.create({
   socialRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingVertical: 10,
+    justifyContent: "space-between",
+    paddingVertical: 11,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  socialIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
+  socialPlatform: {
+    color: colors.stone,
+    fontSize: 10,
+    fontFamily: fonts.bold,
+    letterSpacing: 1.5,
   },
   socialHandle: {
     color: colors.dark,
-    fontSize: 14,
-    fontWeight: "500",
+    fontSize: 13,
+    fontFamily: fonts.medium,
+  },
+  hqVenue: {
+    color: colors.dark,
+    fontSize: 18,
+    fontFamily: fonts.display,
+  },
+  venueChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  venueChipLogo: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+  },
+  venueChipText: {
+    color: colors.dark,
+    fontSize: 13,
+    fontFamily: fonts.medium,
   },
 
   // Member code
