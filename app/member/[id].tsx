@@ -44,30 +44,35 @@ export default function MemberProfileScreen() {
   useEffect(() => {
     if (!id) return;
     const load = async () => {
-      const snap = await getDoc(doc(db, "profiles", id));
-      if (snap.exists()) {
-        setMember({ id: snap.id, ...snap.data() } as Profile);
-      }
-      if (user?.uid) {
-        const q = query(
-          collection(db, "connections"),
-          where("from_id", "==", user.uid),
-          where("to_id", "==", id)
-        );
-        const cSnap = await getDocs(q);
-        if (!cSnap.empty) {
-          setConnection({ id: cSnap.docs[0].id, ...cSnap.docs[0].data() } as Connection);
+      try {
+        const snap = await getDoc(doc(db, "profiles", id));
+        if (snap.exists()) {
+          setMember({ id: snap.id, ...snap.data() } as Profile);
         }
+        if (user?.uid) {
+          const q = query(
+            collection(db, "connections"),
+            where("from_id", "==", user.uid),
+            where("to_id", "==", id)
+          );
+          const cSnap = await getDocs(q);
+          if (!cSnap.empty) {
+            setConnection({ id: cSnap.docs[0].id, ...cSnap.docs[0].data() } as Connection);
+          }
+        }
+        const visitsSnap = await getDocs(
+          query(collection(db, "venue_visits"), where("member_id", "==", id))
+        );
+        const venueIds = [...new Set(visitsSnap.docs.map((d) => d.data().venue_id as string))];
+        if (venueIds.length > 0) {
+          const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
+          setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
+        }
+      } catch (e) {
+        console.warn("loadMember:", e);
+      } finally {
+        setLoading(false);
       }
-      const visitsSnap = await getDocs(
-        query(collection(db, "venue_visits"), where("member_id", "==", id))
-      );
-      const venueIds = [...new Set(visitsSnap.docs.map((d) => d.data().venue_id as string))];
-      if (venueIds.length > 0) {
-        const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
-        setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
-      }
-      setLoading(false);
     };
     load();
   }, [id, user?.uid]);
