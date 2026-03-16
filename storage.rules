@@ -35,5 +35,16 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    // ──── Admin media uploads ────
+    // Public read so hosted URLs work in the app and on the web.
+    // Write requires auth + 20 MB limit + images only.
+    // Admin gate is enforced at the application layer.
+    match /media/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAuth()
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
   }
 }

@@ -19,6 +19,7 @@ import Emails from "./pages/Emails";
 import Verify from "./pages/Verify";
 import Pipeline from "./pages/Pipeline";
 import CMS from "./pages/CMS";
+import Media from "./pages/Media";
 
 function ProtectedRoutes() {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -73,6 +74,7 @@ function ProtectedRoutes() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/emails" element={<Emails />} />
         <Route path="/cms" element={<CMS />} />
+        <Route path="/media" element={<Media />} />
       </Routes>
     </Layout>
   );
