@@ -21,6 +21,7 @@ import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickImage, uploadAvatar } from "@/lib/storage";
 import type { MemberIndustry, HomelandRegion } from "@/lib/database.types";
+import { HOMELAND_GROUPS } from "@/constants/homelands";
 
 const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
   { key: "creative", label: "Creative" },
@@ -29,50 +30,6 @@ const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
   { key: "music", label: "Music" },
   { key: "business", label: "Business" },
   { key: "wellness", label: "Wellness" },
-];
-
-const HOMELAND_GROUPS: { label: string; regions: { key: HomelandRegion; label: string }[] }[] = [
-  {
-    label: "Africa",
-    regions: [
-      { key: "north_africa", label: "North Africa" },
-      { key: "west_africa", label: "West Africa" },
-      { key: "central_africa", label: "Central Africa" },
-      { key: "east_africa", label: "East Africa" },
-      { key: "southern_africa", label: "Southern Africa" },
-    ],
-  },
-  {
-    label: "Americas",
-    regions: [
-      { key: "caribbean", label: "Caribbean" },
-      { key: "central_america", label: "Central America" },
-      { key: "south_america", label: "South America" },
-    ],
-  },
-  {
-    label: "Asia",
-    regions: [
-      { key: "middle_east", label: "Middle East" },
-      { key: "south_asia", label: "South Asia" },
-      { key: "southeast_asia", label: "Southeast Asia" },
-      { key: "east_asia", label: "East Asia" },
-    ],
-  },
-  {
-    label: "Europe",
-    regions: [
-      { key: "western_europe", label: "Western Europe" },
-      { key: "eastern_europe", label: "Eastern Europe" },
-      { key: "southern_europe", label: "Southern Europe" },
-    ],
-  },
-  {
-    label: "Oceania",
-    regions: [
-      { key: "pacific_islands", label: "Pacific Islands" },
-    ],
-  },
 ];
 
 function FieldLabel({ label }: { label: string }) {

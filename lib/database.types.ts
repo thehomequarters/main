@@ -22,27 +22,85 @@ export type MemberIndustry =
   | "wellness";
 
 export type HomelandRegion =
-  // Africa
-  | "north_africa"
-  | "west_africa"
-  | "central_africa"
-  | "east_africa"
-  | "southern_africa"
-  // Americas
-  | "caribbean"
-  | "central_america"
-  | "south_america"
-  // Asia
-  | "middle_east"
-  | "south_asia"
-  | "southeast_asia"
-  | "east_asia"
-  // Europe
-  | "western_europe"
-  | "eastern_europe"
-  | "southern_europe"
+  // Africa — specific nations
+  | "nigerian"
+  | "ghanaian"
+  | "ethiopian_eritrean"
+  | "somali"
+  | "kenyan"
+  | "south_african"
+  | "zimbabwean"
+  | "congolese"
+  | "ugandan"
+  | "rwandan"
+  | "cameroonian"
+  | "senegalese"
+  | "ivorian"
+  | "egyptian"
+  | "moroccan"
+  | "algerian_tunisian"
+  | "west_african"
+  | "east_african"
+  | "southern_african"
+  // Caribbean — specific islands
+  | "jamaican"
+  | "trinidadian"
+  | "haitian"
+  | "cuban"
+  | "dominican"
+  | "barbadian"
+  | "caribbean_other"
+  // Latin America — specific countries
+  | "mexican"
+  | "colombian"
+  | "venezuelan"
+  | "brazilian"
+  | "argentine"
+  | "chilean"
+  | "peruvian"
+  | "ecuadorian"
+  | "puerto_rican"
+  | "central_american"
+  | "south_american_other"
+  // Europe — country-specific
+  | "italian"
+  | "spanish"
+  | "portuguese"
+  | "french"
+  | "greek"
+  | "british_irish"
+  | "german_austrian"
+  | "dutch_belgian"
+  | "scandinavian"
+  | "polish"
+  | "romanian"
+  | "balkan"
+  | "eastern_european_other"
+  // Middle East — specific cultures
+  | "lebanese"
+  | "iranian_persian"
+  | "turkish"
+  | "arab_levant"
+  | "arab_gulf"
+  | "arab_north_africa"
+  | "iraqi"
+  | "yemeni"
+  // South Asia
+  | "indian"
+  | "pakistani"
+  | "bangladeshi"
+  | "sri_lankan"
+  | "nepali"
+  // East & Southeast Asia
+  | "chinese"
+  | "japanese"
+  | "korean"
+  | "filipino"
+  | "vietnamese"
+  | "thai"
+  | "indonesian_malay"
   // Oceania
-  | "pacific_islands";
+  | "pacific_islander";
 
 export interface Profile {
   id: string;
