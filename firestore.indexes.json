@@ -7,6 +7,16 @@
         { "fieldPath": "membership_status", "order": "ASCENDING" },
         { "fieldPath": "push_token", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "redemptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "member_id", "order": "ASCENDING" },
+        { "fieldPath": "deal_id", "order": "ASCENDING" },
+        { "fieldPath": "venue_id", "order": "ASCENDING" },
+        { "fieldPath": "redeemed_at", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

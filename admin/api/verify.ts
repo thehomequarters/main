@@ -31,6 +31,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
+  try {
+    return await verifyHandler(req, res);
+  } catch (err: unknown) {
+    console.error("Unhandled error in /api/verify:", err);
+    return res.status(500).json({ error: "Internal server error. Please try again." });
+  }
+}
+
+async function verifyHandler(req: VercelRequest, res: VercelResponse) {
+
   const { token, pin } = req.body ?? {};
   if (!token || !pin)
     return res.status(400).json({ error: "Missing token or pin" });
