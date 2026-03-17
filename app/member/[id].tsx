@@ -195,11 +195,16 @@ export default function MemberProfileScreen() {
         </View>
 
         {/* Name & title */}
-        <Text style={styles.name}>
-          {isMasked
-            ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
-            : `${member.first_name} ${member.last_name}`}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <Text style={styles.name}>
+            {isMasked
+              ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
+              : `${member.first_name} ${member.last_name}`}
+          </Text>
+          {!isMasked && member.membership_tier === "committee_member" && (
+            <Ionicons name="checkmark-circle" size={20} color="#4F8EF7" />
+          )}
+        </View>
         {!isMasked && member.title ? (
           <Text style={styles.title}>{member.title}</Text>
         ) : isMasked ? (

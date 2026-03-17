@@ -172,6 +172,7 @@ export interface Post {
   author_initials: string;
   author_title: string;
   author_city: string;
+  author_tier?: MembershipTier;
   content: string;
   topic: PostTopic;
   color: string;

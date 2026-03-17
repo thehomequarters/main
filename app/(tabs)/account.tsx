@@ -134,8 +134,7 @@ export default function AccountTab() {
     const url = `https://${code}.thehomequarters.com`;
     try {
       await Share.share({
-        message: url,
-        url,
+        message: `Join me on HomeQuarters — the private members' community for the diaspora.\n\n${url}`,
       });
     } catch (e: any) {
       // User cancelled - non-critical
@@ -206,15 +205,20 @@ export default function AccountTab() {
           </Pressable>
 
           <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: colors.ink,
-                fontSize: 28,
-                fontFamily: fonts.display,
-              }}
-            >
-              {profile?.first_name} {profile?.last_name}
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text
+                style={{
+                  color: colors.ink,
+                  fontSize: 28,
+                  fontFamily: fonts.display,
+                }}
+              >
+                {profile?.first_name} {profile?.last_name}
+              </Text>
+              {profile?.membership_tier === "committee_member" && (
+                <Ionicons name="checkmark-circle" size={20} color="#4F8EF7" />
+              )}
+            </View>
             <Text
               style={{
                 color: colors.stone,

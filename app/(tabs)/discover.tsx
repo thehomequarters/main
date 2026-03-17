@@ -601,15 +601,20 @@ export default function DiscoverTab() {
 
                 {/* Info */}
                 <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      color: colors.dark,
-                      fontSize: 15,
-                      fontWeight: "600",
-                    }}
-                  >
-                    {profile?.first_name} {profile?.last_name}
-                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Text
+                      style={{
+                        color: colors.dark,
+                        fontSize: 15,
+                        fontWeight: "600",
+                      }}
+                    >
+                      {profile?.first_name} {profile?.last_name}
+                    </Text>
+                    {profile?.membership_tier === "committee_member" && (
+                      <Ionicons name="checkmark-circle" size={14} color="#4F8EF7" />
+                    )}
+                  </View>
                   <Text
                     style={{
                       color: colors.stone,
@@ -774,6 +779,9 @@ export default function DiscoverTab() {
                   </Text>
                   {masked && (
                     <Ionicons name="lock-closed-outline" size={10} color={colors.stone} />
+                  )}
+                  {!masked && member.membership_tier === "committee_member" && (
+                    <Ionicons name="checkmark-circle" size={14} color="#4F8EF7" />
                   )}
                 </View>
                 <Text

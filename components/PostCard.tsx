@@ -78,15 +78,20 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text
-            style={{
-              color: colors.dark,
-              fontSize: 14,
-              fontFamily: fonts.semibold,
-            }}
-          >
-            {post.author_name}
-          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text
+              style={{
+                color: colors.dark,
+                fontSize: 14,
+                fontFamily: fonts.semibold,
+              }}
+            >
+              {post.author_name}
+            </Text>
+            {post.author_tier === "committee_member" && (
+              <Ionicons name="checkmark-circle" size={14} color="#4F8EF7" />
+            )}
+          </View>
           <Text
             style={{
               color: colors.stone,
