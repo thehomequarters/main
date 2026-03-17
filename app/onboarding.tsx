@@ -17,32 +17,13 @@ import { db } from "@/lib/firebase";
 
 const { width: W, height: H } = Dimensions.get("window");
 
-const DEFAULT_SLIDES = [
-  {
-    id: "1",
-    image: {
-      uri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90",
-    },
-  },
-  {
-    id: "2",
-    image: {
-      uri: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=90",
-    },
-  },
-  {
-    id: "3",
-    image: {
-      uri: "https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=90",
-    },
-  },
-];
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [slides, setSlides] = useState(DEFAULT_SLIDES);
+  type Slide = { id: string; image: { uri: string }; eyebrow?: string; title?: string };
+  const [slides, setSlides] = useState<Slide[]>([]);
 
   // Fade-in overlay animations — staggered cinematic reveal
   const darkTint = useRef(new Animated.Value(0)).current;
@@ -91,10 +72,12 @@ export default function OnboardingScreen() {
           .map((d) => ({
             id: d.id,
             image: { uri: d.data().image_url as string },
+            eyebrow: d.data().eyebrow as string | undefined,
+            title: (d.data().title as string | undefined)?.replace(/\\n/g, "\n"),
           }));
         if (remote.length > 0) setSlides(remote);
       } catch {
-        // Keep default slides on network error
+        // No slides on network error — dark screen shows
       }
     })();
   }, []);
@@ -140,6 +123,18 @@ export default function OnboardingScreen() {
         style={[styles.bottomScrim, { opacity: bottomScrim }]}
         pointerEvents="none"
       />
+
+      {/* Slide copy — eyebrow + title, updates per slide */}
+      {(slides[currentIndex]?.eyebrow || slides[currentIndex]?.title) && (
+        <Animated.View style={[styles.slideTextBlock, { opacity: ctaOpacity }]} pointerEvents="none">
+          {!!slides[currentIndex]?.eyebrow && (
+            <Text style={styles.slideEyebrow}>{slides[currentIndex].eyebrow}</Text>
+          )}
+          {!!slides[currentIndex]?.title && (
+            <Text style={styles.slideTitle}>{slides[currentIndex].title}</Text>
+          )}
+        </Animated.View>
+      )}
 
       {/* Overlay 3 — dots + CTAs + subtle branding, fades in last */}
       <Animated.View style={[styles.bottomControls, { opacity: ctaOpacity }]}>
@@ -204,6 +199,28 @@ const styles = StyleSheet.create({
   bottomScrim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.65)",
+  },
+
+  // Per-slide copy block
+  slideTextBlock: {
+    position: "absolute",
+    left: 28,
+    right: 28,
+    bottom: 220,
+  },
+  slideEyebrow: {
+    color: "rgba(201,168,76,0.85)",
+    fontSize: 10,
+    fontFamily: fonts.semibold,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    marginBottom: 10,
+  },
+  slideTitle: {
+    color: colors.white,
+    fontSize: 36,
+    fontFamily: fonts.display,
+    lineHeight: 42,
   },
 
   // Subtle branding block above dots

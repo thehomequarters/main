@@ -34,8 +34,7 @@ export default function LoginScreen() {
   const [resetSent, setResetSent] = useState(false);
 
   // Welcome-back splash
-  const WELCOME_SPLASH_FALLBACK = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90";
-  const [welcomeSplashUrl, setWelcomeSplashUrl] = useState(WELCOME_SPLASH_FALLBACK);
+  const [welcomeSplashUrl, setWelcomeSplashUrl] = useState("");
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
   const welcomeFade = useRef(new Animated.Value(0)).current;
@@ -162,10 +161,11 @@ export default function LoginScreen() {
           <Text
             style={{
               color: colors.dark,
-              fontSize: 24,
-              fontFamily: fonts.bold,
+              fontSize: 38,
+              fontFamily: fonts.display,
               textAlign: "center",
-              marginBottom: 12,
+              marginBottom: 8,
+              letterSpacing: 0.5,
             }}
           >
             Welcome Back
@@ -270,14 +270,16 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Welcome-back splash — fades in over dark image bg, then fades out */}
+      {/* Welcome-back splash — fades in over dark bg, then fades out */}
       {showWelcome && (
         <Animated.View style={[styles.welcomeOverlay, { opacity: welcomeFade }]}>
-          <Image
-            source={{ uri: welcomeSplashUrl }}
-            style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
-          />
+          {!!welcomeSplashUrl && (
+            <Image
+              source={{ uri: welcomeSplashUrl }}
+              style={StyleSheet.absoluteFillObject}
+              resizeMode="cover"
+            />
+          )}
           <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.52)" }]} />
           <Text style={styles.welcomeHq}>HQ</Text>
           <Text style={styles.welcomeLabel}>Welcome back,</Text>
