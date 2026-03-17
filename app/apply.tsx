@@ -17,6 +17,8 @@ import * as Haptics from "expo-haptics";
 import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import type { HomelandRegion } from "@/lib/database.types";
+import { HOMELAND_GROUPS } from "@/constants/homelands";
 
 /** Generate a random code like HQ-XXXX-XXXX */
 function genCode(prefix: string) {
@@ -35,6 +37,10 @@ export default function ApplyScreen() {
   const [inviteData, setInviteData] = useState<any>(null);
   const [usedInviteCode, setUsedInviteCode] = useState(false);
   const [noCode, setNoCode] = useState(false); // true = showing "no code" message
+
+  // Step 1b: homeland selection (shown after invite code verified)
+  const [homelandStep, setHomelandStep] = useState(false);
+  const [selectedHomelands, setSelectedHomelands] = useState<HomelandRegion[]>([]);
 
   // Step 2: fill out details
   const [firstName, setFirstName] = useState("");
@@ -71,7 +77,7 @@ export default function ApplyScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setInviteData({ ...data, id: code });
       setUsedInviteCode(true);
-      setVerified(true);
+      setHomelandStep(true);
     } catch (e: any) {
       toast(e.message, "error");
     } finally {
@@ -84,8 +90,20 @@ export default function ApplyScreen() {
       toast("Please complete all required fields.", "error");
       return;
     }
-    if (password.length < 6) {
-      toast("Password must be at least 6 characters.", "error");
+    if (password.length < 8) {
+      toast("Password must be at least 8 characters.", "error");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      toast("Password must contain at least one uppercase letter.", "error");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      toast("Password must contain at least one number.", "error");
+      return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      toast("Password must contain at least one special character (e.g. !@#$%).", "error");
       return;
     }
     if (!ageConfirmed) {
@@ -142,6 +160,7 @@ export default function ApplyScreen() {
         city: null,
         industry: null,
         interests: [],
+        homeland_regions: selectedHomelands,
         instagram_handle: instagram.trim().replace(/^@/, "") || null,
         linkedin_handle: linkedin.trim() || null,
       });
@@ -171,7 +190,101 @@ export default function ApplyScreen() {
         {/* Wordmark */}
         <Text style={styles.wordmark}>HQ</Text>
 
-        {!verified && !noCode ? (
+        {homelandStep && !verified ? (
+          /* ─── Step 1b: Homeland selection ─── */
+          <>
+            <View style={styles.sealWrap}>
+              <View style={styles.seal}>
+                <Text style={styles.sealSymbol}>🌍</Text>
+              </View>
+            </View>
+
+            <Text style={styles.headline}>Where are you{"\n"}from?</Text>
+            <Text style={styles.subtext}>
+              HomeQuarters is built for the global diaspora. Select the region(s)
+              you call home — you can always update this later.
+            </Text>
+
+            <View style={styles.divider} />
+
+            {HOMELAND_GROUPS.map((group) => (
+              <View key={group.label} style={{ marginBottom: 20 }}>
+                <Text
+                  style={{
+                    color: colors.stone,
+                    fontSize: 10,
+                    fontWeight: "700",
+                    letterSpacing: 2,
+                    marginBottom: 10,
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {group.label}
+                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                  {group.regions.map((region) => {
+                    const selected = selectedHomelands.includes(region.key);
+                    return (
+                      <Pressable
+                        key={region.key}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setSelectedHomelands((prev) =>
+                            selected
+                              ? prev.filter((r) => r !== region.key)
+                              : [...prev, region.key]
+                          );
+                        }}
+                        style={{
+                          paddingHorizontal: 14,
+                          paddingVertical: 9,
+                          borderRadius: 20,
+                          borderWidth: 1.5,
+                          borderColor: selected ? colors.dark : colors.border,
+                          backgroundColor: selected ? colors.dark : colors.white,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: selected ? colors.white : colors.dark,
+                            fontSize: 13,
+                            fontWeight: "600",
+                          }}
+                        >
+                          {region.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+            ))}
+
+            <View style={styles.divider} />
+
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setHomelandStep(false);
+                setVerified(true);
+              }}
+              style={styles.btn}
+            >
+              <Text style={styles.btnText}>
+                {selectedHomelands.length > 0
+                  ? `Continue  (${selectedHomelands.length} selected)`
+                  : "Skip for Now"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => { setHomelandStep(false); setVerified(false); }}
+              style={styles.signinRow}
+            >
+              <Text style={styles.signinText}>← Back</Text>
+            </Pressable>
+          </>
+        ) : !verified && !noCode ? (
           /* ─── Step 1: Enter invitation code ─── */
           <>
             <View style={styles.sealWrap}>
@@ -253,7 +366,7 @@ export default function ApplyScreen() {
             <View style={styles.divider} />
 
             <Pressable
-              onPress={() => { setVerified(true); setNoCode(false); }}
+              onPress={() => { setHomelandStep(true); setNoCode(false); }}
               style={styles.btn}
             >
               <Text style={styles.btnText}>Apply Without Code</Text>
@@ -325,7 +438,7 @@ export default function ApplyScreen() {
 
             <Text style={styles.fieldLabel}>CREATE PASSWORD</Text>
             <TextInput
-              placeholder="Minimum 6 characters"
+              placeholder="Min 8 chars, uppercase, number, symbol"
               placeholderTextColor={colors.stone}
               value={password}
               onChangeText={setPassword}
@@ -441,10 +554,10 @@ export default function ApplyScreen() {
             </Text>
 
             <Pressable
-              onPress={() => { setVerified(false); setNoCode(false); setUsedInviteCode(false); setInviteData(null); setInviteCode(""); }}
+              onPress={() => { setVerified(false); setHomelandStep(true); }}
               style={[styles.signinRow, { marginTop: 16 }]}
             >
-              <Text style={styles.signinText}>← Back - I have an invitation code</Text>
+              <Text style={styles.signinText}>← Back</Text>
             </Pressable>
 
             <Pressable

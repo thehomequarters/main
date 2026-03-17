@@ -33,7 +33,7 @@ const GOLD_FEATURES = [
 
 const PLATINUM_FEATURES = [
   { icon: "checkmark-circle-outline" as const, text: "Everything in Gold", dim: true },
-  { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants in Zim" },
+  { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants & bars" },
   { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
   { icon: "sparkles-outline" as const, text: "Curated experiences - events, stays & more" },
 ];
@@ -271,7 +271,7 @@ export default function BillingScreen() {
             <View style={[styles.tierDot, { backgroundColor: "#E8E8E8" }]} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.tierName, { color: "#FFFFFF" }]}>Platinum</Text>
-              <Text style={[styles.tierTag, { color: "rgba(255,255,255,0.4)" }]}>Your Zimbabwe Pass</Text>
+              <Text style={[styles.tierTag, { color: "rgba(255,255,255,0.4)" }]}>The Traveller's Plan</Text>
             </View>
             <View style={{ alignItems: "flex-end" }}>
               <View style={styles.priceWrap}>
@@ -291,9 +291,9 @@ export default function BillingScreen() {
           </View>
 
           <Text style={[styles.tierDesc, { color: "rgba(255,255,255,0.58)" }]}>
-            For members heading back to Zimbabwe. Unlock member discounts at the
-            best restaurants, bars, and experiences in Harare and beyond - plus
-            a Telecel eSIM so you land connected.
+            For members who travel. Unlock member discounts at the best
+            restaurants, bars, and experiences wherever you go — plus
+            exclusive travel perks coming soon.
           </Text>
 
           <View style={styles.featureList}>

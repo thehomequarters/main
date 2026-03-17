@@ -3,6 +3,7 @@ import { Resend } from "resend";
 const FROM = "HomeQuarters <noreply@email.thehomequarters.com>";
 const SUPPORT_EMAIL = "hello@thehomequarters.com";
 const APP_URL = "https://thehomequarters.com";
+const UNSUBSCRIBE_URL = `${APP_URL}/unsubscribe`;
 
 function baseTemplate(content: string): string {
   return `<!DOCTYPE html>
@@ -36,11 +37,17 @@ function baseTemplate(content: string): string {
         </td></tr>
 
         <tr><td style="background:#F2EBE0;padding:28px 40px;border:1px solid #E0D5C5;border-top:none;border-radius:0 0 16px 16px;">
-          <p style="margin:0;color:#9A8E82;font-size:11px;line-height:18px;text-align:center;">
+          <p style="margin:0 0 10px;color:#9A8E82;font-size:11px;line-height:18px;text-align:center;">
             HomeQuarters · Private Members' Community<br/>
-            This email was sent to you because you have an account with HomeQuarters.<br/>
-            © ${new Date().getFullYear()} HomeQuarters. All rights reserved.
+            London, United Kingdom<br/>
+            This email was sent because you have an account with HomeQuarters.
           </p>
+          <p style="margin:0;text-align:center;">
+            <a href="${UNSUBSCRIBE_URL}" style="color:#9A8E82;font-size:11px;text-decoration:underline;">Unsubscribe</a>
+            <span style="color:#C8BEB4;font-size:11px;">&nbsp;&middot;&nbsp;</span>
+            <a href="${APP_URL}/privacy" style="color:#9A8E82;font-size:11px;text-decoration:underline;">Privacy Policy</a>
+          </p>
+          <p style="margin:10px 0 0;color:#C8BEB4;font-size:10px;text-align:center;">© ${new Date().getFullYear()} HomeQuarters. All rights reserved.</p>
         </td></tr>
 
       </table>
@@ -147,12 +154,17 @@ export default async function handler(req: any, res: any) {
   const resend = new Resend(apiKey);
   const { subject, html, text } = buildEmail(type, firstName);
 
+  const encodedEmail = encodeURIComponent(to);
   const { error } = await resend.emails.send({
     from: FROM,
     to: [to],
     subject,
     html,
     text,
+    headers: {
+      "List-Unsubscribe": `<mailto:unsubscribe@email.thehomequarters.com>, <${UNSUBSCRIBE_URL}?email=${encodedEmail}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 
   if (error) {

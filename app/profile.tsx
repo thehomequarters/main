@@ -20,7 +20,8 @@ import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickImage, uploadAvatar } from "@/lib/storage";
-import type { MemberIndustry } from "@/lib/database.types";
+import type { MemberIndustry, HomelandRegion } from "@/lib/database.types";
+import { HOMELAND_GROUPS } from "@/constants/homelands";
 
 const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
   { key: "creative", label: "Creative" },
@@ -112,6 +113,9 @@ export default function ProfileScreen() {
   const [favouriteHqVenue, setFavouriteHqVenue] = useState(
     profile?.favourite_hq_venue ?? ""
   );
+  const [homelandRegions, setHomelandRegions] = useState<HomelandRegion[]>(
+    (profile?.homeland_regions ?? []) as HomelandRegion[]
+  );
   const [saving, setSaving] = useState(false);
   const [avatarLocal, setAvatarLocal] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -153,7 +157,8 @@ export default function ProfileScreen() {
     customPlacesText !== (profile?.custom_places ?? []).join(", ") ||
     instagramHandle !== (profile?.instagram_handle ?? "") ||
     linkedinHandle !== (profile?.linkedin_handle ?? "") ||
-    favouriteHqVenue !== (profile?.favourite_hq_venue ?? "");
+    favouriteHqVenue !== (profile?.favourite_hq_venue ?? "") ||
+    JSON.stringify(homelandRegions) !== JSON.stringify(profile?.homeland_regions ?? []);
 
   const handleSave = async () => {
     if (!user?.uid) return;
@@ -187,6 +192,7 @@ export default function ProfileScreen() {
         instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
         linkedin_handle: linkedinHandle.trim() || null,
         favourite_hq_venue: favouriteHqVenue.trim() || null,
+        homeland_regions: homelandRegions,
       });
       await refreshProfile();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -474,12 +480,84 @@ export default function ProfileScreen() {
             placeholder="e.g. Barcelona, Lisbon, London…"
           />
 
-          <FieldLabel label="CITY" />
+          <FieldLabel label="CITY YOU'RE BASED IN" />
           <FieldInput
             value={city}
             onChangeText={setCity}
-            placeholder="e.g. Harare"
+            placeholder="e.g. London"
           />
+
+          <FieldLabel label="HOMELAND REGIONS" />
+          <Text
+            style={{
+              color: colors.grey,
+              fontSize: 11,
+              marginBottom: 12,
+              marginTop: -10,
+              opacity: 0.7,
+            }}
+          >
+            Where are you from? Select all that apply.
+          </Text>
+          {HOMELAND_GROUPS.map((group) => (
+            <View key={group.label} style={{ marginBottom: 16 }}>
+              <Text
+                style={{
+                  color: colors.grey,
+                  fontSize: 9,
+                  fontWeight: "700",
+                  letterSpacing: 2,
+                  marginBottom: 8,
+                  textTransform: "uppercase",
+                  opacity: 0.6,
+                }}
+              >
+                {group.label}
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                {group.regions.map((region) => {
+                  const selected = homelandRegions.includes(region.key);
+                  return (
+                    <Pressable
+                      key={region.key}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setHomelandRegions((prev) =>
+                          selected
+                            ? prev.filter((r) => r !== region.key)
+                            : [...prev, region.key]
+                        );
+                      }}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 18,
+                        borderWidth: 1.5,
+                        borderColor: selected
+                          ? colors.stone
+                          : "rgba(160,160,160,0.25)",
+                        backgroundColor: selected
+                          ? "rgba(154,142,130,0.18)"
+                          : "transparent",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: selected ? colors.stone : colors.grey,
+                          fontSize: 12,
+                          fontWeight: "600",
+                        }}
+                      >
+                        {region.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+
+          <View style={{ height: 8 }} />
 
           <FieldLabel label="INDUSTRY" />
           <ScrollView

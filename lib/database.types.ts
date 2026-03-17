@@ -21,6 +21,87 @@ export type MemberIndustry =
   | "business"
   | "wellness";
 
+export type HomelandRegion =
+  // Africa — specific nations
+  | "nigerian"
+  | "ghanaian"
+  | "ethiopian_eritrean"
+  | "somali"
+  | "kenyan"
+  | "south_african"
+  | "zimbabwean"
+  | "congolese"
+  | "ugandan"
+  | "rwandan"
+  | "cameroonian"
+  | "senegalese"
+  | "ivorian"
+  | "egyptian"
+  | "moroccan"
+  | "algerian_tunisian"
+  | "west_african"
+  | "east_african"
+  | "southern_african"
+  // Caribbean — specific islands
+  | "jamaican"
+  | "trinidadian"
+  | "haitian"
+  | "cuban"
+  | "dominican"
+  | "barbadian"
+  | "caribbean_other"
+  // Latin America — specific countries
+  | "mexican"
+  | "colombian"
+  | "venezuelan"
+  | "brazilian"
+  | "argentine"
+  | "chilean"
+  | "peruvian"
+  | "ecuadorian"
+  | "puerto_rican"
+  | "central_american"
+  | "south_american_other"
+  // Europe — country-specific
+  | "italian"
+  | "spanish"
+  | "portuguese"
+  | "french"
+  | "greek"
+  | "british_irish"
+  | "german_austrian"
+  | "dutch_belgian"
+  | "scandinavian"
+  | "polish"
+  | "romanian"
+  | "balkan"
+  | "eastern_european_other"
+  // Middle East — specific cultures
+  | "lebanese"
+  | "iranian_persian"
+  | "turkish"
+  | "arab_levant"
+  | "arab_gulf"
+  | "arab_north_africa"
+  | "iraqi"
+  | "yemeni"
+  // South Asia
+  | "indian"
+  | "pakistani"
+  | "bangladeshi"
+  | "sri_lankan"
+  | "nepali"
+  // East & Southeast Asia
+  | "chinese"
+  | "japanese"
+  | "korean"
+  | "filipino"
+  | "vietnamese"
+  | "thai"
+  | "indonesian_malay"
+  // Oceania
+  | "pacific_islander";
+
 export interface Profile {
   id: string;
   first_name: string;
@@ -38,6 +119,7 @@ export interface Profile {
   city: string | null;
   industry: MemberIndustry | null;
   interests: string[];
+  homeland_regions?: HomelandRegion[];  // diaspora homeland regions
   custom_places?: string[];  // user-entered places (in addition to auto-tracked venue visits)
   // Social handles
   instagram_handle: string | null;
@@ -86,6 +168,7 @@ export interface GroupMessage {
   author_name: string;
   author_initials: string;
   content: string;
+  image_url?: string;
   created_at: string;
 }
 
@@ -172,12 +255,26 @@ export interface Post {
   author_initials: string;
   author_title: string;
   author_city: string;
+  author_tier?: MembershipTier;
   content: string;
   topic: PostTopic;
   color: string;
   image_url: string | null;
   likes: number;
   comments: number;
+  created_at: string;
+}
+
+export interface Recommendation {
+  id: string;
+  author_id: string;
+  author_name: string;
+  author_initials: string;
+  author_tier?: MembershipTier;
+  venue_id: string;
+  venue_name: string;
+  text?: string;
+  image_url?: string | null;
   created_at: string;
 }
 

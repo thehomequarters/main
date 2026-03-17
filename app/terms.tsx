@@ -23,11 +23,11 @@ const SECTIONS = [
   },
   {
     title: "5. Benefits & Redemption",
-    body: "Membership benefits - including venue deals, event access, and the Telecel Zimbabwe eSIM - are for your personal use only. Benefits may not be resold, gifted, or shared. One redemption per benefit per visit unless the specific benefit states otherwise. HQ partner venues and benefit offerings may change at any time without prior notice.",
+    body: "Membership benefits - including venue deals, event access, and partner travel perks - are for your personal use only. Benefits may not be resold, gifted, or shared. One redemption per benefit per visit unless the specific benefit states otherwise. HQ partner venues and benefit offerings may change at any time without prior notice.",
   },
   {
     title: "6. Benefits & Redemption",
-    body: "Membership benefits — including venue deals, event access, and partner offers such as the Telecel Zimbabwe eSIM for eligible Platinum members — are for your personal use only and cannot be resold, gifted, or transferred. One redemption per benefit per visit unless the specific benefit expressly states otherwise. HQ partner venues and benefit offerings may change, be withdrawn, or be substituted at any time without prior notice. HQ acts as an introducer only: the benefit is provided by the partner venue or supplier, and HQ accepts no liability for the quality, availability, or discontinuation of any third-party benefit.",
+    body: "Membership benefits — including venue deals, event access, and partner travel perks for eligible Platinum members — are for your personal use only and cannot be resold, gifted, or transferred. One redemption per benefit per visit unless the specific benefit expressly states otherwise. HQ partner venues and benefit offerings may change, be withdrawn, or be substituted at any time without prior notice. HQ acts as an introducer only: the benefit is provided by the partner venue or supplier, and HQ accepts no liability for the quality, availability, or discontinuation of any third-party benefit.",
   },
   {
     title: "7. Termination",

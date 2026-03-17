@@ -135,6 +135,7 @@ export default function Venues() {
   const [venuePins, setVenuePins] = useState<Record<string, VenuePin>>({});
   const [pinVisible, setPinVisible] = useState<Record<string, boolean>>({});
   const [pinSaving, setPinSaving] = useState<string | null>(null);
+  const [pinInput, setPinInput] = useState<Record<string, string>>({});
 
   // Deal form
   const [showDealForm, setShowDealForm] = useState<string | null>(null);
@@ -453,18 +454,23 @@ export default function Venues() {
     setShowForm(true);
   };
 
-  const handleGeneratePin = async (venue: Venue) => {
+  const handleSetPin = async (venue: Venue) => {
+    const pin = (pinInput[venue.id] ?? "").trim();
+    if (!/^\d{6}$/.test(pin)) {
+      toast("PIN must be exactly 6 digits.", "error");
+      return;
+    }
     setPinSaving(venue.id);
     try {
-      const newPin = Math.floor(100000 + Math.random() * 900000).toString();
       await setDoc(doc(db, "venue_pins", venue.id), {
-        pin: newPin,
+        pin,
         venue_name: venue.name,
         updated_at: new Date().toISOString(),
       });
-      toast("New PIN generated");
+      setPinInput((p) => ({ ...p, [venue.id]: "" }));
+      toast("PIN saved");
     } catch {
-      toast("Failed to generate PIN", "error");
+      toast("Failed to save PIN", "error");
     } finally {
       setPinSaving(null);
     }
@@ -998,6 +1004,7 @@ export default function Venues() {
                       const pinData = venuePins[venue.id];
                       const isVisible = pinVisible[venue.id] ?? false;
                       const isSaving = pinSaving === venue.id;
+                      const inputVal = pinInput[venue.id] ?? "";
                       return (
                         <div className="space-y-4">
                           <div>
@@ -1008,6 +1015,7 @@ export default function Venues() {
                             </p>
                           </div>
 
+                          {/* Current PIN display */}
                           {pinData ? (
                             <div className="bg-black border border-dark-border rounded-xl px-4 py-3 flex items-center justify-between">
                               <div>
@@ -1032,13 +1040,31 @@ export default function Venues() {
                             </div>
                           )}
 
-                          <button
-                            onClick={() => handleGeneratePin(venue)}
-                            disabled={isSaving}
-                            className="px-4 py-2 bg-gold text-black text-xs font-bold rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-50"
-                          >
-                            {isSaving ? "Generating…" : pinData ? "Regenerate PIN" : "Generate PIN"}
-                          </button>
+                          {/* Manual PIN entry */}
+                          <div>
+                            <p className="text-gray-500 text-xs mb-2">{pinData ? "Set a new PIN" : "Set PIN"}</p>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={6}
+                                value={inputVal}
+                                onChange={(e) => {
+                                  const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                                  setPinInput((p) => ({ ...p, [venue.id]: v }));
+                                }}
+                                placeholder="6-digit PIN"
+                                className="flex-1 bg-black border border-dark-border rounded-xl px-3 py-2.5 text-white font-mono tracking-[0.3em] text-sm focus:outline-none focus:border-gold/50"
+                              />
+                              <button
+                                onClick={() => handleSetPin(venue)}
+                                disabled={isSaving || inputVal.length !== 6}
+                                className="px-4 py-2.5 bg-gold text-black text-xs font-bold rounded-xl hover:bg-gold/90 transition-colors disabled:opacity-50"
+                              >
+                                {isSaving ? "Saving…" : "Set PIN"}
+                              </button>
+                            </div>
+                          </div>
 
                           {pinData && (
                             <div className="bg-dark border border-dark-border rounded-xl px-4 py-3">

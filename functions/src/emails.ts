@@ -5,6 +5,7 @@
 // ─────────────────────────────────────────────
 
 const BASE_URL = process.env.APP_BASE_URL ?? "https://thehomequarters.com";
+const UNSUBSCRIBE_URL = `${BASE_URL}/unsubscribe`;
 
 function wrap(content: string): string {
   return `<!DOCTYPE html>
@@ -31,11 +32,17 @@ function wrap(content: string): string {
 
         <!-- Footer -->
         <tr><td style="background:#F2EBE0;padding:28px 40px;border:1px solid #E0D5C5;border-top:none;border-radius:0 0 16px 16px;">
-          <p style="margin:0;color:#9A8E82;font-size:11px;line-height:18px;text-align:center;">
+          <p style="margin:0 0 10px;color:#9A8E82;font-size:11px;line-height:18px;text-align:center;">
             HomeQuarters · Private Members&rsquo; Community<br/>
-            This email was sent to you because you have an account with HomeQuarters.<br/>
-            &copy; 2026 HomeQuarters. All rights reserved.
+            London, United Kingdom<br/>
+            This email was sent because you have an account or subscription with HomeQuarters.
           </p>
+          <p style="margin:0;text-align:center;">
+            <a href="${UNSUBSCRIBE_URL}" style="color:#9A8E82;font-size:11px;text-decoration:underline;">Unsubscribe</a>
+            <span style="color:#C8BEB4;font-size:11px;">&nbsp;&middot;&nbsp;</span>
+            <a href="${BASE_URL}/privacy" style="color:#9A8E82;font-size:11px;text-decoration:underline;">Privacy Policy</a>
+          </p>
+          <p style="margin:10px 0 0;color:#C8BEB4;font-size:10px;text-align:center;">&copy; 2026 HomeQuarters. All rights reserved.</p>
         </td></tr>
 
       </table>

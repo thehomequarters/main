@@ -205,11 +205,19 @@ export default function NominateScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={20} color={colors.white} />
         </Pressable>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>Nominate</Text>
-          <Text style={styles.headerSub}>
-            {nominationsLeft} of {MAX_NOMINATIONS} nominations remaining
-          </Text>
+          <View style={styles.headerPips}>
+            {Array.from({ length: MAX_NOMINATIONS }).map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.headerPip,
+                  i < nominationsUsed ? styles.headerPipUsed : styles.headerPipFree,
+                ]}
+              />
+            ))}
+          </View>
         </View>
       </View>
 
@@ -236,36 +244,8 @@ export default function NominateScreen() {
       >
         {tab === "send" ? (
           <>
-            {/* Nomination counter */}
-            <View style={styles.counterCard}>
-              <View style={styles.counterRow}>
-                {Array.from({ length: MAX_NOMINATIONS }).map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.counterPip,
-                      i < nominationsUsed
-                        ? styles.counterPipUsed
-                        : styles.counterPipFree,
-                    ]}
-                  />
-                ))}
-              </View>
-              <Text style={styles.counterLabel}>
-                {canNominate
-                  ? `You have ${nominationsLeft} nomination${nominationsLeft === 1 ? "" : "s"} remaining`
-                  : "You have used all your nominations"}
-              </Text>
-            </View>
-
             {canNominate ? (
               <>
-                <Text style={styles.sectionLabel}>WHO ARE YOU NOMINATING?</Text>
-                <Text style={styles.sectionHint}>
-                  You are personally vouching for this person. Only nominate
-                  someone you know and trust.
-                </Text>
-
                 <Text style={styles.fieldLabel}>THEIR EMAIL ADDRESS</Text>
                 <TextInput
                   placeholder="their@email.com"
@@ -305,8 +285,7 @@ export default function NominateScreen() {
                 </Pressable>
 
                 <Text style={styles.disclaimer}>
-                  Once sent, this nomination cannot be revoked. Your name is
-                  attached to this invitation as a guarantor.
+                  Your name is attached to this invitation as a guarantor.
                 </Text>
               </>
             ) : (
@@ -363,25 +342,7 @@ export default function NominateScreen() {
         ) : (
           /* ─── Vouch for applicant tab ─── */
           <>
-            <Text style={styles.sectionLabel}>VOUCH FOR A PENDING APPLICANT</Text>
-            <Text style={styles.sectionHint}>
-              If someone you know has already applied and needs a second
-              nomination, enter their application code below to vouch for them.
-            </Text>
-
-            <View style={styles.vouchInfoCard}>
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={18}
-                color={colors.stone}
-              />
-              <Text style={styles.vouchInfoText}>
-                Vouching is a serious responsibility. You are adding your name as
-                a second guarantor for this person's membership.
-              </Text>
-            </View>
-
-            <Text style={styles.fieldLabel}>APPLICANT'S APPLICATION CODE</Text>
+            <Text style={styles.fieldLabel}>APPLICANT'S CODE</Text>
             <TextInput
               placeholder="APP-XXXX-XXXX"
               placeholderTextColor="rgba(201,168,76,0.35)"
@@ -445,10 +406,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700",
   },
-  headerSub: {
-    color: colors.grey,
-    fontSize: 12,
-    marginTop: 1,
+  headerPips: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 6,
+  },
+  headerPip: {
+    width: 28,
+    height: 4,
+    borderRadius: 2,
+  },
+  headerPipUsed: {
+    backgroundColor: "rgba(201,168,76,0.3)",
+  },
+  headerPipFree: {
+    backgroundColor: colors.stone,
   },
   tabBar: {
     flexDirection: "row",
@@ -482,46 +454,12 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     paddingBottom: 60,
   },
-  counterCard: {
-    backgroundColor: colors.dark,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.darkBorder,
-    padding: 18,
-    marginBottom: 28,
-  },
-  counterRow: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 12,
-  },
-  counterPip: {
-    flex: 1,
-    height: 8,
-    borderRadius: 4,
-  },
-  counterPipUsed: {
-    backgroundColor: "rgba(201,168,76,0.3)",
-  },
-  counterPipFree: {
-    backgroundColor: colors.stone,
-  },
-  counterLabel: {
-    color: colors.grey,
-    fontSize: 13,
-  },
   sectionLabel: {
     color: "rgba(160,160,160,0.5)",
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
     marginBottom: 8,
-  },
-  sectionHint: {
-    color: "rgba(160,160,160,0.65)",
-    fontSize: 13,
-    lineHeight: 20,
-    marginBottom: 24,
   },
   fieldLabel: {
     color: "rgba(160,160,160,0.5)",
@@ -637,22 +575,5 @@ const styles = StyleSheet.create({
   },
   inviteStatusTextUsed: {
     color: "#4CAF50",
-  },
-  vouchInfoCard: {
-    flexDirection: "row",
-    gap: 12,
-    backgroundColor: "rgba(201,168,76,0.06)",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(201,168,76,0.2)",
-    padding: 14,
-    marginBottom: 24,
-    alignItems: "flex-start",
-  },
-  vouchInfoText: {
-    color: "rgba(160,160,160,0.7)",
-    fontSize: 13,
-    lineHeight: 19,
-    flex: 1,
   },
 });

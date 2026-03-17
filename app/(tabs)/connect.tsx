@@ -161,6 +161,7 @@ export default function ConnectTab() {
         author_initials: initials.toUpperCase(),
         author_title: profile.title || "HQ Member",
         author_city: profile.city || "Harare",
+        author_tier: profile.membership_tier,
         content: newPostContent.trim(),
         topic: newPostTopic,
         color: topicOption?.color || "#A0A0A0",

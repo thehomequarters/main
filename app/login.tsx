@@ -34,8 +34,7 @@ export default function LoginScreen() {
   const [resetSent, setResetSent] = useState(false);
 
   // Welcome-back splash
-  const WELCOME_SPLASH_FALLBACK = "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=90";
-  const [welcomeSplashUrl, setWelcomeSplashUrl] = useState(WELCOME_SPLASH_FALLBACK);
+  const [welcomeSplashUrl, setWelcomeSplashUrl] = useState("");
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
   const welcomeFade = useRef(new Animated.Value(0)).current;
@@ -49,7 +48,7 @@ export default function LoginScreen() {
     }).catch(() => {});
   }, []);
 
-  const triggerWelcomeSplash = (name: string) => {
+  const triggerWelcomeSplash = (name: string, destination: string) => {
     setWelcomeName(name);
     setShowWelcome(true);
     Animated.sequence([
@@ -58,13 +57,14 @@ export default function LoginScreen() {
         duration: 500,
         useNativeDriver: true,
       }),
-      Animated.delay(1200),
-      Animated.timing(welcomeFade, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start(() => router.replace("/"));
+      Animated.delay(1400),
+    ]).start(() => {
+      // Navigate while overlay is still fully visible — the screen fade
+      // transition takes over, so the login screen never flashes through.
+      router.replace(destination as any);
+      // Clean up overlay after transition completes
+      setTimeout(() => setShowWelcome(false), 600);
+    });
   };
 
   const handlePasswordReset = async () => {
@@ -110,12 +110,19 @@ export default function LoginScreen() {
         email.trim().toLowerCase(),
         password
       );
-      // Fetch first name for the welcome splash
+      // Fetch profile for the welcome splash and to determine destination directly,
+      // so we skip the index.tsx hop and avoid any loading-spinner flash.
       const profileSnap = await getDoc(doc(db, "profiles", credential.user.uid));
-      const firstName = profileSnap.exists()
-        ? ((profileSnap.data().first_name as string) ?? "")
-        : "";
-      triggerWelcomeSplash(firstName || "Member");
+      const profileData = profileSnap.exists() ? profileSnap.data() : null;
+      const firstName = (profileData?.first_name as string) ?? "";
+      const status = profileData?.membership_status as string | undefined;
+      const destination =
+        status === "active" || status === "accepted"
+          ? "/(tabs)"
+          : status === "pending" || status === "open_application"
+            ? "/pending"
+            : "/apply";
+      triggerWelcomeSplash(firstName || "Member", destination);
     } catch (error: any) {
       const msg =
         error.code === "auth/invalid-credential"
@@ -162,10 +169,11 @@ export default function LoginScreen() {
           <Text
             style={{
               color: colors.dark,
-              fontSize: 24,
-              fontFamily: fonts.bold,
+              fontSize: 38,
+              fontFamily: fonts.display,
               textAlign: "center",
-              marginBottom: 12,
+              marginBottom: 8,
+              letterSpacing: 0.5,
             }}
           >
             Welcome Back
@@ -270,14 +278,16 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Welcome-back splash — fades in over dark image bg, then fades out */}
+      {/* Welcome-back splash — fades in over dark bg, then fades out */}
       {showWelcome && (
         <Animated.View style={[styles.welcomeOverlay, { opacity: welcomeFade }]}>
-          <Image
-            source={{ uri: welcomeSplashUrl }}
-            style={StyleSheet.absoluteFillObject}
-            resizeMode="cover"
-          />
+          {!!welcomeSplashUrl && (
+            <Image
+              source={{ uri: welcomeSplashUrl }}
+              style={StyleSheet.absoluteFillObject}
+              resizeMode="cover"
+            />
+          )}
           <View style={[StyleSheet.absoluteFillObject, { backgroundColor: "rgba(0,0,0,0.52)" }]} />
           <Text style={styles.welcomeHq}>HQ</Text>
           <Text style={styles.welcomeLabel}>Welcome back,</Text>

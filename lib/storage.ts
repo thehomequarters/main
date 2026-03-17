@@ -81,6 +81,13 @@ export async function uploadPostImage(postId: string, uri: string): Promise<stri
 }
 
 /**
+ * Upload a recommendation image. Returns the download URL.
+ */
+export async function uploadRecommendationImage(id: string, uri: string): Promise<string> {
+  return uploadImage(uri, `recommendations/${id}_${Date.now()}.jpg`);
+}
+
+/**
  * Upload a chat image. Returns the download URL.
  */
 export async function uploadChatImage(
@@ -88,4 +95,14 @@ export async function uploadChatImage(
   uri: string
 ): Promise<string> {
   return uploadImage(uri, `chat/${conversationId}_${Date.now()}.jpg`);
+}
+
+/**
+ * Upload a group chat image. Returns the download URL.
+ */
+export async function uploadGroupChatImage(
+  groupId: string,
+  uri: string
+): Promise<string> {
+  return uploadImage(uri, `group_chat/${groupId}_${Date.now()}.jpg`);
 }
