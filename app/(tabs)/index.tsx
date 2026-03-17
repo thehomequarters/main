@@ -413,7 +413,7 @@ export default function HomeTab() {
       <Modal
         visible={searchVisible}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle="fullScreen"
         onRequestClose={() => setSearchVisible(false)}
       >
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
