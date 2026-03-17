@@ -478,7 +478,7 @@ export default function ProfileScreen() {
           <FieldInput
             value={city}
             onChangeText={setCity}
-            placeholder="e.g. Harare"
+            placeholder="e.g. London"
           />
 
           <FieldLabel label="INDUSTRY" />

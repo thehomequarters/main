@@ -81,6 +81,13 @@ export async function uploadPostImage(postId: string, uri: string): Promise<stri
 }
 
 /**
+ * Upload a recommendation image. Returns the download URL.
+ */
+export async function uploadRecommendationImage(id: string, uri: string): Promise<string> {
+  return uploadImage(uri, `recommendations/${id}_${Date.now()}.jpg`);
+}
+
+/**
  * Upload a chat image. Returns the download URL.
  */
 export async function uploadChatImage(

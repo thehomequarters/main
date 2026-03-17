@@ -27,7 +27,9 @@ import { useToast } from "@/components/Toast";
 import * as Haptics from "expo-haptics";
 import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import type { Profile, Connection, Venue } from "@/lib/database.types";
+import type { Profile, Connection, Venue, Recommendation } from "@/lib/database.types";
+import { RecommendationCard } from "@/components/RecommendationCard";
+import { orderBy } from "firebase/firestore";
 
 export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,6 +42,7 @@ export default function MemberProfileScreen() {
   const [connection, setConnection] = useState<Connection | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [visitedVenues, setVisitedVenues] = useState<Venue[]>([]);
+  const [memberRecs, setMemberRecs] = useState<Recommendation[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -60,10 +63,12 @@ export default function MemberProfileScreen() {
             setConnection({ id: cSnap.docs[0].id, ...cSnap.docs[0].data() } as Connection);
           }
         }
-        const visitsSnap = await getDocs(
-          query(collection(db, "venue_visits"), where("member_id", "==", id))
-        );
-        const venueIds = [...new Set(visitsSnap.docs.map((d) => d.data().venue_id as string))];
+        const [visitsSnap, recsSnap] = await Promise.all([
+          getDocs(query(collection(db, "venue_visits"), where("member_id", "==", id))),
+          getDocs(query(collection(db, "recommendations"), where("author_id", "==", id), orderBy("created_at", "desc"))),
+        ]);
+        setMemberRecs(recsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation));
+        const venueIds = [...new Set(visitsSnap.docs.map((d: any) => d.data().venue_id as string))];
         if (venueIds.length > 0) {
           const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
           setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
@@ -362,6 +367,26 @@ export default function MemberProfileScreen() {
                 ))}
               </View>
             )}
+          </View>
+        )}
+
+        {/* Recommendations */}
+        {!isMasked && memberRecs.length > 0 && (
+          <View style={styles.card}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <Text style={styles.cardLabel}>RECOMMENDATIONS</Text>
+              <View style={{ backgroundColor: "rgba(201,168,76,0.10)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(201,168,76,0.25)", paddingHorizontal: 9, paddingVertical: 3 }}>
+                <Text style={{ color: "#C9A84C", fontSize: 11, fontFamily: fonts.bold }}>{memberRecs.length}</Text>
+              </View>
+            </View>
+            {memberRecs.map((rec) => (
+              <RecommendationCard
+                key={rec.id}
+                rec={rec}
+                showVenue
+                onPress={() => router.push(`/venue/${rec.venue_id}` as any)}
+              />
+            ))}
           </View>
         )}
 

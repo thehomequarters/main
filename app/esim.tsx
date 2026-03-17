@@ -1,59 +1,32 @@
 import React from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  Pressable,
-  FlatList,
-  Linking,
-} from "react-native";
+import { View, Text, Platform, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 
-// Replace with the real Airalo affiliate link once registered
-const AIRALO_BASE_URL = "https://ref.airalo.com/PLACEHOLDER";
+const BG    = "#1C1C1E";
+const CARD  = "#252523";
+const LINE  = "rgba(255,255,255,0.08)";
+const PEARL = "rgba(255,255,255,0.82)";
+const MUTED = "rgba(255,255,255,0.45)";
 
-// Dark theme values for this premium feature screen
-const DARK_BG    = "#1C1C1E";
-const DARK_CARD  = "#252523";
-const DARK_LINE  = "rgba(255,255,255,0.09)";
-const PEARL_TEXT = "rgba(255,255,255,0.85)";
-const MUTED_TEXT = "rgba(255,255,255,0.45)";
-
-const REGIONS = [
-  { label: "Global",       icon: "earth-outline" as const,         url: AIRALO_BASE_URL },
-  { label: "Europe",       icon: "business-outline" as const,      url: `${AIRALO_BASE_URL}?region=europe` },
-  { label: "Americas",     icon: "navigate-outline" as const,      url: `${AIRALO_BASE_URL}?region=americas` },
-  { label: "Asia Pacific", icon: "partly-sunny-outline" as const,  url: `${AIRALO_BASE_URL}?region=asia-pacific` },
-  { label: "Middle East",  icon: "sunny-outline" as const,         url: `${AIRALO_BASE_URL}?region=middle-east` },
-  { label: "Africa",       icon: "leaf-outline" as const,          url: `${AIRALO_BASE_URL}?region=africa` },
-];
-
-const STEPS = [
-  { step: "1", title: "Choose your destination", description: "Browse eSIM plans for 200+ countries and regions." },
-  { step: "2", title: "Activate on arrival", description: "Install your eSIM before you fly and activate when you land." },
-  { step: "3", title: "Stay connected instantly", description: "No roaming charges, no physical SIM. Just fast local data." },
+const TEASER = [
+  { icon: "wifi-outline" as const,    label: "Global eSIMs",         body: "Instant data in 200+ countries — no SIM swaps, no roaming surprises." },
+  { icon: "pricetag-outline" as const, label: "Local rates",          body: "Browse affordable data plans at local prices, paid in pounds." },
+  { icon: "flash-outline" as const,   label: "Instant activation",   body: "Install before you fly, activate on arrival. Five minutes, sorted." },
 ];
 
 export default function ESIMScreen() {
   const router = useRouter();
 
-  const openAiralo = (url: string) => {
-    Linking.openURL(url).catch(() => {
-      Linking.openURL(AIRALO_BASE_URL);
-    });
-  };
-
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: DARK_BG }}
-      contentContainerStyle={{ paddingBottom: 48 }}
+      style={{ flex: 1, backgroundColor: BG }}
+      contentContainerStyle={{ paddingBottom: 60 }}
     >
       {/* Header */}
       <View
         style={{
-          paddingTop: 60,
+          paddingTop: Platform.OS === "ios" ? 60 : 44,
           paddingHorizontal: 20,
           paddingBottom: 8,
           flexDirection: "row",
@@ -67,22 +40,18 @@ export default function ESIMScreen() {
             width: 36,
             height: 36,
             borderRadius: 18,
-            backgroundColor: DARK_CARD,
+            backgroundColor: CARD,
             borderWidth: 1,
-            borderColor: DARK_LINE,
+            borderColor: LINE,
             justifyContent: "center",
             alignItems: "center",
           }}
         >
-          <Ionicons name="arrow-back" size={18} color={colors.white} />
+          <Ionicons name="arrow-back" size={18} color={PEARL} />
         </Pressable>
         <View>
-          <Text style={{ color: colors.white, fontSize: 24, fontWeight: "700" }}>
-            eSIM & Travel
-          </Text>
-          <Text style={{ color: MUTED_TEXT, fontSize: 13, marginTop: 2 }}>
-            Member benefit
-          </Text>
+          <Text style={{ color: "#FFFFFF", fontSize: 22, fontWeight: "700" }}>eSIM & Travel</Text>
+          <Text style={{ color: MUTED, fontSize: 13, marginTop: 2 }}>Member benefit</Text>
         </View>
       </View>
 
@@ -91,130 +60,77 @@ export default function ESIMScreen() {
         style={{
           marginHorizontal: 20,
           marginTop: 16,
-          backgroundColor: DARK_CARD,
+          backgroundColor: CARD,
           borderRadius: 20,
           borderWidth: 1,
-          borderColor: DARK_LINE,
-          padding: 24,
+          borderColor: LINE,
+          padding: 28,
+          alignItems: "center",
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 12,
-              backgroundColor: "rgba(255,255,255,0.07)",
-              borderWidth: 1,
-              borderColor: DARK_LINE,
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <Ionicons name="airplane-outline" size={20} color={PEARL_TEXT} />
-          </View>
-          <Text style={{ color: MUTED_TEXT, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, textTransform: "uppercase" }}>
-            Member Perk · Powered by Airalo
-          </Text>
+        <View
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 22,
+            backgroundColor: "rgba(255,255,255,0.05)",
+            borderWidth: 1,
+            borderColor: LINE,
+            justifyContent: "center",
+            alignItems: "center",
+            marginBottom: 24,
+          }}
+        >
+          <Ionicons name="airplane-outline" size={34} color={PEARL} />
         </View>
 
-        <Text style={{ color: colors.white, fontSize: 22, fontWeight: "700", lineHeight: 28, marginBottom: 10 }}>
-          Stay Connected{"\n"}Anywhere You Go
-        </Text>
-        <Text style={{ color: MUTED_TEXT, fontSize: 14, lineHeight: 21 }}>
-          As an HQ member, access affordable eSIMs for 200+ destinations through our
-          partner Airalo - no roaming charges, no physical SIM, instant activation.
-        </Text>
-
-        {/* Stats strip */}
         <View
           style={{
             flexDirection: "row",
-            marginTop: 20,
-            paddingTop: 16,
-            borderTopWidth: 1,
-            borderTopColor: DARK_LINE,
+            alignItems: "center",
+            gap: 7,
+            backgroundColor: "rgba(255,255,255,0.06)",
+            borderRadius: 100,
+            paddingHorizontal: 14,
+            paddingVertical: 7,
+            marginBottom: 20,
           }}
         >
-          {[
-            { value: "200+", label: "Destinations" },
-            { value: "4.7★", label: "App Store" },
-            { value: "20M+", label: "Global users" },
-          ].map((stat, i) => (
-            <View key={stat.label} style={{ flex: 1, alignItems: "center" }}>
-              {i > 0 && (
-                <View
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 4,
-                    bottom: 4,
-                    width: 1,
-                    backgroundColor: DARK_LINE,
-                  }}
-                />
-              )}
-              <Text style={{ color: PEARL_TEXT, fontSize: 16, fontWeight: "700" }}>
-                {stat.value}
-              </Text>
-              <Text style={{ color: MUTED_TEXT, fontSize: 11, marginTop: 2 }}>
-                {stat.label}
-              </Text>
-            </View>
-          ))}
+          <Ionicons name="time-outline" size={13} color={MUTED} />
+          <Text style={{ color: MUTED, fontSize: 12, fontWeight: "600", letterSpacing: 0.5 }}>Coming Soon</Text>
         </View>
-      </View>
 
-      {/* Browse by region */}
-      <View style={{ marginTop: 28 }}>
         <Text
           style={{
-            color: MUTED_TEXT,
-            fontSize: 11,
-            fontWeight: "600",
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-            paddingHorizontal: 20,
-            marginBottom: 12,
+            color: "#FFFFFF",
+            fontSize: 26,
+            fontWeight: "800",
+            textAlign: "center",
+            letterSpacing: -0.3,
+            lineHeight: 32,
+            marginBottom: 14,
           }}
         >
-          Browse by Region
+          Travel like a member
         </Text>
-        <FlatList
-          data={REGIONS}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
-          keyExtractor={(item) => item.label}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => openAiralo(item.url)}
-              style={{
-                backgroundColor: DARK_CARD,
-                borderRadius: 14,
-                borderWidth: 1,
-                borderColor: DARK_LINE,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                alignItems: "center",
-                gap: 6,
-                minWidth: 90,
-              }}
-            >
-              <Ionicons name={item.icon} size={22} color={PEARL_TEXT} />
-              <Text style={{ color: colors.white, fontSize: 12, fontWeight: "500" }}>
-                {item.label}
-              </Text>
-            </Pressable>
-          )}
-        />
-      </View>
-
-      {/* How it works */}
-      <View style={{ marginTop: 28, paddingHorizontal: 20 }}>
         <Text
           style={{
-            color: MUTED_TEXT,
+            color: MUTED,
+            fontSize: 15,
+            lineHeight: 24,
+            textAlign: "center",
+          }}
+        >
+          We're building an eSIM experience designed for the HQ traveller.
+          Stay connected wherever you go — local rates, no drama.
+        </Text>
+      </View>
+
+      {/* Teaser features */}
+      <View style={{ marginHorizontal: 20, marginTop: 24 }}>
+        <Text
+          style={{
+            color: MUTED,
             fontSize: 11,
             fontWeight: "600",
             letterSpacing: 1.5,
@@ -222,89 +138,55 @@ export default function ESIMScreen() {
             marginBottom: 12,
           }}
         >
-          How It Works
+          What's coming
         </Text>
         <View
           style={{
-            backgroundColor: DARK_CARD,
+            backgroundColor: CARD,
             borderRadius: 16,
             borderWidth: 1,
-            borderColor: DARK_LINE,
+            borderColor: LINE,
             overflow: "hidden",
           }}
         >
-          {STEPS.map((item, index) => (
+          {TEASER.map((item, i) => (
             <View
-              key={item.step}
+              key={item.label}
               style={{
                 flexDirection: "row",
-                padding: 16,
-                gap: 14,
-                borderBottomWidth: index < STEPS.length - 1 ? 1 : 0,
-                borderBottomColor: DARK_LINE,
+                padding: 18,
+                gap: 16,
+                borderBottomWidth: i < TEASER.length - 1 ? 1 : 0,
+                borderBottomColor: LINE,
+                alignItems: "flex-start",
               }}
             >
               <View
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: "rgba(255,255,255,0.07)",
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: "rgba(255,255,255,0.06)",
                   borderWidth: 1,
-                  borderColor: DARK_LINE,
+                  borderColor: LINE,
                   justifyContent: "center",
                   alignItems: "center",
+                  flexShrink: 0,
                 }}
               >
-                <Text style={{ color: PEARL_TEXT, fontSize: 13, fontWeight: "700" }}>
-                  {item.step}
-                </Text>
+                <Ionicons name={item.icon} size={18} color={PEARL} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ color: colors.white, fontSize: 14, fontWeight: "600", marginBottom: 3 }}>
-                  {item.title}
+                <Text style={{ color: "#FFFFFF", fontSize: 14, fontWeight: "600", marginBottom: 4 }}>
+                  {item.label}
                 </Text>
-                <Text style={{ color: MUTED_TEXT, fontSize: 13, lineHeight: 19 }}>
-                  {item.description}
+                <Text style={{ color: MUTED, fontSize: 13, lineHeight: 20 }}>
+                  {item.body}
                 </Text>
               </View>
             </View>
           ))}
         </View>
-      </View>
-
-      {/* Main CTA */}
-      <View style={{ paddingHorizontal: 20, marginTop: 28 }}>
-        <Pressable
-          onPress={() => openAiralo(AIRALO_BASE_URL)}
-          style={{
-            backgroundColor: colors.white,
-            borderRadius: 14,
-            paddingVertical: 16,
-            alignItems: "center",
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 8,
-          }}
-        >
-          <Ionicons name="globe-outline" size={18} color={DARK_BG} />
-          <Text style={{ color: DARK_BG, fontSize: 16, fontWeight: "700" }}>
-            Browse eSIM Plans
-          </Text>
-        </Pressable>
-
-        <Text
-          style={{
-            color: DARK_LINE,
-            fontSize: 11,
-            textAlign: "center",
-            marginTop: 12,
-            lineHeight: 16,
-          }}
-        >
-          You'll be taken to Airalo to complete your purchase.{"\n"}
-          Powered by Airalo · 4.7★ App Store · 200+ destinations
-        </Text>
       </View>
     </ScrollView>
   );

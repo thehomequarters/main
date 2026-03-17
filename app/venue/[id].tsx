@@ -19,17 +19,23 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
   collection,
   query,
   where,
   getDocs,
+  orderBy,
+  onSnapshot,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import * as Haptics from "expo-haptics";
 import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
-import type { Venue, Deal } from "@/lib/database.types";
+import type { Venue, Deal, Recommendation } from "@/lib/database.types";
+import { RecommendationCard } from "@/components/RecommendationCard";
+import { pickPostImage, uploadRecommendationImage } from "@/lib/storage";
+import { Modal, TextInput, KeyboardAvoidingView, ActivityIndicator } from "react-native";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { Ionicons } from "@expo/vector-icons";
 import Svg, { Defs, LinearGradient as SvgGradient, Stop, Circle } from "react-native-svg";
@@ -56,6 +62,14 @@ export default function VenueDetailScreen() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isVisited, setIsVisited] = useState(false);
   const [visitLoading, setVisitLoading] = useState(false);
+
+  // Recommendations
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [hasRecommended, setHasRecommended] = useState(false);
+  const [showRecModal, setShowRecModal] = useState(false);
+  const [recText, setRecText] = useState("");
+  const [recImageUri, setRecImageUri] = useState<string | null>(null);
+  const [recSubmitting, setRecSubmitting] = useState(false);
 
   const screenWidth = Dimensions.get("window").width;
 
@@ -85,6 +99,56 @@ export default function VenueDetailScreen() {
     };
     fetchVenue();
   }, [id]);
+
+  // Live recommendations listener
+  useEffect(() => {
+    if (!id) return;
+    const q = query(
+      collection(db, "recommendations"),
+      where("venue_id", "==", id),
+      orderBy("created_at", "desc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const recs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
+      setRecommendations(recs);
+      if (profile?.id) {
+        setHasRecommended(recs.some((r) => r.author_id === profile.id));
+      }
+    });
+    return unsub;
+  }, [id, profile?.id]);
+
+  const handleSubmitRecommendation = async () => {
+    if (!profile || !venue) return;
+    setRecSubmitting(true);
+    try {
+      let imageUrl: string | null = null;
+      if (recImageUri) {
+        imageUrl = await uploadRecommendationImage(`${profile.id}_${id}`, recImageUri);
+      }
+      const initials = `${profile.first_name?.[0] ?? ""}${profile.last_name?.[0] ?? ""}`.toUpperCase();
+      await addDoc(collection(db, "recommendations"), {
+        author_id: profile.id,
+        author_name: `${profile.first_name} ${profile.last_name}`,
+        author_initials: initials,
+        author_tier: profile.membership_tier ?? null,
+        venue_id: id,
+        venue_name: venue.name,
+        text: recText.trim() || null,
+        image_url: imageUrl,
+        created_at: new Date().toISOString(),
+      });
+      setShowRecModal(false);
+      setRecText("");
+      setRecImageUri(null);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      toast("Recommendation added!");
+    } catch {
+      toast("Failed to submit. Please try again.", "error");
+    } finally {
+      setRecSubmitting(false);
+    }
+  };
 
   const openMap = () => {
     if (!venue) return;
@@ -648,10 +712,144 @@ export default function VenueDetailScreen() {
                 {isVisited ? "Visited" : "Been here"}
               </Text>
             </Pressable>
+
+            {/* Recommend button */}
+            <Pressable
+              onPress={() => setShowRecModal(true)}
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 7,
+                backgroundColor: hasRecommended ? "rgba(201,168,76,0.08)" : colors.white,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: hasRecommended ? "rgba(201,168,76,0.35)" : colors.border,
+                paddingVertical: 13,
+              }}
+            >
+              <Ionicons name="star" size={16} color={hasRecommended ? "#C9A84C" : colors.dark} />
+              <Text style={{ color: hasRecommended ? "#C9A84C" : colors.dark, fontSize: 13, fontWeight: "600" }}>
+                {hasRecommended ? "Recommended" : "Recommend"}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Recommendations section */}
+          <View style={{ marginBottom: 32 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" }}>
+                Member Recommendations
+              </Text>
+              {recommendations.length > 0 && (
+                <View style={{ backgroundColor: "rgba(201,168,76,0.10)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(201,168,76,0.25)", paddingHorizontal: 10, paddingVertical: 4 }}>
+                  <Text style={{ color: "#C9A84C", fontSize: 12, fontWeight: "700" }}>{recommendations.length}</Text>
+                </View>
+              )}
+            </View>
+
+            {recommendations.length === 0 ? (
+              <View style={{ backgroundColor: colors.white, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 20, alignItems: "center" }}>
+                <Ionicons name="star-outline" size={28} color={colors.border} style={{ marginBottom: 10 }} />
+                <Text style={{ color: colors.stone, fontSize: 13, textAlign: "center" }}>
+                  No recommendations yet.{"\n"}Be the first to recommend this venue.
+                </Text>
+              </View>
+            ) : (
+              recommendations.map((rec) => (
+                <RecommendationCard key={rec.id} rec={rec} />
+              ))
+            )}
           </View>
 
         </View>
       </ScrollView>
+
+      {/* Create Recommendation Modal */}
+      <Modal
+        visible={showRecModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowRecModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1, backgroundColor: colors.bg }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          {/* Modal header */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            <Pressable onPress={() => { setShowRecModal(false); setRecText(""); setRecImageUri(null); }}>
+              <Text style={{ color: colors.stone, fontSize: 15 }}>Cancel</Text>
+            </Pressable>
+            <Text style={{ color: colors.dark, fontSize: 16, fontWeight: "700" }}>Recommend</Text>
+            <Pressable
+              onPress={handleSubmitRecommendation}
+              disabled={recSubmitting || (!recText.trim() && !recImageUri)}
+              style={{ opacity: recSubmitting || (!recText.trim() && !recImageUri) ? 0.4 : 1 }}
+            >
+              {recSubmitting
+                ? <ActivityIndicator size="small" color={colors.dark} />
+                : <Text style={{ color: colors.dark, fontSize: 15, fontWeight: "700" }}>Post</Text>
+              }
+            </Pressable>
+          </View>
+
+          <ScrollView contentContainerStyle={{ padding: 20 }}>
+            {/* Venue name */}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <Ionicons name="star" size={16} color="#C9A84C" />
+              <Text style={{ color: colors.dark, fontSize: 14, fontWeight: "600" }}>{venue?.name}</Text>
+            </View>
+
+            {/* Text input */}
+            <TextInput
+              value={recText}
+              onChangeText={setRecText}
+              placeholder="Share what you love about this venue… (optional)"
+              placeholderTextColor={colors.stone}
+              multiline
+              style={{
+                backgroundColor: colors.white,
+                borderRadius: 14,
+                borderWidth: 1,
+                borderColor: colors.border,
+                padding: 16,
+                fontSize: 15,
+                color: colors.dark,
+                minHeight: 120,
+                textAlignVertical: "top",
+                marginBottom: 16,
+              }}
+            />
+
+            {/* Image picker */}
+            {recImageUri ? (
+              <View style={{ marginBottom: 16 }}>
+                <Image source={{ uri: recImageUri }} style={{ width: "100%", height: 200, borderRadius: 12, marginBottom: 10 }} resizeMode="cover" />
+                <Pressable onPress={() => setRecImageUri(null)}>
+                  <Text style={{ color: colors.stone, fontSize: 13, textAlign: "center" }}>Remove photo</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={async () => {
+                  const uri = await pickPostImage();
+                  if (uri) setRecImageUri(uri);
+                }}
+                style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.white, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 16 }}
+              >
+                <Ionicons name="camera-outline" size={20} color={colors.stone} />
+                <Text style={{ color: colors.stone, fontSize: 14 }}>Add a photo (optional)</Text>
+              </Pressable>
+            )}
+
+            <Text style={{ color: colors.stone, fontSize: 12, textAlign: "center", lineHeight: 18 }}>
+              Your recommendation will appear on this venue's page{"\n"}and on your member profile.
+            </Text>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Redeem Benefit button */}
       {deals.length > 0 && (

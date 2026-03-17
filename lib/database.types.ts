@@ -182,6 +182,19 @@ export interface Post {
   created_at: string;
 }
 
+export interface Recommendation {
+  id: string;
+  author_id: string;
+  author_name: string;
+  author_initials: string;
+  author_tier?: MembershipTier;
+  venue_id: string;
+  venue_name: string;
+  text?: string;
+  image_url?: string | null;
+  created_at: string;
+}
+
 export interface PostLike {
   id: string;
   post_id: string;
