@@ -20,6 +20,7 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
@@ -29,7 +30,6 @@ import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Profile, Connection, Venue, Recommendation } from "@/lib/database.types";
 import { RecommendationCard } from "@/components/RecommendationCard";
-import { orderBy } from "firebase/firestore";
 
 export default function MemberProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -175,143 +175,149 @@ export default function MemberProfileScreen() {
   const isPending = connection?.status === "pending";
   const isSelf = user?.uid === member.id;
   const isMasked = member.profile_visibility === "connections" && !isConnected && !isSelf;
+  const isElevated = member.membership_tier === "founding_member" || member.membership_tier === "committee_member";
 
   return (
     <View style={styles.root}>
-      {/* Nav */}
-      <View style={styles.nav}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.dark} />
-        </Pressable>
-        <View style={{ width: 36 }} />
-      </View>
+      {/* Floating back button */}
+      <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Ionicons name="arrow-back" size={18} color={colors.dark} />
+      </Pressable>
 
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Hero ─────────────────────────────── */}
+        <View style={styles.hero}>
 
-        {/* Avatar */}
-        <View style={styles.avatarWrap}>
-          {!isMasked && member.avatar_url ? (
-            <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <Text style={styles.avatarInitials}>{initials.toUpperCase()}</Text>
+          {/* Avatar */}
+          <View style={[styles.avatarRing, isElevated && styles.avatarRingGold]}>
+            {!isMasked && member.avatar_url ? (
+              <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarFallback]}>
+                <Text style={styles.avatarInitials}>{initials.toUpperCase()}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Name + badge */}
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>
+              {isMasked
+                ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
+                : `${member.first_name} ${member.last_name}`}
+            </Text>
+            {!isMasked && member.membership_tier === "committee_member" && (
+              <Ionicons name="checkmark-circle" size={22} color="#4F8EF7" />
+            )}
+          </View>
+
+          {/* Title */}
+          {!isMasked && member.title ? (
+            <Text style={styles.title}>{member.title}</Text>
+          ) : isMasked ? (
+            <Text style={styles.title}>HQ Member</Text>
+          ) : null}
+
+          {/* Role badge */}
+          {!isMasked && isElevated && (
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleBadgeText}>
+                {member.membership_tier === "founding_member" ? "Founding Member" : "Committee Member"}
+              </Text>
+            </View>
+          )}
+
+          {/* Location + industry inline */}
+          {!isMasked && (member.city || member.industry) && (
+            <View style={styles.metaRow}>
+              {member.city && !member.hide_city && (
+                <Text style={styles.metaText}>
+                  <Ionicons name="location-outline" size={11} color={colors.stone} /> {member.city}
+                </Text>
+              )}
+              {member.city && !member.hide_city && member.industry && !member.hide_industry && (
+                <Text style={styles.metaDot}>·</Text>
+              )}
+              {member.industry && !member.hide_industry && (
+                <Text style={styles.metaText}>
+                  {member.industry.charAt(0).toUpperCase() + member.industry.slice(1)}
+                </Text>
+              )}
+            </View>
+          )}
+
+          {/* Bio — inline, no card */}
+          {!isMasked && member.bio ? (
+            <Text style={styles.bio}>{member.bio}</Text>
+          ) : null}
+
+          {/* Stats */}
+          {!isMasked && memberRecs.length > 0 && (
+            <View style={styles.statsRow}>
+              <Text style={styles.statNum}>{memberRecs.length}</Text>
+              <Text style={styles.statLabel}>{memberRecs.length === 1 ? "recommendation" : "recommendations"}</Text>
+            </View>
+          )}
+
+          {/* Locked notice */}
+          {isMasked && (
+            <View style={styles.lockedRow}>
+              <Ionicons name="lock-closed-outline" size={14} color={colors.stone} />
+              <Text style={styles.lockedText}>Connect to see this member's full profile</Text>
+            </View>
+          )}
+
+          {/* Action buttons */}
+          {!isSelf && (
+            <View style={styles.actions}>
+              <Pressable
+                onPress={handleConnect}
+                disabled={actionLoading}
+                style={[
+                  styles.actionBtn,
+                  isConnected ? styles.btnConnected : isPending ? styles.btnPending : styles.btnConnect,
+                ]}
+              >
+                <Ionicons
+                  name={isConnected ? "checkmark-circle" : isPending ? "time-outline" : "person-add-outline"}
+                  size={15}
+                  color={isConnected ? colors.green : isPending ? colors.stone : colors.white}
+                />
+                <Text style={[styles.actionBtnText, {
+                  color: isConnected ? colors.green : isPending ? colors.stone : colors.white,
+                }]}>
+                  {isConnected ? "Connected" : isPending ? "Request sent" : "Connect"}
+                </Text>
+              </Pressable>
+
+              {isConnected && (
+                <Pressable
+                  onPress={handleMessage}
+                  disabled={actionLoading}
+                  style={[styles.actionBtn, styles.btnMessage]}
+                >
+                  <Ionicons name="chatbubble-outline" size={15} color={colors.dark} />
+                  <Text style={[styles.actionBtnText, { color: colors.dark }]}>Message</Text>
+                </Pressable>
+              )}
             </View>
           )}
         </View>
 
-        {/* Name & title */}
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}>
-          <Text style={styles.name}>
-            {isMasked
-              ? `${member.first_name} ${member.last_name?.[0] ?? ""}.`
-              : `${member.first_name} ${member.last_name}`}
-          </Text>
-          {!isMasked && member.membership_tier === "committee_member" && (
-            <Ionicons name="checkmark-circle" size={20} color="#4F8EF7" />
-          )}
-        </View>
-        {!isMasked && member.title ? (
-          <Text style={styles.title}>{member.title}</Text>
-        ) : isMasked ? (
-          <Text style={styles.title}>HQ Member</Text>
-        ) : null}
+        {/* ── Divider ───────────────────────────── */}
+        <View style={styles.divider} />
 
-        {/* Founding / Committee Member badge */}
-        {!isMasked && (member.membership_tier === "founding_member" || member.membership_tier === "committee_member") ? (
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>
-              {member.membership_tier === "founding_member" ? "Founding Member" : "Committee Member"}
-            </Text>
-          </View>
-        ) : null}
-
-        {/* Meta chips — location + industry */}
-        {!isMasked && (member.city || member.industry) ? (
-          <View style={styles.chips}>
-            {member.city && !member.hide_city ? (
-              <View style={styles.chip}>
-                <Ionicons name="location-outline" size={12} color={colors.stone} />
-                <Text style={styles.chipText}>{member.city}</Text>
-              </View>
-            ) : null}
-            {member.industry && !member.hide_industry ? (
-              <View style={styles.chip}>
-                <Ionicons name="briefcase-outline" size={12} color={colors.stone} />
-                <Text style={styles.chipText}>
-                  {member.industry.charAt(0).toUpperCase() + member.industry.slice(1)}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
-
-        {/* Action buttons */}
-        {!isSelf && (
-          <View style={styles.actions}>
-            <Pressable
-              onPress={handleConnect}
-              disabled={actionLoading}
-              style={[
-                styles.actionBtn,
-                isConnected
-                  ? styles.connectedBtn
-                  : isPending
-                  ? styles.pendingBtn
-                  : styles.connectBtn,
-              ]}
-            >
-              <Ionicons
-                name={isConnected ? "checkmark-circle" : isPending ? "time-outline" : "person-add-outline"}
-                size={16}
-                color={isConnected ? colors.green : isPending ? colors.stone : colors.white}
-              />
-              <Text
-                style={[
-                  styles.actionBtnText,
-                  { color: isConnected ? colors.green : isPending ? colors.stone : colors.white },
-                ]}
-              >
-                {isConnected ? "Connected" : isPending ? "Pending" : "Connect"}
-              </Text>
-            </Pressable>
-
-            {isConnected && (
-              <Pressable
-                onPress={handleMessage}
-                disabled={actionLoading}
-                style={[styles.actionBtn, styles.messageBtn]}
-              >
-                <Ionicons name="chatbubble-outline" size={16} color={colors.dark} />
-                <Text style={[styles.actionBtnText, { color: colors.dark }]}>Message</Text>
-              </Pressable>
-            )}
-          </View>
-        )}
-
-        {/* Locked profile notice */}
-        {isMasked && (
-          <View style={[styles.card, { flexDirection: "row", alignItems: "center", gap: 12 }]}>
-            <Ionicons name="lock-closed-outline" size={16} color={colors.stone} />
-            <Text style={{ color: colors.stone, fontSize: 14, flex: 1, lineHeight: 20 }}>
-              Connect to see this member's full profile
-            </Text>
-          </View>
-        )}
-
-        {/* Bio */}
-        {!isMasked && member.bio ? (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>ABOUT</Text>
-            <Text style={styles.bio}>{member.bio}</Text>
-          </View>
-        ) : null}
+        {/* ── Content sections ─────────────────── */}
 
         {/* Interests */}
-        {!isMasked && !member.hide_interests && member.interests && member.interests.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>INTERESTS</Text>
+        {!isMasked && !member.hide_interests && (member.interests?.length ?? 0) > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Interests</Text>
             <View style={styles.tags}>
-              {member.interests.map((interest) => (
+              {member.interests!.map((interest) => (
                 <View key={interest} style={styles.tag}>
                   <Text style={styles.tagText}>{interest}</Text>
                 </View>
@@ -321,28 +327,23 @@ export default function MemberProfileScreen() {
         )}
 
         {/* My HQ */}
-        {!isMasked && member.favourite_hq_venue ? (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>MY HQ</Text>
+        {!isMasked && member.favourite_hq_venue && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>My HQ</Text>
             <Text style={styles.hqVenue}>{member.favourite_hq_venue}</Text>
           </View>
-        ) : null}
+        )}
 
         {/* Places */}
-        {!isMasked && !member.hide_venue_log && (isSelf || visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>PLACES</Text>
-            {visitedVenues.length === 0 && (member.custom_places?.length ?? 0) === 0 ? (
-              <Text style={[styles.bio, { color: colors.stone }]}>
-                No places logged yet. Visit a venue and tap "Been here" to add it.
-              </Text>
-            ) : null}
+        {!isMasked && !member.hide_venue_log && (visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Places</Text>
             {visitedVenues.length > 0 && (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                style={{ marginHorizontal: -18 }}
-                contentContainerStyle={{ paddingHorizontal: 18, gap: 10 }}
+                style={{ marginHorizontal: -20 }}
+                contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
               >
                 {visitedVenues.map((venue) => (
                   <Pressable
@@ -372,11 +373,11 @@ export default function MemberProfileScreen() {
 
         {/* Recommendations */}
         {!isMasked && memberRecs.length > 0 && (
-          <View style={styles.card}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <Text style={styles.cardLabel}>RECOMMENDATIONS</Text>
-              <View style={{ backgroundColor: "rgba(201,168,76,0.10)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(201,168,76,0.25)", paddingHorizontal: 9, paddingVertical: 3 }}>
-                <Text style={{ color: "#C9A84C", fontSize: 11, fontFamily: fonts.bold }}>{memberRecs.length}</Text>
+          <View style={styles.section}>
+            <View style={styles.sectionLabelRow}>
+              <Text style={styles.sectionLabel}>Recommendations</Text>
+              <View style={styles.recBadge}>
+                <Text style={styles.recBadgeText}>{memberRecs.length}</Text>
               </View>
             </View>
             {memberRecs.map((rec) => (
@@ -392,18 +393,21 @@ export default function MemberProfileScreen() {
 
         {/* Social */}
         {!isMasked && !member.hide_social_links && (member.instagram_handle || member.linkedin_handle) && (
-          <View style={styles.card}>
-            <Text style={styles.cardLabel}>FIND ME ONLINE</Text>
-            {member.instagram_handle ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>Online</Text>
+            {member.instagram_handle && (
               <Pressable
                 onPress={() => Linking.openURL(`https://instagram.com/${member.instagram_handle}`)}
                 style={styles.socialRow}
               >
-                <Text style={styles.socialPlatform}>INSTAGRAM</Text>
+                <View style={styles.socialIconWrap}>
+                  <Ionicons name="logo-instagram" size={16} color="#C13584" />
+                </View>
                 <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
+                <Ionicons name="arrow-forward" size={13} color={colors.stone} style={{ marginLeft: "auto" }} />
               </Pressable>
-            ) : null}
-            {member.linkedin_handle ? (
+            )}
+            {member.linkedin_handle && (
               <Pressable
                 onPress={() => {
                   const url = member.linkedin_handle!.startsWith("http")
@@ -411,16 +415,19 @@ export default function MemberProfileScreen() {
                     : `https://linkedin.com/in/${member.linkedin_handle}`;
                   Linking.openURL(url);
                 }}
-                style={[styles.socialRow, { borderBottomWidth: 0 }]}
+                style={styles.socialRow}
               >
-                <Text style={styles.socialPlatform}>LINKEDIN</Text>
+                <View style={styles.socialIconWrap}>
+                  <Ionicons name="logo-linkedin" size={16} color="#0A66C2" />
+                </View>
                 <Text style={styles.socialHandle}>
                   {member.linkedin_handle!.startsWith("http")
-                    ? (member.linkedin_handle!.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "").replace(/\/$/, "") || "LinkedIn Profile")
+                    ? (member.linkedin_handle!.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "").replace(/\/$/, "") || "LinkedIn")
                     : member.linkedin_handle}
                 </Text>
+                <Ionicons name="arrow-forward" size={13} color={colors.stone} style={{ marginLeft: "auto" }} />
               </Pressable>
-            ) : null}
+            )}
           </View>
         )}
 
@@ -442,39 +449,58 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  nav: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: Platform.OS === "ios" ? 60 : 44,
-    paddingHorizontal: 20,
-    paddingBottom: 8,
-  },
+
+  // Back button — floating
   backBtn: {
+    position: "absolute",
+    top: Platform.OS === "ios" ? 56 : 40,
+    left: 20,
+    zIndex: 10,
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.sand,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: "center",
     alignItems: "center",
   },
+
   scroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 48,
+    paddingTop: Platform.OS === "ios" ? 110 : 96,
+    paddingBottom: 56,
     alignItems: "center",
   },
 
-  // Avatar
-  avatarWrap: {
-    marginTop: 12,
-    marginBottom: 20,
+  // ── Hero ──────────────────────────────────
+  hero: {
+    width: "100%",
+    alignItems: "center",
+    paddingHorizontal: 24,
+    paddingBottom: 32,
   },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+
+  avatarRing: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     borderWidth: 3,
     borderColor: colors.border,
+    marginBottom: 20,
+    // subtle shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  avatarRingGold: {
+    borderColor: colors.gold,
+  },
+  avatar: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 70,
   },
   avatarFallback: {
     backgroundColor: colors.sand,
@@ -483,75 +509,114 @@ const styles = StyleSheet.create({
   },
   avatarInitials: {
     color: colors.dark,
-    fontSize: 32,
-    fontWeight: "700",
+    fontSize: 42,
+    fontFamily: fonts.display,
     letterSpacing: 1,
   },
 
-  // Name
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
   name: {
-    color: colors.dark,
-    fontSize: 26,
-    fontWeight: "800",
-    letterSpacing: -0.3,
+    color: colors.ink,
+    fontSize: 36,
+    fontFamily: fonts.display,
+    letterSpacing: 0.3,
     textAlign: "center",
-    marginBottom: 6,
   },
   title: {
     color: colors.stone,
     fontSize: 14,
-    fontWeight: "500",
+    fontFamily: fonts.medium,
     textAlign: "center",
-    marginBottom: 14,
+    marginBottom: 12,
   },
 
-  // Chips
   roleBadge: {
     alignSelf: "center",
-    backgroundColor: "rgba(201,168,76,0.12)",
+    backgroundColor: colors.goldLight,
     borderWidth: 1,
-    borderColor: "rgba(201,168,76,0.35)",
+    borderColor: "rgba(201,168,76,0.30)",
     borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 5,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   roleBadgeText: {
-    color: "#C9A84C",
-    fontSize: 11,
-    fontWeight: "700",
+    color: colors.gold,
+    fontSize: 10,
+    fontFamily: fonts.bold,
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
-  chips: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 24,
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  chip: {
+
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    gap: 6,
+    marginBottom: 20,
   },
-  chipText: {
+  metaText: {
     color: colors.stone,
-    fontSize: 12,
-    fontWeight: "500",
+    fontSize: 13,
+    fontFamily: fonts.medium,
+  },
+  metaDot: {
+    color: colors.border,
+    fontSize: 13,
   },
 
-  // Action buttons
+  bio: {
+    color: colors.dark,
+    fontSize: 15,
+    fontFamily: fonts.body,
+    lineHeight: 24,
+    textAlign: "center",
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 5,
+    marginBottom: 24,
+  },
+  statNum: {
+    color: colors.dark,
+    fontSize: 18,
+    fontFamily: fonts.bold,
+  },
+  statLabel: {
+    color: colors.stone,
+    fontSize: 13,
+    fontFamily: fonts.medium,
+  },
+
+  lockedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  lockedText: {
+    color: colors.stone,
+    fontSize: 13,
+    fontFamily: fonts.medium,
+  },
+
   actions: {
     flexDirection: "row",
     gap: 10,
-    marginBottom: 28,
     width: "100%",
   },
   actionBtn: {
@@ -559,94 +624,102 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 7,
+    gap: 6,
     borderRadius: 100,
-    paddingVertical: 13,
+    paddingVertical: 14,
     borderWidth: 1,
   },
-  connectBtn: {
+  btnConnect: {
     backgroundColor: colors.dark,
     borderColor: colors.dark,
   },
-  connectedBtn: {
-    backgroundColor: "rgba(76,175,80,0.08)",
-    borderColor: "rgba(76,175,80,0.25)",
+  btnConnected: {
+    backgroundColor: "rgba(46,125,50,0.07)",
+    borderColor: "rgba(46,125,50,0.20)",
   },
-  pendingBtn: {
+  btnPending: {
     backgroundColor: colors.white,
     borderColor: colors.border,
   },
-  messageBtn: {
+  btnMessage: {
     backgroundColor: colors.white,
     borderColor: colors.border,
   },
   actionBtnText: {
     fontSize: 14,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
   },
 
-  // Cards
-  card: {
+  // ── Divider ────────────────────────────────
+  divider: {
     width: "100%",
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 18,
-    marginBottom: 12,
+    height: 1,
+    backgroundColor: colors.border,
+    marginBottom: 8,
   },
-  cardLabel: {
+
+  // ── Sections ───────────────────────────────
+  section: {
+    width: "100%",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  sectionLabel: {
     color: colors.stone,
-    fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1.5,
-    marginBottom: 12,
+    fontSize: 11,
+    fontFamily: fonts.semibold,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 14,
   },
-  bio: {
-    color: colors.dark,
-    fontSize: 14,
-    lineHeight: 22,
+  sectionLabelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 14,
   },
+  recBadge: {
+    backgroundColor: colors.goldLight,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(201,168,76,0.25)",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  recBadgeText: {
+    color: colors.gold,
+    fontSize: 11,
+    fontFamily: fonts.bold,
+  },
+
   tags: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
   tag: {
-    backgroundColor: colors.sand,
+    backgroundColor: colors.white,
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
   },
   tagText: {
-    color: colors.stone,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  socialRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 11,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  socialPlatform: {
-    color: colors.stone,
-    fontSize: 10,
-    fontFamily: fonts.bold,
-    letterSpacing: 1.5,
-  },
-  socialHandle: {
     color: colors.dark,
     fontSize: 13,
     fontFamily: fonts.medium,
   },
+
   hqVenue: {
     color: colors.dark,
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: fonts.display,
+    letterSpacing: 0.2,
   },
+
   venueChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -656,12 +729,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
   },
   venueChipLogo: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 5,
   },
   venueChipText: {
     color: colors.dark,
@@ -669,13 +742,36 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
   },
 
-  // Member code
+  socialRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  socialIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  socialHandle: {
+    color: colors.dark,
+    fontSize: 14,
+    fontFamily: fonts.medium,
+  },
+
   code: {
     color: colors.stone,
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 3,
-    fontWeight: "500",
-    marginTop: 12,
-    opacity: 0.5,
+    fontFamily: fonts.medium,
+    marginTop: 24,
+    opacity: 0.4,
   },
 });
