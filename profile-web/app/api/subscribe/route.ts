@@ -5,8 +5,12 @@ import { Resend } from "resend";
 // ── Email templates (mirrors functions/src/emails.ts) ────────────────────────
 
 const BASE_URL = "https://thehomequarters.com";
+const UNSUBSCRIBE_URL = `${BASE_URL}/unsubscribe`;
 
-function wrap(content: string): string {
+function wrap(content: string, recipientEmail?: string): string {
+  const unsubLink = recipientEmail
+    ? `${UNSUBSCRIBE_URL}?email=${encodeURIComponent(recipientEmail)}`
+    : UNSUBSCRIBE_URL;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,10 +29,17 @@ function wrap(content: string): string {
           ${content}
         </td></tr>
         <tr><td style="background:#F2EBE0;padding:28px 40px;border:1px solid #E0D5C5;border-top:none;border-radius:0 0 16px 16px;">
-          <p style="margin:0;color:#9A8E82;font-size:11px;line-height:18px;text-align:center;">
+          <p style="margin:0 0 10px;color:#9A8E82;font-size:11px;line-height:18px;text-align:center;">
             HomeQuarters · Private Members&rsquo; Community<br/>
-            &copy; 2026 HomeQuarters. All rights reserved.
+            London, United Kingdom<br/>
+            You&rsquo;re receiving this because you subscribed at thehomequarters.com.
           </p>
+          <p style="margin:0;text-align:center;">
+            <a href="${unsubLink}" style="color:#9A8E82;font-size:11px;text-decoration:underline;">Unsubscribe</a>
+            <span style="color:#C8BEB4;font-size:11px;">&nbsp;&middot;&nbsp;</span>
+            <a href="${BASE_URL}/privacy" style="color:#9A8E82;font-size:11px;text-decoration:underline;">Privacy Policy</a>
+          </p>
+          <p style="margin:10px 0 0;color:#C8BEB4;font-size:10px;text-align:center;">&copy; 2026 HomeQuarters. All rights reserved.</p>
         </td></tr>
       </table>
     </td></tr>
@@ -55,7 +66,7 @@ function ctaButton(label: string, url: string): string {
   </table>`;
 }
 
-function newsletterWelcomeHtml(opts: { firstName?: string }): string {
+function newsletterWelcomeHtml(opts: { firstName?: string; email?: string }): string {
   const greeting = opts.firstName ? `Hi ${opts.firstName},` : "Hello,";
   const body = `
     <p style="margin:0 0 6px;color:#C9A84C;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">YOU&rsquo;RE ON THE LIST</p>
@@ -72,12 +83,8 @@ function newsletterWelcomeHtml(opts: { firstName?: string }): string {
       HomeQuarters is a private members&rsquo; community — by invitation. If you know a current member, ask them for an invitation code and apply directly in the app. Or keep an eye on your inbox — we occasionally open applications to our waitlist.
     </p>
     ${ctaButton("Learn more", BASE_URL)}
-    ${goldDivider()}
-    <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      To unsubscribe at any time, reply to this email with &ldquo;unsubscribe&rdquo; in the subject line.
-    </p>
   `;
-  return wrap(body);
+  return wrap(body, opts.email);
 }
 
 function newsletterWelcomeText(opts: { firstName?: string }): string {
@@ -93,7 +100,7 @@ HomeQuarters is a private members' community, by invitation. If you know a curre
 
 Learn more: ${BASE_URL}
 
-To unsubscribe, reply with "unsubscribe" in the subject.
+To unsubscribe: ${UNSUBSCRIBE_URL}
 
 HomeQuarters`;
 }
@@ -130,12 +137,17 @@ export async function POST(req: NextRequest) {
   // Non-fatal: send welcome email
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
+    const encodedEmail = encodeURIComponent(sanitized);
     await resend.emails.send({
       from: FROM_EMAIL,
       to: sanitized,
       subject: "You're on the HomeQuarters list",
-      html: newsletterWelcomeHtml({ firstName }),
+      html: newsletterWelcomeHtml({ firstName, email: sanitized }),
       text: newsletterWelcomeText({ firstName }),
+      headers: {
+        "List-Unsubscribe": `<mailto:unsubscribe@email.thehomequarters.com>, <${UNSUBSCRIBE_URL}?email=${encodedEmail}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     });
   } catch (err) {
     console.error("Failed to send newsletter welcome email:", err);

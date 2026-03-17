@@ -46,6 +46,9 @@ const resendApiKey = defineSecret("RESEND_API_KEY");
 const FROM_EMAIL = "HomeQuarters <noreply@email.thehomequarters.com>";
 const FOUNDER_EMAIL = "Valentine Eluwasi <hello@email.thehomequarters.com>";
 
+const UNSUBSCRIBE_EMAIL = "mailto:unsubscribe@email.thehomequarters.com";
+const UNSUBSCRIBE_URL = "https://thehomequarters.com/unsubscribe";
+
 async function sendEmail(opts: {
   to: string;
   subject: string;
@@ -56,6 +59,7 @@ async function sendEmail(opts: {
   scheduledAt?: Date;
 }): Promise<string | null> {
   const resend = new Resend(opts.apiKey);
+  const encodedEmail = encodeURIComponent(opts.to);
   const payload: Parameters<typeof resend.emails.send>[0] = {
     from: opts.from ?? FROM_EMAIL,
     to: opts.to,
@@ -63,6 +67,10 @@ async function sendEmail(opts: {
     text: opts.text,
     ...(opts.html ? { html: opts.html } : {}),
     ...(opts.scheduledAt ? { scheduledAt: opts.scheduledAt.toISOString() } : {}),
+    headers: {
+      "List-Unsubscribe": `<${UNSUBSCRIBE_EMAIL}>, <${UNSUBSCRIBE_URL}?email=${encodedEmail}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   };
   const { data, error } = await resend.emails.send(payload);
   if (error) {
