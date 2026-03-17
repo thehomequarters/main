@@ -48,7 +48,7 @@ export default function LoginScreen() {
     }).catch(() => {});
   }, []);
 
-  const triggerWelcomeSplash = (name: string) => {
+  const triggerWelcomeSplash = (name: string, destination: string) => {
     setWelcomeName(name);
     setShowWelcome(true);
     Animated.sequence([
@@ -57,13 +57,14 @@ export default function LoginScreen() {
         duration: 500,
         useNativeDriver: true,
       }),
-      Animated.delay(1200),
-      Animated.timing(welcomeFade, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start(() => router.replace("/"));
+      Animated.delay(1400),
+    ]).start(() => {
+      // Navigate while overlay is still fully visible — the screen fade
+      // transition takes over, so the login screen never flashes through.
+      router.replace(destination as any);
+      // Clean up overlay after transition completes
+      setTimeout(() => setShowWelcome(false), 600);
+    });
   };
 
   const handlePasswordReset = async () => {
@@ -109,12 +110,19 @@ export default function LoginScreen() {
         email.trim().toLowerCase(),
         password
       );
-      // Fetch first name for the welcome splash
+      // Fetch profile for the welcome splash and to determine destination directly,
+      // so we skip the index.tsx hop and avoid any loading-spinner flash.
       const profileSnap = await getDoc(doc(db, "profiles", credential.user.uid));
-      const firstName = profileSnap.exists()
-        ? ((profileSnap.data().first_name as string) ?? "")
-        : "";
-      triggerWelcomeSplash(firstName || "Member");
+      const profileData = profileSnap.exists() ? profileSnap.data() : null;
+      const firstName = (profileData?.first_name as string) ?? "";
+      const status = profileData?.membership_status as string | undefined;
+      const destination =
+        status === "active" || status === "accepted"
+          ? "/(tabs)"
+          : status === "pending" || status === "open_application"
+            ? "/pending"
+            : "/apply";
+      triggerWelcomeSplash(firstName || "Member", destination);
     } catch (error: any) {
       const msg =
         error.code === "auth/invalid-credential"
