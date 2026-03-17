@@ -1467,10 +1467,9 @@ export const verifyRedemption = onRequest({ cors: true, secrets: [resendApiKey] 
     return;
   }
 
-  const { type, member_id, venue_id, deal_id, ts } = payload;
+  const { member_id, venue_id, deal_id, ts } = payload;
 
   if (
-    type !== "hq_redeem" ||
     typeof member_id !== "string" || !member_id ||
     typeof venue_id !== "string" || !venue_id ||
     typeof deal_id !== "string" || !deal_id ||
@@ -1542,15 +1541,24 @@ export const verifyRedemption = onRequest({ cors: true, secrets: [resendApiKey] 
 
   // Write confirmed redemption
   const memberName = `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim();
+  const now = new Date().toISOString();
   await db.collection("redemptions").add({
     member_id,
     venue_id,
     deal_id,
-    redeemed_at: new Date().toISOString(),
+    redeemed_at: now,
     verified_by_venue: true,
     member_name: memberName,
     member_tier: profile.membership_tier ?? null,
   });
+
+  // Auto-mark "been there" — upsert so repeated redemptions don't overwrite the first visit timestamp
+  await db
+    .doc(`venue_visits/${member_id}_${venue_id}`)
+    .set(
+      { member_id, venue_id, visited_at: now },
+      { merge: true }
+    );
 
   // Notify venue contact if opt-in is enabled
   const venueDoc = await db.doc(`venues/${venue_id}`).get();

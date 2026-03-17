@@ -1,11 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, Pressable, Dimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
-import * as Haptics from "expo-haptics";
-import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import QRCode from "react-native-qrcode-svg";
@@ -17,15 +13,13 @@ export default function QRCodeScreen() {
     venueId: string;
     dealId: string;
   }>();
-  const { user, profile } = useAuth();
+  const { profile } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
   const screenWidth = Dimensions.get("window").width;
   const qrSize = screenWidth * 0.5;
-  const [redeemed, setRedeemed] = useState(false);
-  const [redeeming, setRedeeming] = useState(false);
 
-  // Encode redemption data as a base64url token inside a verify URL.
+  // Encode redemption data as a base64url token. Staff scan this, open the verify
+  // URL in their browser, and enter the venue PIN to confirm the redemption.
   // Phone cameras open the URL automatically; staff then enter the venue PIN.
   const tokenData = {
     member_id: profile?.id ?? "",
@@ -43,32 +37,6 @@ export default function QRCodeScreen() {
     .replace(/=/g, "");
   const verifyBase = process.env.EXPO_PUBLIC_VERIFY_URL ?? "";
   const qrPayload = `${verifyBase}/verify?t=${base64}`;
-
-  const handleRedeem = async () => {
-    if (!user?.uid || !venueId || !dealId || redeemed) return;
-
-    setRedeeming(true);
-    try {
-      await addDoc(collection(db, "redemptions"), {
-        member_id: user.uid,
-        venue_id: venueId,
-        deal_id: dealId,
-        redeemed_at: new Date().toISOString(),
-      });
-      await setDoc(doc(db, "venue_visits", `${user.uid}_${venueId}`), {
-        member_id: user.uid,
-        venue_id: venueId,
-        visited_at: new Date().toISOString(),
-      });
-      setRedeemed(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      toast("Benefit recorded successfully.", "success");
-    } catch (e: any) {
-      toast(e.message, "error");
-    } finally {
-      setRedeeming(false);
-    }
-  };
 
   return (
     <View
@@ -215,38 +183,6 @@ export default function QRCodeScreen() {
         </View>
       </View>
 
-      {/* Manual fallback - only if venue isn't set up with PIN yet */}
-      {venueId && dealId && (
-        <View style={{ marginTop: 20, alignItems: "center" }}>
-          <Text style={{ color: colors.grey, fontSize: 11, marginBottom: 8 }}>
-            No scanner available at this venue?
-          </Text>
-          <Pressable
-            onPress={handleRedeem}
-            disabled={redeemed || redeeming}
-            style={{
-              backgroundColor: "transparent",
-              borderWidth: 1,
-              borderColor: redeemed ? "rgba(76, 175, 80, 0.3)" : "rgba(255,255,255,0.1)",
-              borderRadius: 10,
-              paddingVertical: 10,
-              paddingHorizontal: 28,
-              opacity: redeeming ? 0.6 : 1,
-            }}
-          >
-            <Text
-              style={{
-                color: redeemed ? colors.green : colors.grey,
-                fontSize: 13,
-                fontWeight: "600",
-                textAlign: "center",
-              }}
-            >
-              {redeemed ? "Recorded" : redeeming ? "Recording..." : "Mark as redeemed manually"}
-            </Text>
-          </Pressable>
-        </View>
-      )}
     </View>
   );
 }

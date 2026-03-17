@@ -761,29 +761,30 @@ export default function ConnectTab() {
       <Modal
         visible={showCreateGroup}
         animationType="slide"
-        transparent
+        presentationStyle="fullScreen"
         onRequestClose={() => setShowCreateGroup(false)}
       >
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={{ flex: 1, backgroundColor: colors.bg }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <Pressable
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
-            onPress={() => setShowCreateGroup(false)}
-          />
           <View
             style={{
+              flex: 1,
               backgroundColor: colors.bg,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
               padding: 24,
+              paddingTop: Platform.OS === "ios" ? 60 : 40,
               paddingBottom: 40,
             }}
           >
-            <Text style={{ color: colors.dark, fontSize: 20, fontWeight: "700", marginBottom: 20 }}>
-              Create a Group
-            </Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+              <Text style={{ color: colors.dark, fontSize: 20, fontWeight: "700" }}>
+                Create a Group
+              </Text>
+              <Pressable onPress={() => setShowCreateGroup(false)}>
+                <Ionicons name="close" size={24} color={colors.stone} />
+              </Pressable>
+            </View>
 
             <Text style={{ color: colors.stone, fontSize: 11, fontWeight: "700", letterSpacing: 1.5, marginBottom: 6 }}>
               GROUP NAME
@@ -851,45 +852,22 @@ export default function ConnectTab() {
       <Modal
         visible={!!commentPost}
         animationType="slide"
-        transparent
+        presentationStyle="fullScreen"
         onRequestClose={() => {
           setCommentPost(null);
           setNewComment("");
         }}
       >
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={{ flex: 1, backgroundColor: colors.white }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <Pressable
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
-            onPress={() => {
-              setCommentPost(null);
-              setNewComment("");
-            }}
-          />
           <View
             style={{
+              flex: 1,
               backgroundColor: colors.white,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              maxHeight: "70%",
-              borderTopWidth: 1,
-              borderColor: colors.border,
             }}
           >
-            {/* Handle bar */}
-            <View style={{ alignItems: "center", paddingTop: 12 }}>
-              <View
-                style={{
-                  width: 36,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: colors.border,
-                }}
-              />
-            </View>
-
             {/* Header */}
             <View
               style={{
@@ -897,7 +875,8 @@ export default function ConnectTab() {
                 justifyContent: "space-between",
                 alignItems: "center",
                 paddingHorizontal: 20,
-                paddingVertical: 16,
+                paddingTop: Platform.OS === "ios" ? 60 : 20,
+                paddingBottom: 16,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.border,
               }}
@@ -1109,29 +1088,20 @@ export default function ConnectTab() {
       </Modal>
 
       {/* Compose Modal */}
-      <Modal visible={showCompose} animationType="slide" transparent>
+      <Modal visible={showCompose} animationType="slide" presentationStyle="fullScreen">
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={{ flex: 1, backgroundColor: colors.white }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <View
             style={{
               flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "flex-end",
+              backgroundColor: colors.white,
+              padding: 24,
+              paddingTop: Platform.OS === "ios" ? 60 : 40,
+              paddingBottom: 40,
             }}
           >
-            <View
-              style={{
-                backgroundColor: colors.white,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                padding: 24,
-                paddingBottom: 40,
-                borderTopWidth: 1,
-                borderColor: colors.border,
-              }}
-            >
               {/* Header */}
               <View
                 style={{
@@ -1294,7 +1264,6 @@ export default function ConnectTab() {
                   Add Photo
                 </Text>
               </Pressable>
-            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>

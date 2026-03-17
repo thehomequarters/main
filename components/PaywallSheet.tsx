@@ -22,32 +22,23 @@ export function PaywallSheet({
   return (
     <Modal
       visible={visible}
-      transparent
+      presentationStyle="fullScreen"
       animationType="slide"
       onRequestClose={onClose}
     >
-      <Pressable
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}
-        onPress={onClose}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.white,
+          padding: 28,
+          paddingTop: 60,
+          paddingBottom: 52,
+          justifyContent: "center",
+        }}
       >
-        <Pressable
-          onPress={() => {}}
-          style={{
-            backgroundColor: colors.white,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            padding: 28,
-            paddingBottom: 52,
-          }}
-        >
-          {/* Handle */}
-          <View
-            style={{
-              width: 36, height: 4, borderRadius: 2,
-              backgroundColor: colors.border,
-              alignSelf: "center", marginBottom: 24,
-            }}
-          />
+        <Pressable onPress={onClose} style={{ position: "absolute", top: 60, right: 28 }}>
+          <Ionicons name="close" size={24} color={colors.stone} />
+        </Pressable>
 
           {/* Lock icon */}
           <View
@@ -96,8 +87,7 @@ export function PaywallSheet({
           <Text style={{ color: colors.stone, fontSize: 12, textAlign: "center" }}>
             Join active members already enjoying these benefits
           </Text>
-        </Pressable>
-      </Pressable>
+      </View>
     </Modal>
   );
 }

@@ -31,6 +31,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST")
     return res.status(405).json({ error: "Method not allowed" });
 
+  try {
+    return await verifyHandler(req, res);
+  } catch (err: unknown) {
+    console.error("Unhandled error in /api/verify:", err);
+    return res.status(500).json({ error: "Internal server error. Please try again." });
+  }
+}
+
+async function verifyHandler(req: VercelRequest, res: VercelResponse) {
+
   const { token, pin } = req.body ?? {};
   if (!token || !pin)
     return res.status(400).json({ error: "Missing token or pin" });
@@ -89,6 +99,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  const now = new Date().toISOString();
+
   // Write verified redemption
   await db.collection("redemptions").add({
     member_id: data.member_id,
@@ -97,9 +109,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     venue_id: data.venue_id,
     deal_id: data.deal_id,
     deal_title: data.deal_title,
-    redeemed_at: new Date().toISOString(),
+    redeemed_at: now,
     verified_by_venue: true,
   });
+
+  // Auto-mark "been there" — upsert so repeated redemptions don't overwrite the first visit timestamp
+  await db
+    .collection("venue_visits")
+    .doc(`${data.member_id}_${data.venue_id}`)
+    .set(
+      { member_id: data.member_id, venue_id: data.venue_id, visited_at: now },
+      { merge: true }
+    );
 
   return res.status(200).json({ ok: true });
 }

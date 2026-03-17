@@ -19,7 +19,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
   collection,
   query,
   where,
@@ -27,6 +26,8 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
+import * as Haptics from "expo-haptics";
+import { useToast } from "@/components/Toast";
 import { colors } from "@/constants/theme";
 import type { Venue, Deal } from "@/lib/database.types";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
@@ -47,6 +48,7 @@ export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { profile } = useAuth();
+  const { toast } = useToast();
   const isGrace = profile?.membership_status === "accepted";
   const [venue, setVenue] = useState<Venue | null>(null);
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -99,22 +101,21 @@ export default function VenueDetailScreen() {
     Linking.openURL(`tel:${venue.phone}`);
   };
 
-  const handleVisitToggle = async () => {
-    if (!profile?.id || visitLoading) return;
+  const handleMarkVisited = async () => {
+    if (!profile?.id || visitLoading || isVisited) return;
     const visitRef = doc(db, "venue_visits", `${profile.id}_${id}`);
     setVisitLoading(true);
     try {
-      if (isVisited) {
-        await deleteDoc(visitRef);
-        setIsVisited(false);
-      } else {
-        await setDoc(visitRef, {
-          member_id: profile.id,
-          venue_id: id,
-          visited_at: new Date().toISOString(),
-        });
-        setIsVisited(true);
-      }
+      await setDoc(visitRef, {
+        member_id: profile.id,
+        venue_id: id,
+        visited_at: new Date().toISOString(),
+      });
+      setIsVisited(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      toast("Added to your places ✦", "success");
+    } catch {
+      toast("Couldn't save visit. Try again.", "error");
     } finally {
       setVisitLoading(false);
     }
@@ -622,8 +623,8 @@ export default function VenueDetailScreen() {
               <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "600" }}>Share</Text>
             </Pressable>
             <Pressable
-              onPress={handleVisitToggle}
-              disabled={visitLoading}
+              onPress={handleMarkVisited}
+              disabled={visitLoading || isVisited}
               style={{
                 flex: 1,
                 flexDirection: "row",

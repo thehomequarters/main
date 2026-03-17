@@ -288,25 +288,22 @@ export default function LoginScreen() {
       {/* Forgot Password Modal */}
       <Modal
         visible={resetVisible}
-        transparent
+        presentationStyle="fullScreen"
         animationType="slide"
         onRequestClose={closeReset}
       >
-        <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.6)" }}
-          onPress={closeReset}
-        />
         <View
           style={{
+            flex: 1,
             backgroundColor: colors.white,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            borderTopWidth: 1,
-            borderColor: colors.border,
             padding: 28,
+            paddingTop: Platform.OS === "ios" ? 60 : 40,
             paddingBottom: Platform.OS === "ios" ? 52 : 32,
           }}
         >
+          <Pressable onPress={closeReset} style={{ alignSelf: "flex-end", marginBottom: 20 }}>
+            <Text style={{ color: colors.stone, fontSize: 15, fontWeight: "600" }}>Close</Text>
+          </Pressable>
           {resetSent ? (
             <>
               <Text
