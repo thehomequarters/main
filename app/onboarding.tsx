@@ -197,16 +197,12 @@ const styles = StyleSheet.create({
   // Overlay 1 — full-screen dark tint
   darkTint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.28)",
+    backgroundColor: "rgba(0,0,0,0.10)",
   },
 
-  // Overlay 2 — bottom scrim
+  // Overlay 2 — full-screen scrim
   bottomScrim: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: H * 0.52,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.65)",
   },
 
