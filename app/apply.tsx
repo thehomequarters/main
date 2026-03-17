@@ -84,8 +84,20 @@ export default function ApplyScreen() {
       toast("Please complete all required fields.", "error");
       return;
     }
-    if (password.length < 6) {
-      toast("Password must be at least 6 characters.", "error");
+    if (password.length < 8) {
+      toast("Password must be at least 8 characters.", "error");
+      return;
+    }
+    if (!/[A-Z]/.test(password)) {
+      toast("Password must contain at least one uppercase letter.", "error");
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      toast("Password must contain at least one number.", "error");
+      return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      toast("Password must contain at least one special character (e.g. !@#$%).", "error");
       return;
     }
     if (!ageConfirmed) {
@@ -325,7 +337,7 @@ export default function ApplyScreen() {
 
             <Text style={styles.fieldLabel}>CREATE PASSWORD</Text>
             <TextInput
-              placeholder="Minimum 6 characters"
+              placeholder="Min 8 chars, uppercase, number, symbol"
               placeholderTextColor={colors.stone}
               value={password}
               onChangeText={setPassword}
