@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { ToastProvider } from "@/components/Toast";
 import { colors } from "@/constants/theme";
@@ -19,7 +20,18 @@ import {
 
 SplashScreen.preventAutoHideAsync();
 
-/** Watches auth state inside the router tree and redirects on sign-out. */
+// Show push notifications even when the app is open in the foreground.
+// Without this, Expo silently drops notifications if the app is active.
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// ── AuthGuard ─────────────────────────────────────────────────────────────────
+
 function AuthGuard() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -37,6 +49,46 @@ function AuthGuard() {
   return null;
 }
 
+// ── NotificationHandler ───────────────────────────────────────────────────────
+// Listens for notification taps and routes to the relevant screen.
+// Must live inside the router tree so useRouter is available.
+
+function NotificationHandler() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Fires when the user taps a push notification (foreground or background).
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = (response.notification.request.content.data ??
+          {}) as Record<string, string>;
+
+        switch (data.type) {
+          case "message":
+            if (data.conversationId) {
+              router.push(`/messages/${data.conversationId}` as any);
+            }
+            break;
+          case "group_message":
+            if (data.groupId) {
+              router.push(`/group/${data.groupId}` as any);
+            }
+            break;
+          case "connection_request":
+          case "connection_accepted":
+            router.push("/notifications" as any);
+            break;
+        }
+      }
+    );
+    return () => sub.remove();
+  }, []);
+
+  return null;
+}
+
+// ── Root layout ───────────────────────────────────────────────────────────────
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     CormorantGaramond_600SemiBold,
@@ -51,12 +103,11 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  // Always render the Stack so navigation state is never unmounted.
-  // The splash screen keeps the app invisible until fonts are ready.
   return (
     <AuthProvider>
       <ToastProvider>
         <AuthGuard />
+        <NotificationHandler />
         <StatusBar style="dark" />
         <Stack
           screenOptions={{

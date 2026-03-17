@@ -1900,3 +1900,152 @@ export const sendMonthlyVenueDigests = onSchedule(
     console.log(`sendMonthlyVenueDigests: ${sent} sent, ${failed} failed for ${monthLabel}`);
   }
 );
+
+// ─────────────────────────────────────────────
+// onNewGroupMessage
+// Fires when a new message is added to the group_messages collection.
+// Sends a push notification to every group member except the author.
+// ─────────────────────────────────────────────
+export const onNewGroupMessage = onDocumentCreated(
+  "group_messages/{messageId}",
+  async (event) => {
+    const message = event.data?.data();
+    if (!message) return;
+
+    const groupId  = message.group_id  as string;
+    const authorId = message.author_id as string;
+    if (!groupId || !authorId) return;
+
+    const db = getFirestore();
+
+    // Resolve all group members except the sender
+    const membersSnap = await db
+      .collection("group_members")
+      .where("group_id", "==", groupId)
+      .get();
+
+    const recipientIds = membersSnap.docs
+      .map((d) => d.data().member_id as string)
+      .filter((id) => id && id !== authorId);
+
+    if (recipientIds.length === 0) return;
+
+    // Fetch push tokens in parallel
+    const profileDocs = await Promise.all(
+      recipientIds.map((id) => db.doc(`profiles/${id}`).get())
+    );
+    const tokens = profileDocs
+      .map((p) => p.data()?.push_token as string | undefined)
+      .filter(Boolean) as string[];
+
+    if (tokens.length === 0) return;
+
+    // Fetch group name for the notification title
+    const groupDoc  = await db.doc(`groups/${groupId}`).get();
+    const groupName = (groupDoc.data()?.name as string) || "Group";
+
+    const bodyText = (message.content as string) || (message.image_url ? "Sent a photo" : "");
+    if (!bodyText) return;
+
+    try {
+      await sendExpoPush({
+        to: tokens,
+        title: `${message.author_name as string} · ${groupName}`,
+        body: bodyText.length > 100 ? bodyText.slice(0, 97) + "…" : bodyText,
+        data: { type: "group_message", groupId },
+      });
+    } catch (err) {
+      console.error("onNewGroupMessage: push failed:", err);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// onNewConnectionRequest
+// Fires when a new connection document is created (status: "pending").
+// Notifies the recipient that someone wants to connect.
+// ─────────────────────────────────────────────
+export const onNewConnectionRequest = onDocumentCreated(
+  "connections/{connectionId}",
+  async (event) => {
+    const connection = event.data?.data();
+    if (!connection) return;
+    if (connection.status !== "pending") return;
+
+    const fromId = connection.from_id as string;
+    const toId   = connection.to_id   as string;
+    if (!fromId || !toId) return;
+
+    const db = getFirestore();
+
+    const [recipientDoc, senderDoc] = await Promise.all([
+      db.doc(`profiles/${toId}`).get(),
+      db.doc(`profiles/${fromId}`).get(),
+    ]);
+
+    const recipient = recipientDoc.data();
+    if (!recipient?.push_token) return;
+
+    const sender     = senderDoc.data();
+    const senderName = sender?.first_name
+      ? `${sender.first_name} ${sender.last_name ?? ""}`.trim()
+      : "A member";
+
+    try {
+      await sendExpoPush({
+        to: recipient.push_token as string,
+        title: "New Connection Request",
+        body: `${senderName} wants to connect with you`,
+        data: { type: "connection_request", fromId },
+      });
+    } catch (err) {
+      console.error("onNewConnectionRequest: push failed:", err);
+    }
+  }
+);
+
+// ─────────────────────────────────────────────
+// onConnectionAccepted
+// Fires when a connection document updates from "pending" → "accepted".
+// Notifies the original requester that their request was accepted.
+// ─────────────────────────────────────────────
+export const onConnectionAccepted = onDocumentUpdated(
+  "connections/{connectionId}",
+  async (event) => {
+    const before = event.data?.before.data();
+    const after  = event.data?.after.data();
+    if (!before || !after) return;
+
+    // Only act on the specific pending → accepted transition
+    if (before.status !== "pending" || after.status !== "accepted") return;
+
+    const fromId = after.from_id as string; // original requester
+    const toId   = after.to_id   as string; // person who accepted
+
+    const db = getFirestore();
+
+    const [requesterDoc, accepterDoc] = await Promise.all([
+      db.doc(`profiles/${fromId}`).get(),
+      db.doc(`profiles/${toId}`).get(),
+    ]);
+
+    const requester = requesterDoc.data();
+    if (!requester?.push_token) return;
+
+    const accepter     = accepterDoc.data();
+    const accepterName = accepter?.first_name
+      ? `${accepter.first_name} ${accepter.last_name ?? ""}`.trim()
+      : "A member";
+
+    try {
+      await sendExpoPush({
+        to: requester.push_token as string,
+        title: "Connection Accepted",
+        body: `${accepterName} accepted your connection request`,
+        data: { type: "connection_accepted", memberId: toId },
+      });
+    } catch (err) {
+      console.error("onConnectionAccepted: push failed:", err);
+    }
+  }
+);
