@@ -17,6 +17,8 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
@@ -25,7 +27,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { useToast } from "@/components/Toast";
-import type { Profile, Connection, MemberIndustry } from "@/lib/database.types";
+import type { Profile, Connection, MemberIndustry, Recommendation } from "@/lib/database.types";
 
 const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
   { key: null, label: "All" },
@@ -46,6 +48,7 @@ export default function DiscoverTab() {
   const [inboundRequests, setInboundRequests] = useState<
     (Connection & { fromProfile?: Profile })[]
   >([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [selectedIndustry, setSelectedIndustry] =
     useState<MemberIndustry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +58,17 @@ export default function DiscoverTab() {
   const fetchMembers = useCallback(async () => {
     try {
       setError(false);
+      // Fetch latest recommendations
+      const recQuery = query(
+        collection(db, "recommendations"),
+        orderBy("created_at", "desc"),
+        limit(20)
+      );
+      const recSnap = await getDocs(recQuery);
+      setRecommendations(
+        recSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation)
+      );
+
       // Get all active member profiles (excluding self)
       const profilesQuery = query(
         collection(db, "profiles"),
@@ -450,6 +464,120 @@ export default function DiscoverTab() {
           </Text>
         </View>
       </View>
+
+      {/* Live Recommendations Feed */}
+      {recommendations.length > 0 && (
+        <View style={{ marginBottom: 28 }}>
+          <View
+            style={{
+              paddingHorizontal: 20,
+              marginBottom: 14,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <View
+              style={{ width: 4, height: 20, borderRadius: 2, backgroundColor: colors.gold }}
+            />
+            <Text style={{ color: colors.dark, fontSize: 18, fontWeight: "700" }}>
+              Member Picks
+            </Text>
+            <View
+              style={{
+                backgroundColor: "rgba(201,168,76,0.15)",
+                borderRadius: 10,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                borderWidth: 1,
+                borderColor: "rgba(201,168,76,0.3)",
+              }}
+            >
+              <Text style={{ color: colors.gold, fontSize: 10, fontWeight: "700", letterSpacing: 1 }}>
+                LIVE
+              </Text>
+            </View>
+          </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
+          >
+            {recommendations.map((rec) => (
+              <Pressable
+                key={rec.id}
+                onPress={() => router.push(`/venue/${rec.venue_id}` as any)}
+                style={{
+                  width: 200,
+                  backgroundColor: colors.white,
+                  borderRadius: 16,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  overflow: "hidden",
+                }}
+              >
+                {rec.image_url ? (
+                  <Image
+                    source={{ uri: rec.image_url }}
+                    style={{ width: "100%", height: 110 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: "100%",
+                      height: 110,
+                      backgroundColor: colors.sand,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons name="storefront-outline" size={28} color={colors.border} />
+                  </View>
+                )}
+                <View style={{ padding: 12 }}>
+                  <Text
+                    style={{ color: colors.dark, fontSize: 14, fontWeight: "700", marginBottom: 2 }}
+                    numberOfLines={1}
+                  >
+                    {rec.venue_name}
+                  </Text>
+                  {rec.text ? (
+                    <Text
+                      style={{ color: colors.stone, fontSize: 12, lineHeight: 17, marginBottom: 8 }}
+                      numberOfLines={2}
+                    >
+                      "{rec.text}"
+                    </Text>
+                  ) : null}
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <View
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 11,
+                        backgroundColor: colors.sand,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text style={{ color: colors.dark, fontSize: 9, fontWeight: "700" }}>
+                        {rec.author_initials}
+                      </Text>
+                    </View>
+                    <Text style={{ color: colors.stone, fontSize: 11 }} numberOfLines={1}>
+                      {rec.author_name}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       {/* Industry filters */}
       <ScrollView

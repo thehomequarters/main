@@ -13,7 +13,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
-// MapView removed - use static map image (works in Expo Go)
+import MapView, { Marker } from "react-native-maps";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   doc,
@@ -513,14 +513,25 @@ export default function VenueDetailScreen() {
                 marginBottom: 16,
               }}
             >
-              {/* Static map preview */}
-              <Image
-                source={{
-                  uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${venue.latitude},${venue.longitude}&zoom=15&size=400x150&markers=${venue.latitude},${venue.longitude},red-marker`,
-                }}
+              {/* Map preview */}
+              <MapView
                 style={{ width: "100%", height: 140 }}
-                resizeMode="cover"
-              />
+                region={{
+                  latitude: venue.latitude,
+                  longitude: venue.longitude,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+              >
+                <Marker
+                  coordinate={{ latitude: venue.latitude, longitude: venue.longitude }}
+                  title={venue.name}
+                />
+              </MapView>
               {/* Address row below map */}
               <View
                 style={{

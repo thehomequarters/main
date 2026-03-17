@@ -21,6 +21,29 @@ export type MemberIndustry =
   | "business"
   | "wellness";
 
+export type HomelandRegion =
+  // Africa
+  | "north_africa"
+  | "west_africa"
+  | "central_africa"
+  | "east_africa"
+  | "southern_africa"
+  // Americas
+  | "caribbean"
+  | "central_america"
+  | "south_america"
+  // Asia
+  | "middle_east"
+  | "south_asia"
+  | "southeast_asia"
+  | "east_asia"
+  // Europe
+  | "western_europe"
+  | "eastern_europe"
+  | "southern_europe"
+  // Oceania
+  | "pacific_islands";
+
 export interface Profile {
   id: string;
   first_name: string;
@@ -38,6 +61,7 @@ export interface Profile {
   city: string | null;
   industry: MemberIndustry | null;
   interests: string[];
+  homeland_regions?: HomelandRegion[];  // diaspora homeland regions
   custom_places?: string[];  // user-entered places (in addition to auto-tracked venue visits)
   // Social handles
   instagram_handle: string | null;
