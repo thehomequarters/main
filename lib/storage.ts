@@ -96,3 +96,13 @@ export async function uploadChatImage(
 ): Promise<string> {
   return uploadImage(uri, `chat/${conversationId}_${Date.now()}.jpg`);
 }
+
+/**
+ * Upload a group chat image. Returns the download URL.
+ */
+export async function uploadGroupChatImage(
+  groupId: string,
+  uri: string
+): Promise<string> {
+  return uploadImage(uri, `group_chat/${groupId}_${Date.now()}.jpg`);
+}

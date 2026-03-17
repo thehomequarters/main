@@ -14,52 +14,81 @@ import { colors, fonts } from "@/constants/theme";
 import { StatusBar } from "expo-status-bar";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { VideoView, useVideoPlayer } from "expo-video";
 
 const { width: W, height: H } = Dimensions.get("window");
 
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+type Slide = {
+  id: string;
+  type: "image" | "video";
+  image?: { uri: string };
+  video_url?: string;
+  eyebrow?: string;
+  title?: string;
+};
+
+// ── VideoSlide — hook must live in its own component ──────────────────────────
+// expo-video's useVideoPlayer cannot be called inside renderItem callbacks.
+
+function VideoSlide({ uri, active }: { uri: string; active: boolean }) {
+  const player = useVideoPlayer(uri, (p) => {
+    p.loop = true;
+    p.muted = true;
+    if (active) p.play();
+  });
+
+  useEffect(() => {
+    if (active) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  }, [active]);
+
+  return (
+    <VideoView
+      player={player}
+      style={styles.media}
+      contentFit="cover"
+      nativeControls={false}
+    />
+  );
+}
+
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const flatRef = useRef<FlatList>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  type Slide = { id: string; image: { uri: string }; eyebrow?: string; title?: string };
   const [slides, setSlides] = useState<Slide[]>([]);
 
-  // Fade-in overlay animations — staggered cinematic reveal
-  const darkTint = useRef(new Animated.Value(0)).current;
+  // Staggered cinematic fade-in overlays
+  const darkTint    = useRef(new Animated.Value(0)).current;
   const bottomScrim = useRef(new Animated.Value(0)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const ctaOpacity = useRef(new Animated.Value(0)).current;
+  const ctaOpacity  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(darkTint, {
-        toValue: 1,
-        duration: 700,
-        delay: 0,
-        useNativeDriver: true,
-      }),
-      Animated.timing(bottomScrim, {
-        toValue: 1,
-        duration: 700,
-        delay: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(logoOpacity, {
-        toValue: 1,
-        duration: 800,
-        delay: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(ctaOpacity, {
-        toValue: 1,
-        duration: 800,
-        delay: 800,
-        useNativeDriver: true,
-      }),
+      Animated.timing(darkTint,    { toValue: 1, duration: 700, delay: 0,   useNativeDriver: true }),
+      Animated.timing(bottomScrim, { toValue: 1, duration: 700, delay: 300, useNativeDriver: true }),
+      Animated.timing(logoOpacity, { toValue: 1, duration: 800, delay: 600, useNativeDriver: true }),
+      Animated.timing(ctaOpacity,  { toValue: 1, duration: 800, delay: 800, useNativeDriver: true }),
     ]).start();
   }, []);
 
+  // Fetch slides from Firestore
+  // Each slide document supports:
+  //   type: "image" | "video"   (defaults to "image" if absent)
+  //   image_url: string          (used when type === "image")
+  //   video_url: string          (used when type === "video")
+  //   eyebrow: string
+  //   title: string
+  //   order: number
+  //   is_active: boolean
   useEffect(() => {
     (async () => {
       try {
@@ -67,17 +96,27 @@ export default function OnboardingScreen() {
           query(collection(db, "onboarding_slides"), orderBy("order", "asc"))
         ).catch(() => null);
         if (!snap || snap.empty) return;
-        const remote = snap.docs
+
+        const remote: Slide[] = snap.docs
           .filter((d) => d.data().is_active === true)
-          .map((d) => ({
-            id: d.id,
-            image: { uri: d.data().image_url as string },
-            eyebrow: d.data().eyebrow as string | undefined,
-            title: (d.data().title as string | undefined)?.replace(/\\n/g, "\n"),
-          }));
+          .map((d) => {
+            const data = d.data();
+            const type: "image" | "video" = data.type === "video" ? "video" : "image";
+            return {
+              id: d.id,
+              type,
+              image: type === "image" && data.image_url
+                ? { uri: data.image_url as string }
+                : undefined,
+              video_url: type === "video" ? (data.video_url as string) : undefined,
+              eyebrow: data.eyebrow as string | undefined,
+              title: (data.title as string | undefined)?.replace(/\\n/g, "\n"),
+            };
+          });
+
         if (remote.length > 0) setSlides(remote);
       } catch {
-        // No slides on network error — dark screen shows
+        // No slides on network error — dark screen
       }
     })();
   }, []);
@@ -92,7 +131,7 @@ export default function OnboardingScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Full-bleed image carousel — swipe to advance */}
+      {/* Full-bleed media carousel */}
       <FlatList
         ref={flatRef}
         data={slides}
@@ -103,28 +142,32 @@ export default function OnboardingScreen() {
         bounces={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 50 }}
-        renderItem={({ item }) => (
-          <Image
-            source={item.image}
-            style={styles.image}
-            resizeMode="cover"
-          />
-        )}
+        renderItem={({ item, index }) => {
+          if (item.type === "video" && item.video_url) {
+            return (
+              <VideoSlide
+                uri={item.video_url}
+                active={index === currentIndex}
+              />
+            );
+          }
+          return (
+            <Image
+              source={item.image!}
+              style={styles.media}
+              resizeMode="cover"
+            />
+          );
+        }}
       />
 
-      {/* Overlay 1 — global dark tint, fades in first */}
-      <Animated.View
-        style={[styles.darkTint, { opacity: darkTint }]}
-        pointerEvents="none"
-      />
+      {/* Overlay 1 — global dark tint */}
+      <Animated.View style={[styles.darkTint, { opacity: darkTint }]} pointerEvents="none" />
 
-      {/* Overlay 2 — bottom scrim for legibility, fades in second */}
-      <Animated.View
-        style={[styles.bottomScrim, { opacity: bottomScrim }]}
-        pointerEvents="none"
-      />
+      {/* Overlay 2 — bottom scrim */}
+      <Animated.View style={[styles.bottomScrim, { opacity: bottomScrim }]} pointerEvents="none" />
 
-      {/* Slide copy — eyebrow + title, updates per slide */}
+      {/* Per-slide copy */}
       {(slides[currentIndex]?.eyebrow || slides[currentIndex]?.title) && (
         <Animated.View style={[styles.slideTextBlock, { opacity: ctaOpacity }]} pointerEvents="none">
           {!!slides[currentIndex]?.eyebrow && (
@@ -136,30 +179,26 @@ export default function OnboardingScreen() {
         </Animated.View>
       )}
 
-      {/* Overlay 3 — dots + CTAs + subtle branding, fades in last */}
+      {/* Bottom controls — branding + dots + CTAs */}
       <Animated.View style={[styles.bottomControls, { opacity: ctaOpacity }]}>
-        {/* Subtle branding above dots */}
-        <Animated.View
-          style={[styles.brandingBlock, { opacity: logoOpacity }]}
-          pointerEvents="none"
-        >
+        <Animated.View style={[styles.brandingBlock, { opacity: logoOpacity }]} pointerEvents="none">
           <Text style={styles.logoText}>HQ</Text>
           <Text style={styles.logoSubtext}>HOMEQUARTERS</Text>
         </Animated.View>
 
-        <View style={styles.dots}>
-          {slides.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                i === currentIndex ? styles.dotActive : styles.dotInactive,
-              ]}
-            />
-          ))}
-        </View>
+        {/* Slide dots */}
+        {slides.length > 1 && (
+          <View style={styles.dots}>
+            {slides.map((_, i) => (
+              <View
+                key={i}
+                style={[styles.dot, i === currentIndex ? styles.dotActive : styles.dotInactive]}
+              />
+            ))}
+          </View>
+        )}
 
-        {/* Primary — cream pill */}
+        {/* Primary CTA */}
         <Pressable
           onPress={() => router.replace("/login")}
           style={({ pressed }) => [styles.signInBtn, { opacity: pressed ? 0.85 : 1 }]}
@@ -167,7 +206,7 @@ export default function OnboardingScreen() {
           <Text style={styles.signInText}>Member Sign In</Text>
         </Pressable>
 
-        {/* Secondary — ghost outline pill */}
+        {/* Secondary CTA */}
         <Pressable
           onPress={() => router.replace("/apply")}
           style={({ pressed }) => [styles.applyBtn, { opacity: pressed ? 0.7 : 1 }]}
@@ -179,29 +218,25 @@ export default function OnboardingScreen() {
   );
 }
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#0A0A0A",
   },
-  image: {
+  media: {
     width: W,
     height: H,
   },
-
-  // Overlay 1 — full-screen dark tint
   darkTint: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.10)",
   },
-
-  // Overlay 2 — full-screen scrim
   bottomScrim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.65)",
   },
-
-  // Per-slide copy block
   slideTextBlock: {
     position: "absolute",
     left: 28,
@@ -222,8 +257,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.display,
     lineHeight: 42,
   },
-
-  // Subtle branding block above dots
   brandingBlock: {
     alignItems: "center",
     marginBottom: 14,
@@ -241,8 +274,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semibold,
     letterSpacing: 5,
   },
-
-  // Bottom controls
   bottomControls: {
     position: "absolute",
     bottom: 0,
@@ -273,8 +304,6 @@ const styles = StyleSheet.create({
     width: 12,
     backgroundColor: "rgba(255,255,255,0.3)",
   },
-
-  // Primary CTA — cream pill
   signInBtn: {
     backgroundColor: colors.bg,
     borderRadius: 100,
@@ -289,8 +318,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
-
-  // Secondary CTA — ghost outline pill
   applyBtn: {
     borderRadius: 100,
     borderWidth: 1,

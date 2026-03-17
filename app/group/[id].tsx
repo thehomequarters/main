@@ -9,6 +9,7 @@ import {
   Platform,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -24,18 +25,29 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/components/Toast";
-import { colors } from "@/constants/theme";
+import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
+import { pickPostImage, uploadGroupChatImage } from "@/lib/storage";
 import type { Group, GroupMessage } from "@/lib/database.types";
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+function formatDateSeparator(dateStr: string): string {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 }
 
 export default function GroupScreen() {
@@ -48,49 +60,77 @@ export default function GroupScreen() {
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [loadingGroup, setLoadingGroup] = useState(true);
   const [text, setText] = useState("");
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const flatRef = useRef<FlatList>(null);
 
+  // Load group metadata
   useEffect(() => {
     if (!id) return;
-
     getDoc(doc(db, "groups", id)).then((snap) => {
       if (snap.exists()) setGroup({ id: snap.id, ...snap.data() } as Group);
       setLoadingGroup(false);
     });
+  }, [id]);
 
+  // Real-time messages
+  useEffect(() => {
+    if (!id) return;
     const q = query(
       collection(db, "group_messages"),
       where("group_id", "==", id),
       orderBy("created_at", "asc")
     );
-
-    const unsub = onSnapshot(q, (snap) => {
-      setMessages(
-        snap.docs.map((d) => ({ id: d.id, ...d.data() }) as GroupMessage)
-      );
-    });
-
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setMessages(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as GroupMessage));
+        setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 80);
+      },
+      (err) => console.warn("group_messages snapshot:", err)
+    );
     return () => unsub();
   }, [id]);
 
+  const handlePickImage = async () => {
+    const uri = await pickPostImage();
+    if (uri) setImageUri(uri);
+  };
+
   const handleSend = async () => {
-    if (!text.trim() || !user?.uid || !profile || !id) return;
+    const trimmed = text.trim();
+    if (!trimmed && !imageUri) return;
+
+    if (!user?.uid || !id) {
+      toast("Something went wrong. Please restart the app.", "error");
+      return;
+    }
+
     setSending(true);
     try {
-      const initials =
-        (profile.first_name?.[0] ?? "") + (profile.last_name?.[0] ?? "");
+      // Upload image if attached
+      let imgUrl: string | undefined;
+      if (imageUri) {
+        imgUrl = await uploadGroupChatImage(id, imageUri);
+        setImageUri(null);
+      }
+
+      const firstName = profile?.first_name ?? user.displayName?.split(" ")[0] ?? "Member";
+      const lastName  = profile?.last_name  ?? user.displayName?.split(" ").slice(1).join(" ") ?? "";
+      const initials  = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
+
       await addDoc(collection(db, "group_messages"), {
         group_id: id,
         author_id: user.uid,
-        author_name: `${profile.first_name} ${profile.last_name}`,
-        author_initials: initials.toUpperCase(),
-        content: text.trim(),
+        author_name: `${firstName} ${lastName}`.trim(),
+        author_initials: initials || "?",
+        content: trimmed,
+        ...(imgUrl ? { image_url: imgUrl } : {}),
         created_at: new Date().toISOString(),
       });
+
       setText("");
-      setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 100);
-    } catch (e: any) {
+    } catch {
       toast("Failed to send message.", "error");
     } finally {
       setSending(false);
@@ -105,6 +145,8 @@ export default function GroupScreen() {
     );
   }
 
+  const canSend = (text.trim().length > 0 || !!imageUri) && !sending;
+
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -117,9 +159,7 @@ export default function GroupScreen() {
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>{group?.name ?? "Group"}</Text>
-          <Text style={styles.headerSub}>
-            {group?.member_count ?? 0} members
-          </Text>
+          <Text style={styles.headerSub}>{group?.member_count ?? 0} members</Text>
         </View>
         <View style={styles.groupIcon}>
           <Ionicons
@@ -136,86 +176,96 @@ export default function GroupScreen() {
         data={messages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.messageList}
-        onContentSizeChange={() =>
-          flatRef.current?.scrollToEnd({ animated: false })
-        }
+        onContentSizeChange={() => flatRef.current?.scrollToEnd({ animated: false })}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Ionicons
-              name="chatbubbles-outline"
-              size={44}
-              color={colors.darkBorder}
-            />
-            <Text style={styles.emptyText}>
-              No messages yet. Start the conversation!
-            </Text>
+            <Ionicons name="chatbubbles-outline" size={44} color={colors.darkBorder} />
+            <Text style={styles.emptyText}>No messages yet. Start the conversation!</Text>
           </View>
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const isMe = item.author_id === user?.uid;
+          const prevMsg = messages[index - 1];
+          const showDate =
+            index === 0 ||
+            new Date(item.created_at).toDateString() !== new Date(prevMsg.created_at).toDateString();
+
           return (
-            <View
-              style={[
-                styles.msgRow,
-                isMe ? styles.msgRowMe : styles.msgRowThem,
-              ]}
-            >
-              {!isMe && (
-                <View style={styles.msgAvatar}>
-                  <Text style={styles.msgAvatarText}>
-                    {item.author_initials}
+            <View>
+              {/* Date separator */}
+              {showDate && (
+                <Text style={styles.dateSep}>{formatDateSeparator(item.created_at)}</Text>
+              )}
+
+              <View style={[styles.msgRow, isMe ? styles.msgRowMe : styles.msgRowThem]}>
+                {!isMe && (
+                  <View style={styles.msgAvatar}>
+                    <Text style={styles.msgAvatarText}>{item.author_initials}</Text>
+                  </View>
+                )}
+
+                <View style={[styles.msgBubble, isMe ? styles.msgBubbleMe : styles.msgBubbleThem]}>
+                  {!isMe && (
+                    <Text style={styles.msgAuthor}>{item.author_name}</Text>
+                  )}
+
+                  {/* Image */}
+                  {item.image_url ? (
+                    <Image
+                      source={{ uri: item.image_url }}
+                      style={[styles.msgImage, item.content ? { marginBottom: 8 } : null]}
+                      resizeMode="cover"
+                    />
+                  ) : null}
+
+                  {/* Text */}
+                  {item.content ? (
+                    <Text style={[styles.msgText, isMe ? styles.msgTextMe : styles.msgTextThem]}>
+                      {item.content}
+                    </Text>
+                  ) : null}
+
+                  <Text style={[styles.msgTime, isMe ? styles.msgTimeMe : styles.msgTimeThem]}>
+                    {timeAgo(item.created_at)}
                   </Text>
                 </View>
-              )}
-              <View
-                style={[
-                  styles.msgBubble,
-                  isMe ? styles.msgBubbleMe : styles.msgBubbleThem,
-                ]}
-              >
-                {!isMe && (
-                  <Text style={styles.msgAuthor}>{item.author_name}</Text>
-                )}
-                <Text
-                  style={[
-                    styles.msgText,
-                    isMe ? styles.msgTextMe : styles.msgTextThem,
-                  ]}
-                >
-                  {item.content}
-                </Text>
-                <Text
-                  style={[
-                    styles.msgTime,
-                    isMe ? styles.msgTimeMe : styles.msgTimeThem,
-                  ]}
-                >
-                  {timeAgo(item.created_at)}
-                </Text>
               </View>
             </View>
           );
         }}
       />
 
-      {/* Input */}
+      {/* Image preview strip */}
+      {imageUri && (
+        <View style={styles.previewStrip}>
+          <Image source={{ uri: imageUri }} style={styles.previewThumb} />
+          <Pressable onPress={() => setImageUri(null)} hitSlop={8}>
+            <Ionicons name="close-circle" size={22} color={colors.red} />
+          </Pressable>
+        </View>
+      )}
+
+      {/* Input row */}
       <View style={styles.inputRow}>
+        <Pressable onPress={handlePickImage} style={styles.imageBtn}>
+          <Ionicons name="image-outline" size={20} color={colors.grey} />
+        </Pressable>
+
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder={`Message ${group?.name ?? "group"}...`}
+          placeholder={`Message ${group?.name ?? "group"}…`}
           placeholderTextColor="rgba(160,160,160,0.4)"
           style={styles.input}
           multiline
           maxLength={600}
+          returnKeyType="default"
         />
+
         <Pressable
           onPress={handleSend}
-          disabled={!text.trim() || sending}
-          style={[
-            styles.sendBtn,
-            { opacity: !text.trim() || sending ? 0.4 : 1 },
-          ]}
+          disabled={!canSend}
+          style={[styles.sendBtn, { opacity: canSend ? 1 : 0.35 }]}
         >
           <Ionicons name="arrow-up" size={18} color={colors.black} />
         </Pressable>
@@ -235,6 +285,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -256,11 +308,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.white,
     fontSize: 17,
-    fontWeight: "700",
+    fontFamily: fonts.semibold,
   },
   headerSub: {
     color: colors.grey,
     fontSize: 12,
+    fontFamily: fonts.body,
     marginTop: 1,
   },
   groupIcon: {
@@ -273,10 +326,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
+  // Messages list
   messageList: {
     paddingHorizontal: 16,
     paddingVertical: 16,
     flexGrow: 1,
+  },
+  dateSep: {
+    color: colors.grey,
+    fontSize: 11,
+    fontFamily: fonts.medium,
+    textAlign: "center",
+    marginVertical: 14,
+    opacity: 0.6,
   },
   empty: {
     alignItems: "center",
@@ -286,11 +349,14 @@ const styles = StyleSheet.create({
   emptyText: {
     color: colors.grey,
     fontSize: 14,
+    fontFamily: fonts.body,
     textAlign: "center",
   },
+
+  // Message row
   msgRow: {
     flexDirection: "row",
-    marginBottom: 14,
+    marginBottom: 12,
     alignItems: "flex-end",
     gap: 8,
   },
@@ -313,13 +379,14 @@ const styles = StyleSheet.create({
   msgAvatarText: {
     color: colors.stone,
     fontSize: 10,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
   },
   msgBubble: {
     maxWidth: "75%",
     borderRadius: 16,
-    paddingHorizontal: 14,
+    paddingHorizontal: 13,
     paddingVertical: 10,
+    overflow: "hidden",
   },
   msgBubbleMe: {
     backgroundColor: colors.stone,
@@ -334,40 +401,75 @@ const styles = StyleSheet.create({
   msgAuthor: {
     color: colors.stone,
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     marginBottom: 3,
+  },
+  msgImage: {
+    width: 200,
+    height: 150,
+    borderRadius: 10,
   },
   msgText: {
     fontSize: 14,
     lineHeight: 20,
+    fontFamily: fonts.body,
   },
   msgTextMe: {
     color: colors.black,
-    fontWeight: "500",
   },
   msgTextThem: {
     color: colors.white,
   },
   msgTime: {
     fontSize: 10,
+    fontFamily: fonts.body,
     marginTop: 4,
+    opacity: 0.55,
   },
   msgTimeMe: {
-    color: "rgba(0,0,0,0.45)",
+    color: colors.black,
     textAlign: "right",
   },
   msgTimeThem: {
-    color: "rgba(160,160,160,0.5)",
+    color: colors.grey,
   },
+
+  // Image preview
+  previewStrip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.darkBorder,
+  },
+  previewThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+  },
+
+  // Input row
   inputRow: {
     flexDirection: "row",
     alignItems: "flex-end",
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     paddingBottom: Platform.OS === "ios" ? 28 : 10,
     borderTopWidth: 1,
     borderTopColor: colors.darkBorder,
-    gap: 10,
+    gap: 8,
+  },
+  imageBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.dark,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     flex: 1,
@@ -377,6 +479,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: colors.white,
     fontSize: 14,
+    fontFamily: fonts.body,
     borderWidth: 1,
     borderColor: colors.darkBorder,
     maxHeight: 120,

@@ -168,6 +168,7 @@ export interface GroupMessage {
   author_name: string;
   author_initials: string;
   content: string;
+  image_url?: string;
   created_at: string;
 }
 
