@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { db, storage } from "../firebase";
 import { useToast } from "../components/Toast";
 
 interface HeroContent {
@@ -142,6 +143,170 @@ function ImageList({
           Add
         </button>
       </div>
+    </div>
+  );
+}
+
+function ScreenshotSection({
+  images,
+  onChange,
+}: {
+  images: string[];
+  onChange: (imgs: string[]) => void;
+}) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  const remove = (i: number) => onChange(images.filter((_, idx) => idx !== i));
+
+  const uploadFiles = (files: FileList | File[]) => {
+    const fileArr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (fileArr.length === 0) {
+      toast("Only image files are supported", "error");
+      return;
+    }
+    setUploading(true);
+    setProgress(0);
+
+    let completed = 0;
+    const progressMap: Record<string, number> = {};
+    const uploadedUrls: string[] = [];
+
+    fileArr.forEach((file) => {
+      const path = `media/screenshots/${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+      const storageRef = ref(storage, path);
+      const task = uploadBytesResumable(storageRef, file);
+
+      task.on(
+        "state_changed",
+        (snap) => {
+          progressMap[file.name] = (snap.bytesTransferred / snap.totalBytes) * 100;
+          const total = Object.values(progressMap).reduce((a, b) => a + b, 0) / fileArr.length;
+          setProgress(Math.round(total));
+        },
+        () => {
+          toast(`Failed to upload ${file.name}`, "error");
+          completed++;
+          if (completed === fileArr.length) {
+            setUploading(false);
+            if (uploadedUrls.length > 0) onChange([...images, ...uploadedUrls]);
+          }
+        },
+        async () => {
+          const url = await getDownloadURL(storageRef);
+          uploadedUrls.push(url);
+          completed++;
+          if (completed === fileArr.length) {
+            setUploading(false);
+            setProgress(0);
+            onChange([...images, ...uploadedUrls]);
+            toast(fileArr.length === 1 ? "Screenshot uploaded" : `${fileArr.length} screenshots uploaded`);
+          }
+        }
+      );
+    });
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files) uploadFiles(e.dataTransfer.files);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      uploadFiles(e.target.files);
+      e.target.value = "";
+    }
+  };
+
+  return (
+    <div>
+      <Label>App Screenshots</Label>
+      <p className="text-gray-600 text-xs mb-3">
+        Phone mockup screenshots shown alongside feature descriptions. Upload directly or drag and drop.
+      </p>
+
+      {/* Upload zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => !uploading && fileInputRef.current?.click()}
+        className={`border-2 border-dashed rounded-xl p-5 mb-4 text-center transition-colors ${
+          uploading ? "border-dark-border cursor-default" :
+          dragOver ? "border-gold bg-gold/5 cursor-pointer" : "border-dark-border hover:border-gray-600 cursor-pointer"
+        }`}
+      >
+        {uploading ? (
+          <div>
+            <p className="text-gray-400 text-sm mb-2">Uploading…</p>
+            <div className="w-full h-1.5 bg-dark-border rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gold rounded-full transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-gold text-xs mt-1.5 font-medium">{progress}%</p>
+          </div>
+        ) : (
+          <>
+            <svg
+              className={`w-7 h-7 mx-auto mb-1.5 ${dragOver ? "text-gold" : "text-gray-600"}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <p className={`text-sm ${dragOver ? "text-gold" : "text-gray-500"}`}>
+              Drop screenshots here, or <span className="underline">click to browse</span>
+            </p>
+            <p className="text-xs text-gray-600 mt-1">PNG, JPG, WebP · Max 20 MB each</p>
+          </>
+        )}
+      </div>
+
+      {/* Existing screenshots */}
+      {images.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 mb-3">
+          {images.map((url, i) => (
+            <div key={i} className="group relative">
+              <div className="aspect-[9/16] rounded-xl bg-dark border border-dark-border overflow-hidden">
+                <img
+                  src={url}
+                  alt={`Screenshot ${i + 1}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.2"; }}
+                />
+              </div>
+              <button
+                onClick={() => remove(i)}
+                className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/70 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
+              >
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <p className="text-gray-600 text-[10px] text-center mt-1">{i + 1}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {images.length === 0 && !uploading && (
+        <p className="text-gray-700 text-xs italic py-1">No screenshots yet.</p>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </div>
   );
 }
@@ -326,9 +491,7 @@ export default function CMS() {
               onChange={(imgs) => setContent((c) => ({ ...c, lifestyle_images: imgs }))}
             />
             <div className="border-t border-dark-border pt-5">
-              <ImageList
-                label="App Screenshots"
-                hint="Phone mockup screenshots shown alongside feature descriptions."
+              <ScreenshotSection
                 images={content.screenshots}
                 onChange={(imgs) => setContent((c) => ({ ...c, screenshots: imgs }))}
               />
