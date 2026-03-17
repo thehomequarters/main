@@ -25,6 +25,7 @@ interface WebsiteContent {
   partners: string[];
   lifestyle_images: string[];
   screenshots: string[];
+  ios_app_link: string;
 }
 
 const DEFAULT_CONTENT: WebsiteContent = {
@@ -56,9 +57,10 @@ const DEFAULT_CONTENT: WebsiteContent = {
   ],
   lifestyle_images: [],
   screenshots: [],
+  ios_app_link: "",
 };
 
-type Tab = "hero" | "features" | "partners" | "media";
+type Tab = "hero" | "features" | "partners" | "media" | "app";
 
 function Label({ children }: { children: React.ReactNode }) {
   return <label className="text-gray-600 text-xs uppercase tracking-wider block mb-1">{children}</label>;
@@ -331,6 +333,7 @@ export default function CMS() {
           partners: data.partners ?? DEFAULT_CONTENT.partners,
           lifestyle_images: data.lifestyle_images ?? [],
           screenshots: data.screenshots ?? [],
+          ios_app_link: data.ios_app_link ?? "",
         });
       }
       setLoading(false);
@@ -370,6 +373,7 @@ export default function CMS() {
     { key: "features", label: "Features" },
     { key: "partners", label: "Partners" },
     { key: "media", label: "Media" },
+    { key: "app", label: "App" },
   ];
 
   if (loading) {
@@ -477,6 +481,25 @@ export default function CMS() {
               >
                 Add
               </button>
+            </div>
+          </>
+        )}
+
+        {/* APP TAB */}
+        {tab === "app" && (
+          <>
+            <div>
+              <p className="text-gray-500 text-sm mb-5">
+                The app is currently <span className="text-white font-semibold">iOS only</span>. Paste the App Store link below — it will appear on all download buttons across the website instantly.
+              </p>
+              <Field
+                label="iOS App Store Link"
+                value={content.ios_app_link}
+                onChange={(v) => setContent((c) => ({ ...c, ios_app_link: v }))}
+              />
+              {content.ios_app_link && (
+                <p className="text-gray-600 text-xs mt-2 font-mono break-all">{content.ios_app_link}</p>
+              )}
             </div>
           </>
         )}
