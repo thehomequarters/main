@@ -45,17 +45,24 @@ export default function MessagesScreen() {
       where("participants", "array-contains", user.uid)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const convList = snapshot.docs
-        .map((d) => ({ id: d.id, ...d.data() }) as Conversation)
-        .sort(
-          (a, b) =>
-            new Date(b.last_message_at || b.created_at).getTime() -
-            new Date(a.last_message_at || a.created_at).getTime()
-        );
-      setConversations(convList);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const convList = snapshot.docs
+          .map((d) => ({ id: d.id, ...d.data() }) as Conversation)
+          .sort(
+            (a, b) =>
+              new Date(b.last_message_at || b.created_at).getTime() -
+              new Date(a.last_message_at || a.created_at).getTime()
+          );
+        setConversations(convList);
+        setLoading(false);
+      },
+      (err) => {
+        console.warn("conversations snapshot error:", err);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, [user?.uid]);

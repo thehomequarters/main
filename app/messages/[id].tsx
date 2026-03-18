@@ -82,7 +82,8 @@ export default function ChatScreen() {
         if (snap.exists()) {
           setConversation({ id: snap.id, ...snap.data() } as Conversation);
         }
-      }
+      },
+      (err) => console.warn("conversation detail snapshot error:", err)
     );
     return () => unsub();
   }, [conversationId]);
@@ -96,14 +97,18 @@ export default function ChatScreen() {
       orderBy("created_at", "asc")
     );
 
-    const unsub = onSnapshot(q, (snapshot) => {
-      const msgList = snapshot.docs.map(
-        (d) => ({ id: d.id, ...d.data() }) as Message
-      );
-      setMessages(msgList);
-      // Scroll to bottom on new messages
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const msgList = snapshot.docs.map(
+          (d) => ({ id: d.id, ...d.data() }) as Message
+        );
+        setMessages(msgList);
+        // Scroll to bottom on new messages
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+      },
+      (err) => console.warn("messages snapshot error:", err)
+    );
 
     return () => unsub();
   }, [conversationId]);

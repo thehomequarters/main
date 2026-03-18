@@ -54,7 +54,7 @@ const PLACEHOLDER_IMAGES: Record<string, string> = {
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const isGrace = profile?.membership_status === "accepted";
   const [venue, setVenue] = useState<Venue | null>(null);
@@ -103,21 +103,25 @@ export default function VenueDetailScreen() {
 
   // Live recommendations listener
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user?.uid) return;
     const q = query(
       collection(db, "recommendations"),
       where("venue_id", "==", id),
       orderBy("created_at", "desc")
     );
-    const unsub = onSnapshot(q, (snap) => {
-      const recs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
-      setRecommendations(recs);
-      if (profile?.id) {
-        setHasRecommended(recs.some((r) => r.author_id === profile.id));
-      }
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const recs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
+        setRecommendations(recs);
+        if (profile?.id) {
+          setHasRecommended(recs.some((r) => r.author_id === profile.id));
+        }
+      },
+      (err) => console.warn("recommendations snapshot error:", err)
+    );
     return unsub;
-  }, [id, profile?.id]);
+  }, [id, user?.uid, profile?.id]);
 
   const handleSubmitRecommendation = async () => {
     if (!profile || !venue) return;
