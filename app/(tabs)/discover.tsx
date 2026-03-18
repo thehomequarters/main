@@ -58,16 +58,21 @@ export default function DiscoverTab() {
   const fetchMembers = useCallback(async () => {
     try {
       setError(false);
-      // Fetch latest recommendations
-      const recQuery = query(
-        collection(db, "recommendations"),
-        orderBy("created_at", "desc"),
-        limit(20)
-      );
-      const recSnap = await getDocs(recQuery);
-      setRecommendations(
-        recSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation)
-      );
+
+      // Fetch recommendations separately — failure here should not block members
+      try {
+        const recQuery = query(
+          collection(db, "recommendations"),
+          orderBy("created_at", "desc"),
+          limit(20)
+        );
+        const recSnap = await getDocs(recQuery);
+        setRecommendations(
+          recSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation)
+        );
+      } catch {
+        // Silently fail — recommendations are non-critical
+      }
 
       // Get all active member profiles (excluding self)
       const profilesQuery = query(
