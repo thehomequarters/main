@@ -10,6 +10,7 @@ import {
   Linking,
   Share,
   Platform,
+  Alert,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
@@ -143,8 +144,9 @@ export default function VenueDetailScreen() {
       setRecImageUri(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       toast("Recommendation added!");
-    } catch {
-      toast("Failed to submit. Please try again.", "error");
+    } catch (e) {
+      console.error("handleSubmitRecommendation error:", e);
+      Alert.alert("Error", "Failed to submit recommendation. Please try again.");
     } finally {
       setRecSubmitting(false);
     }
@@ -726,7 +728,7 @@ export default function VenueDetailScreen() {
 
             {/* Recommend button */}
             <Pressable
-              onPress={() => setShowRecModal(true)}
+              onPress={() => isGrace ? router.push("/activate") : setShowRecModal(true)}
               style={{
                 flex: 1,
                 flexDirection: "row",
