@@ -201,7 +201,6 @@ export function PostCard({ post, timeAgo, onLike, onComment, onPress }: PostCard
           </Text>
         </Pressable>
         <View style={{ flex: 1 }} />
-        <Ionicons name="share-outline" size={18} color={colors.stone} />
       </View>
     </Pressable>
   );

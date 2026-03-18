@@ -106,18 +106,34 @@ export default function GroupScreen() {
       return;
     }
 
+    const firstName = profile?.first_name ?? user.displayName?.split(" ")[0] ?? "Member";
+    const lastName  = profile?.last_name  ?? user.displayName?.split(" ").slice(1).join(" ") ?? "";
+    const initials  = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
+    const now = new Date().toISOString();
+    const tempId = `temp_${Date.now()}`;
+
+    // Optimistically add message to local state immediately
+    const optimisticMsg: GroupMessage = {
+      id: tempId,
+      group_id: id,
+      author_id: user.uid,
+      author_name: `${firstName} ${lastName}`.trim(),
+      author_initials: initials || "?",
+      content: trimmed,
+      created_at: now,
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setText("");
+    setImageUri(null);
+    setTimeout(() => flatRef.current?.scrollToEnd({ animated: true }), 50);
+
     setSending(true);
     try {
       // Upload image if attached
       let imgUrl: string | undefined;
       if (imageUri) {
         imgUrl = await uploadGroupChatImage(id, imageUri);
-        setImageUri(null);
       }
-
-      const firstName = profile?.first_name ?? user.displayName?.split(" ")[0] ?? "Member";
-      const lastName  = profile?.last_name  ?? user.displayName?.split(" ").slice(1).join(" ") ?? "";
-      const initials  = (firstName[0] ?? "").toUpperCase() + (lastName[0] ?? "").toUpperCase();
 
       await addDoc(collection(db, "group_messages"), {
         group_id: id,
@@ -126,11 +142,12 @@ export default function GroupScreen() {
         author_initials: initials || "?",
         content: trimmed,
         ...(imgUrl ? { image_url: imgUrl } : {}),
-        created_at: new Date().toISOString(),
+        created_at: now,
       });
-
-      setText("");
     } catch {
+      // Remove the optimistic message on failure
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setText(trimmed);
       toast("Failed to send message.", "error");
     } finally {
       setSending(false);

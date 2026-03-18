@@ -796,8 +796,8 @@ export default function VenueDetailScreen() {
             <Text style={{ color: colors.dark, fontSize: 16, fontWeight: "700" }}>Recommend</Text>
             <Pressable
               onPress={handleSubmitRecommendation}
-              disabled={recSubmitting || (!recText.trim() && !recImageUri)}
-              style={{ opacity: recSubmitting || (!recText.trim() && !recImageUri) ? 0.4 : 1 }}
+              disabled={recSubmitting}
+              style={{ opacity: recSubmitting ? 0.4 : 1 }}
             >
               {recSubmitting
                 ? <ActivityIndicator size="small" color={colors.dark} />
