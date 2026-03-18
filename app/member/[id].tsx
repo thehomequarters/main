@@ -31,7 +31,6 @@ import * as Haptics from "expo-haptics";
 import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Profile, Connection, Venue, Recommendation } from "@/lib/database.types";
-import { RecommendationCard } from "@/components/RecommendationCard";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
@@ -69,6 +68,7 @@ export default function MemberProfileScreen() {
   const [actionLoading, setActionLoading] = useState(false);
   const [visitedVenues, setVisitedVenues] = useState<Venue[]>([]);
   const [memberRecs, setMemberRecs] = useState<Recommendation[]>([]);
+  const [recVenues, setRecVenues] = useState<Record<string, Venue>>({});
 
   // ── Animation values ──────────────────────────────────────────────────────
 
@@ -117,11 +117,18 @@ export default function MemberProfileScreen() {
             getDocs(query(collection(db, "venue_visits"), where("member_id", "==", id))),
             getDocs(query(collection(db, "recommendations"), where("author_id", "==", id), orderBy("created_at", "desc"))),
           ]);
-          setMemberRecs(recsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation));
-          const venueIds = [...new Set(visitsSnap.docs.map((d: any) => d.data().venue_id as string))];
-          if (venueIds.length > 0) {
-            const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
-            setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
+          const recs = recsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
+          setMemberRecs(recs);
+          const visitVenueIds = [...new Set(visitsSnap.docs.map((d: any) => d.data().venue_id as string))];
+          const recVenueIds = [...new Set(recs.map((r) => r.venue_id))];
+          const allVenueIds = [...new Set([...visitVenueIds, ...recVenueIds])];
+          if (allVenueIds.length > 0) {
+            const venueDocs = await Promise.all(allVenueIds.map((vid) => getDoc(doc(db, "venues", vid))));
+            const allVenues = venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue);
+            setVisitedVenues(allVenues.filter((v) => visitVenueIds.includes(v.id)));
+            const venueMap: Record<string, Venue> = {};
+            allVenues.forEach((v) => { venueMap[v.id] = v; });
+            setRecVenues(venueMap);
           }
         } catch {
           // Silently fail for recs/venues — not critical
@@ -563,7 +570,7 @@ export default function MemberProfileScreen() {
               </View>
             )}
 
-          {/* Recommendations */}
+          {/* Recommendations — 3-column image grid */}
           {!isMasked && memberRecs.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionLabelRow}>
@@ -572,14 +579,39 @@ export default function MemberProfileScreen() {
                   <Text style={styles.recBadgeText}>{memberRecs.length}</Text>
                 </View>
               </View>
-              {memberRecs.map((rec) => (
-                <RecommendationCard
-                  key={rec.id}
-                  rec={rec}
-                  showVenue
-                  onPress={() => router.push(`/venue/${rec.venue_id}` as any)}
-                />
-              ))}
+              <View style={styles.recGrid}>
+                {memberRecs.map((rec) => {
+                  const venue = recVenues[rec.venue_id];
+                  const imageUri = venue?.image_url ?? venue?.image_urls?.[0] ?? null;
+                  return (
+                    <Pressable
+                      key={rec.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        router.push(`/venue/${rec.venue_id}` as any);
+                      }}
+                      style={({ pressed }) => [styles.recGridCell, pressed && { opacity: 0.75 }]}
+                    >
+                      {imageUri ? (
+                        <Image
+                          source={{ uri: imageUri }}
+                          style={styles.recGridImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={[styles.recGridImage, styles.recGridPlaceholder]}>
+                          <Ionicons name="storefront-outline" size={22} color={colors.stone} />
+                        </View>
+                      )}
+                      <View style={styles.recGridLabel}>
+                        <Text style={styles.recGridVenueName} numberOfLines={1}>
+                          {rec.venue_name}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
           )}
 
@@ -915,6 +947,43 @@ const styles = StyleSheet.create({
     color: colors.gold,
     fontSize: 11,
     fontFamily: fonts.bold,
+  },
+
+  // Recommendations grid
+  recGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 2,
+  },
+  recGridCell: {
+    width: (SCREEN_WIDTH - 44) / 3, // (screen - 40px section padding - 4px for 2 gaps) / 3
+    aspectRatio: 1,
+    borderRadius: 4,
+    overflow: "hidden",
+    position: "relative",
+  },
+  recGridImage: {
+    width: "100%",
+    height: "100%",
+  },
+  recGridPlaceholder: {
+    backgroundColor: colors.sand,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  recGridLabel: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.42)",
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+  },
+  recGridVenueName: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontFamily: fonts.semibold,
   },
 
   // Tags
