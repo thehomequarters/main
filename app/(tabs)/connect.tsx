@@ -1155,7 +1155,7 @@ export default function ConnectTab() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8, marginBottom: 16 }}
+                contentContainerStyle={{ gap: 8, marginBottom: 16, alignItems: "flex-start" }}
               >
                 {TOPIC_OPTIONS.map((topic) => (
                   <Pressable
