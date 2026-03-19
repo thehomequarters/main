@@ -758,36 +758,26 @@ export default function VenueDetailScreen() {
             </Pressable>
           </View>
 
-          {/* Recommendations section */}
-          <View style={{ marginBottom: 32 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" }}>
-                Member Recommendations
-              </Text>
-              {recommendations.length > 0 && (
+          {/* Recommendations section — hidden when empty */}
+          {recommendations.length > 0 && (
+            <View style={{ marginBottom: 32 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" }}>
+                  Member Recommendations
+                </Text>
                 <View style={{ backgroundColor: "rgba(201,168,76,0.10)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(201,168,76,0.25)", paddingHorizontal: 10, paddingVertical: 4 }}>
                   <Text style={{ color: "#C9A84C", fontSize: 12, fontWeight: "700" }}>{recommendations.length}</Text>
                 </View>
-              )}
-            </View>
-
-            {recommendations.length === 0 ? (
-              <View style={{ backgroundColor: colors.white, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 20, alignItems: "center" }}>
-                <Ionicons name="star-outline" size={28} color={colors.border} style={{ marginBottom: 10 }} />
-                <Text style={{ color: colors.stone, fontSize: 13, textAlign: "center" }}>
-                  No recommendations yet.{"\n"}Be the first to recommend this venue.
-                </Text>
               </View>
-            ) : (
-              recommendations.map((rec) => (
+              {recommendations.map((rec) => (
                 <RecommendationCard
                   key={rec.id}
                   rec={rec}
                   onAuthorPress={() => router.push(`/member/${rec.author_id}` as any)}
                 />
-              ))
-            )}
-          </View>
+              ))}
+            </View>
+          )}
 
         </View>
       </ScrollView>
