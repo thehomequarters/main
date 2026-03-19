@@ -13,6 +13,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   addDoc,
   deleteDoc,
   updateDoc,
@@ -27,7 +28,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import { useToast } from "@/components/Toast";
-import type { Profile, Connection, MemberIndustry, Recommendation } from "@/lib/database.types";
+import type { Profile, Connection, MemberIndustry, Recommendation, Venue } from "@/lib/database.types";
 
 const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
   { key: null, label: "All" },
@@ -49,6 +50,7 @@ export default function DiscoverTab() {
     (Connection & { fromProfile?: Profile })[]
   >([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [venueMap, setVenueMap] = useState<Record<string, Venue>>({});
   const [selectedIndustry, setSelectedIndustry] =
     useState<MemberIndustry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,9 +69,23 @@ export default function DiscoverTab() {
           limit(20)
         );
         const recSnap = await getDocs(recQuery);
-        setRecommendations(
-          recSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation)
-        );
+        const recs = recSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
+        setRecommendations(recs);
+
+        // Fetch venue images for recs that have no attached image
+        const missingImageVenueIds = [
+          ...new Set(recs.filter((r) => !r.image_url).map((r) => r.venue_id)),
+        ];
+        if (missingImageVenueIds.length > 0) {
+          const venueSnaps = await Promise.all(
+            missingImageVenueIds.map((vid) => getDoc(doc(db, "venues", vid)))
+          );
+          const map: Record<string, Venue> = {};
+          venueSnaps.forEach((snap) => {
+            if (snap.exists()) map[snap.id] = { id: snap.id, ...snap.data() } as Venue;
+          });
+          setVenueMap(map);
+        }
       } catch {
         // Silently fail — recommendations are non-critical
       }
@@ -522,25 +538,31 @@ export default function DiscoverTab() {
                   overflow: "hidden",
                 }}
               >
-                {rec.image_url ? (
-                  <Image
-                    source={{ uri: rec.image_url }}
-                    style={{ width: "100%", height: 110 }}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View
-                    style={{
-                      width: "100%",
-                      height: 110,
-                      backgroundColor: colors.sand,
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Ionicons name="storefront-outline" size={28} color={colors.border} />
-                  </View>
-                )}
+                {(() => {
+                  const imgUri = rec.image_url
+                    ?? venueMap[rec.venue_id]?.image_url
+                    ?? venueMap[rec.venue_id]?.image_urls?.[0]
+                    ?? null;
+                  return imgUri ? (
+                    <Image
+                      source={{ uri: imgUri }}
+                      style={{ width: "100%", height: 110 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: "100%",
+                        height: 110,
+                        backgroundColor: colors.sand,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Ionicons name="storefront-outline" size={28} color={colors.border} />
+                    </View>
+                  );
+                })()}
                 <View style={{ padding: 12 }}>
                   <Text
                     style={{ color: colors.dark, fontSize: 14, fontWeight: "700", marginBottom: 2 }}

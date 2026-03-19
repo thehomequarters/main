@@ -738,16 +738,21 @@ export default function VenueDetailScreen() {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 7,
+                gap: 5,
                 backgroundColor: hasRecommended ? "rgba(201,168,76,0.08)" : colors.white,
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: hasRecommended ? "rgba(201,168,76,0.35)" : colors.border,
                 paddingVertical: 13,
+                paddingHorizontal: 6,
+                overflow: "hidden",
               }}
             >
               <Ionicons name="star" size={16} color={hasRecommended ? "#C9A84C" : colors.dark} />
-              <Text style={{ color: hasRecommended ? "#C9A84C" : colors.dark, fontSize: 13, fontWeight: "600" }}>
+              <Text
+                numberOfLines={1}
+                style={{ color: hasRecommended ? "#C9A84C" : colors.dark, fontSize: hasRecommended ? 12 : 13, fontWeight: "600", flexShrink: 1 }}
+              >
                 {hasRecommended ? "Recommended" : "Recommend"}
               </Text>
             </Pressable>
@@ -775,7 +780,11 @@ export default function VenueDetailScreen() {
               </View>
             ) : (
               recommendations.map((rec) => (
-                <RecommendationCard key={rec.id} rec={rec} />
+                <RecommendationCard
+                  key={rec.id}
+                  rec={rec}
+                  onAuthorPress={() => router.push(`/member/${rec.author_id}` as any)}
+                />
               ))
             )}
           </View>
