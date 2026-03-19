@@ -311,6 +311,40 @@ export default function MemberProfileScreen() {
   const isMasked    = member.profile_visibility === "connections" && !isConnected && !isSelf;
   const isElevated  = member.membership_tier === "founding_member" || member.membership_tier === "committee_member";
 
+  // ── Unified feed items (visited venues + recommendations merged by venue) ──
+  const feedItemsMap = new Map<string, {
+    venueId: string;
+    venueName: string;
+    imageUri: string | null;
+    isVisited: boolean;
+    isRecommended: boolean;
+  }>();
+  visitedVenues.forEach((venue) => {
+    feedItemsMap.set(venue.id, {
+      venueId: venue.id,
+      venueName: venue.name,
+      imageUri: venue.image_url ?? venue.image_urls?.[0] ?? null,
+      isVisited: true,
+      isRecommended: false,
+    });
+  });
+  memberRecs.forEach((rec) => {
+    const venue = recVenues[rec.venue_id];
+    const imageUri = venue?.image_url ?? venue?.image_urls?.[0] ?? null;
+    if (feedItemsMap.has(rec.venue_id)) {
+      feedItemsMap.get(rec.venue_id)!.isRecommended = true;
+    } else {
+      feedItemsMap.set(rec.venue_id, {
+        venueId: rec.venue_id,
+        venueName: rec.venue_name,
+        imageUri,
+        isVisited: false,
+        isRecommended: true,
+      });
+    }
+  });
+  const feedItems = Array.from(feedItemsMap.values());
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -526,40 +560,71 @@ export default function MemberProfileScreen() {
             </View>
           )}
 
-          {/* Places */}
+          {/* ── Places & Recommendations — unified Instagram-style grid ── */}
           {!isMasked &&
             !member.hide_venue_log &&
-            (visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
+            (feedItems.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Places</Text>
+                <View style={styles.sectionLabelRow}>
+                  <Text style={styles.sectionLabel}>Places</Text>
+                  {feedItems.length > 0 && (
+                    <View style={styles.recBadge}>
+                      <Text style={styles.recBadgeText}>{feedItems.length}</Text>
+                    </View>
+                  )}
+                </View>
 
-                {visitedVenues.length > 0 && (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={{ marginHorizontal: -20 }}
-                    contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
-                  >
-                    {visitedVenues.map((venue) => (
+                {feedItems.length > 0 && (
+                  <View style={styles.feedGrid}>
+                    {feedItems.map((item) => (
                       <Pressable
-                        key={venue.id}
+                        key={item.venueId}
                         onPress={() => {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          router.push(`/venue/${venue.id}` as any);
+                          router.push(`/venue/${item.venueId}` as any);
                         }}
-                        style={({ pressed }) => [styles.venueChip, pressed && styles.venueChipPressed]}
+                        style={({ pressed }) => [styles.feedCell, pressed && { opacity: 0.82 }]}
                       >
-                        {venue.logo_url ? (
-                          <Image source={{ uri: venue.logo_url }} style={styles.venueChipLogo} />
-                        ) : null}
-                        <Text style={styles.venueChipText}>{venue.name}</Text>
+                        {item.imageUri ? (
+                          <Image
+                            source={{ uri: item.imageUri }}
+                            style={styles.feedCellImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={[styles.feedCellImage, styles.feedCellPlaceholder]}>
+                            <Ionicons name="storefront-outline" size={24} color={colors.stone} />
+                          </View>
+                        )}
+
+                        {/* Bottom gradient label */}
+                        <View style={styles.feedCellOverlay}>
+                          <Text style={styles.feedCellName} numberOfLines={2}>
+                            {item.venueName}
+                          </Text>
+                        </View>
+
+                        {/* Top-right badges */}
+                        <View style={styles.feedCellBadges}>
+                          {item.isVisited && (
+                            <View style={styles.feedBadge}>
+                              <Ionicons name="location" size={9} color="#fff" />
+                            </View>
+                          )}
+                          {item.isRecommended && (
+                            <View style={[styles.feedBadge, styles.feedBadgeRec]}>
+                              <Ionicons name="star" size={9} color="#fff" />
+                            </View>
+                          )}
+                        </View>
                       </Pressable>
                     ))}
-                  </ScrollView>
+                  </View>
                 )}
 
+                {/* Custom (non-HQ) places as tags below the grid */}
                 {(member.custom_places?.length ?? 0) > 0 && (
-                  <View style={[styles.tags, visitedVenues.length > 0 ? { marginTop: 12 } : {}]}>
+                  <View style={[styles.tags, feedItems.length > 0 ? { marginTop: 14 } : {}]}>
                     {member.custom_places!.map((place) => (
                       <View key={place} style={styles.tag}>
                         <Text style={styles.tagText}>{place}</Text>
@@ -569,51 +634,6 @@ export default function MemberProfileScreen() {
                 )}
               </View>
             )}
-
-          {/* Recommendations — 3-column image grid */}
-          {!isMasked && memberRecs.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionLabelRow}>
-                <Text style={styles.sectionLabel}>Recommendations</Text>
-                <View style={styles.recBadge}>
-                  <Text style={styles.recBadgeText}>{memberRecs.length}</Text>
-                </View>
-              </View>
-              <View style={styles.recGrid}>
-                {memberRecs.map((rec) => {
-                  const venue = recVenues[rec.venue_id];
-                  const imageUri = venue?.image_url ?? venue?.image_urls?.[0] ?? null;
-                  return (
-                    <Pressable
-                      key={rec.id}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        router.push(`/venue/${rec.venue_id}` as any);
-                      }}
-                      style={({ pressed }) => [styles.recGridCell, pressed && { opacity: 0.75 }]}
-                    >
-                      {imageUri ? (
-                        <Image
-                          source={{ uri: imageUri }}
-                          style={styles.recGridImage}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View style={[styles.recGridImage, styles.recGridPlaceholder]}>
-                          <Ionicons name="storefront-outline" size={22} color={colors.stone} />
-                        </View>
-                      )}
-                      <View style={styles.recGridLabel}>
-                        <Text style={styles.recGridVenueName} numberOfLines={1}>
-                          {rec.venue_name}
-                        </Text>
-                      </View>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          )}
 
           {/* Online links — no branded icons */}
           {!isMasked &&
@@ -949,14 +969,75 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
 
-  // Recommendations grid
+  // ── Instagram-style places & recs feed grid ───────────────────────────────
+  feedGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 2,
+    marginHorizontal: -2,
+  },
+  feedCell: {
+    width: (SCREEN_WIDTH - 40 - 4) / 3, // 3 columns with 2px gaps
+    aspectRatio: 1,
+    borderRadius: 3,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: colors.sand,
+  },
+  feedCellImage: {
+    width: "100%",
+    height: "100%",
+  },
+  feedCellPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  feedCellOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 7,
+    paddingTop: 20,
+    paddingBottom: 7,
+    backgroundColor: "rgba(0,0,0,0.38)",
+  },
+  feedCellName: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontFamily: fonts.semibold,
+    lineHeight: 13,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  feedCellBadges: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    flexDirection: "column",
+    gap: 3,
+  },
+  feedBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  feedBadgeRec: {
+    backgroundColor: "rgba(201,168,76,0.85)",
+  },
+
+  // Legacy — keep for sectionLabelRow recBadge usage
   recGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 2,
   },
   recGridCell: {
-    width: (SCREEN_WIDTH - 44) / 3, // (screen - 40px section padding - 4px for 2 gaps) / 3
+    width: (SCREEN_WIDTH - 44) / 3,
     aspectRatio: 1,
     borderRadius: 4,
     overflow: "hidden",
