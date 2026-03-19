@@ -107,7 +107,7 @@ HomeQuarters`;
 
 // ── Handler ───────────────────────────────────────────────────────────────────
 
-const FROM_EMAIL = "HomeQuarters <noreply@email.thehomequarters.com>";
+const FROM_EMAIL = "HomeQuarters <hello@email.thehomequarters.com>";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { email?: string; first_name?: string };

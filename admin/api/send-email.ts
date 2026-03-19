@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const FROM = "HomeQuarters <noreply@email.thehomequarters.com>";
+const FROM = "HomeQuarters <hello@email.thehomequarters.com>";
 const SUPPORT_EMAIL = "hello@thehomequarters.com";
 const APP_URL = "https://thehomequarters.com";
 const UNSUBSCRIBE_URL = `${APP_URL}/unsubscribe`;
