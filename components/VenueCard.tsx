@@ -204,7 +204,7 @@ export function VenueCard({
           resizeMode="cover"
         />
 
-        {/* Top-to-bottom dark scrim for readability */}
+        {/* Uniform dark scrim across entire image */}
         <View
           style={{
             position: "absolute",
@@ -212,19 +212,7 @@ export function VenueCard({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.18)",
-          }}
-        />
-
-        {/* Bottom gradient (stronger) */}
-        <View
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "65%",
-            backgroundColor: "rgba(0,0,0,0.52)",
+            backgroundColor: "rgba(0,0,0,0.45)",
           }}
         />
 
