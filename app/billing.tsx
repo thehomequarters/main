@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,54 +17,56 @@ import { useAuth } from "@/lib/auth";
 import { functions } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 
-// Pricing (monthly base, annual = 15% off)
-const PRICES = {
-  gold:     { monthly: 5,  annual: 51  },  // £60/yr → £51/yr
-  platinum: { monthly: 15, annual: 153 },  // £180/yr → £153/yr
-};
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared constants
+// ─────────────────────────────────────────────────────────────────────────────
 
+const PRICES = {
+  gold:     { monthly: 5,  annual: 51  },
+  platinum: { monthly: 15, annual: 153 },
+};
 
 const GOLD_FEATURES = [
   { icon: "storefront-outline" as const, text: "Deals at 15+ partner venues across the UK" },
-  { icon: "people-outline" as const, text: "Connect & Discover - full community access" },
-  { icon: "calendar-outline" as const, text: "Members-only events & social nights" },
-  { icon: "card-outline" as const, text: "Digital HQ membership card" },
-  { icon: "star-outline" as const, text: "Nominate friends to join the community" },
+  { icon: "people-outline" as const,     text: "Connect & Discover - full community access" },
+  { icon: "calendar-outline" as const,   text: "Members-only events & social nights" },
+  { icon: "card-outline" as const,       text: "Digital HQ membership card" },
+  { icon: "star-outline" as const,       text: "Nominate friends to join the community" },
 ];
 
 const PLATINUM_FEATURES = [
   { icon: "checkmark-circle-outline" as const, text: "Everything in Gold", dim: true },
-  { icon: "restaurant-outline" as const, text: "Member discounts at top restaurants & bars" },
-  { icon: "wine-outline" as const, text: "Exclusive rates at premium bars & lounges" },
-  { icon: "sparkles-outline" as const, text: "Curated experiences - events, stays & more" },
+  { icon: "restaurant-outline" as const,       text: "Member discounts at top restaurants & bars" },
+  { icon: "wine-outline" as const,             text: "Exclusive rates at premium bars & lounges" },
+  { icon: "sparkles-outline" as const,         text: "Curated experiences - events, stays & more" },
 ];
 
 const G = {
-  bg: "#1E1500",
-  border: "rgba(201,168,76,0.28)",
+  bg:             "#1E1500",
+  border:         "rgba(201,168,76,0.28)",
   borderSelected: "rgba(201,168,76,0.9)",
-  title: "#F5E6A0",
-  price: "#F5E6A0",
-  pricePer: "rgba(245,230,160,0.45)",
-  tag: "rgba(245,230,160,0.4)",
-  desc: "rgba(245,230,160,0.58)",
-  feature: "rgba(245,230,160,0.85)",
-  icon: "#C9A84C",
-  currentBg: "rgba(201,168,76,0.12)",
-  currentBorder: "rgba(201,168,76,0.3)",
-  currentText: "#C9A84C",
-  check: "#C9A84C",
+  title:          "#F5E6A0",
+  price:          "#F5E6A0",
+  pricePer:       "rgba(245,230,160,0.45)",
+  tag:            "rgba(245,230,160,0.4)",
+  desc:           "rgba(245,230,160,0.58)",
+  feature:        "rgba(245,230,160,0.85)",
+  icon:           "#C9A84C",
+  currentBg:      "rgba(201,168,76,0.12)",
+  currentBorder:  "rgba(201,168,76,0.3)",
+  currentText:    "#C9A84C",
+  check:          "#C9A84C",
 };
 
 const SUB_STATUS_LABELS: Record<string, string> = {
-  active: "Active",
+  active:   "Active",
   past_due: "Payment overdue",
   canceled: "Cancelled",
   trialing: "Trial",
 };
 
 const SUB_STATUS_COLORS: Record<string, string> = {
-  active: colors.green,
+  active:   colors.green,
   past_due: "#F5A623",
   canceled: "#FF6B6B",
   trialing: "#7B9CFF",
@@ -72,7 +75,145 @@ const SUB_STATUS_COLORS: Record<string, string> = {
 type Plan = "gold" | "platinum";
 type BillingInterval = "monthly" | "annual";
 
-export default function BillingScreen() {
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared nav bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+function NavBar({ onBack }: { onBack: () => void }) {
+  return (
+    <View style={styles.nav}>
+      <Pressable onPress={onBack} style={styles.backBtn}>
+        <Ionicons name="arrow-back" size={20} color={colors.dark} />
+      </Pressable>
+      <Text style={styles.navTitle}>Membership Plans</Text>
+      <View style={{ width: 36 }} />
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// iOS — App Store compliant view
+// No prices, no plan cards, no purchase CTA.
+// Apple guideline 3.1.1: subscriptions must not be sold inside the app unless
+// using IAP. Instead we direct users to the website with no pricing shown.
+// ─────────────────────────────────────────────────────────────────────────────
+
+function IOSBillingScreen() {
+  const router = useRouter();
+  const { profile } = useAuth();
+  const [loadingPortal, setLoadingPortal] = useState(false);
+
+  const isActive       = profile?.membership_status === "active";
+  const hasSubscription = !!profile?.stripe_customer_id;
+  const subStatus      = profile?.subscription_status;
+  const periodEnd      = profile?.current_period_end;
+
+  const tierLabel =
+    profile?.membership_tier === "platinum_card" ? "Platinum"
+    : profile?.membership_tier === "founding_member" ? "Founding Member"
+    : profile?.membership_tier === "committee_member" ? "Committee Member"
+    : "Gold";
+
+  const handleManageSubscription = async () => {
+    setLoadingPortal(true);
+    try {
+      const getPortalUrl = httpsCallable<{ return_url: string }, { url: string }>(
+        functions,
+        "getStripePortalUrl"
+      );
+      const result = await getPortalUrl({ return_url: "https://thehomequarters.com" });
+      await Linking.openURL(result.data.url);
+    } catch (err) {
+      console.error("Failed to open billing portal:", err);
+    } finally {
+      setLoadingPortal(false);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+      <NavBar onBack={() => router.back()} />
+
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+
+        <Text style={styles.heading}>Your membership</Text>
+        <Text style={styles.sub}>
+          Manage your HomeQuarters membership below.
+        </Text>
+
+        {/* Current plan status */}
+        {isActive && (
+          <View style={styles.iosStatusCard}>
+            <View style={styles.iosStatusRow}>
+              <View style={[styles.statusDot, { backgroundColor: SUB_STATUS_COLORS[subStatus ?? "active"] ?? colors.green }]} />
+              <Text style={styles.iosStatusTier}>{tierLabel} membership</Text>
+            </View>
+            {subStatus && (
+              <Text style={styles.iosStatusDetail}>
+                {SUB_STATUS_LABELS[subStatus] ?? subStatus}
+                {periodEnd && subStatus === "active"
+                  ? ` · Renews ${new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                  : null}
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* Info card — no pricing, no external purchase link */}
+        <View style={styles.iosInfoCard}>
+          <Ionicons name="globe-outline" size={20} color={colors.stone} style={{ marginBottom: 10 }} />
+          <Text style={styles.iosInfoTitle}>Manage your plan online</Text>
+          <Text style={styles.iosInfoBody}>
+            To subscribe, upgrade, or change your plan, visit{" "}
+            <Text style={styles.iosInfoUrl}>thehomequarters.com</Text>
+            {" "}from a web browser. Once your membership is active, it will automatically appear here.
+          </Text>
+        </View>
+
+        {/* What's included — no prices, just features */}
+        <View style={styles.iosFeaturesCard}>
+          <Text style={styles.iosFeaturesTitle}>What's included with membership</Text>
+          {GOLD_FEATURES.map((f, i) => (
+            <View key={i} style={styles.iosFeatureRow}>
+              <Ionicons name={f.icon} size={15} color={colors.stone} />
+              <Text style={styles.iosFeatureText}>{f.text}</Text>
+            </View>
+          ))}
+        </View>
+
+      </ScrollView>
+
+      {/* Footer — manage existing subscription only (no purchase CTA) */}
+      <View style={styles.footer}>
+        {hasSubscription ? (
+          <Pressable
+            onPress={handleManageSubscription}
+            disabled={loadingPortal}
+            style={({ pressed }) => [styles.manageBtn, { opacity: pressed || loadingPortal ? 0.75 : 1 }]}
+          >
+            {loadingPortal ? (
+              <ActivityIndicator size="small" color={colors.dark} />
+            ) : (
+              <>
+                <Ionicons name="settings-outline" size={16} color={colors.dark} />
+                <Text style={styles.manageBtnText}>Manage Subscription</Text>
+              </>
+            )}
+          </Pressable>
+        ) : null}
+
+        <Text style={styles.footerNote}>hello@thehomequarters.com</Text>
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Android — full plan selection UI with Stripe checkout
+// ─────────────────────────────────────────────────────────────────────────────
+
+function AndroidBillingScreen() {
   const router = useRouter();
   const { profile } = useAuth();
 
@@ -84,17 +225,17 @@ export default function BillingScreen() {
   );
   const [loadingPortal, setLoadingPortal] = useState(false);
 
-  const isActive = profile?.membership_status === "active";
-  const isGrace = profile?.membership_status === "accepted";
-  const currentTier = profile?.membership_tier;
-  const subStatus = profile?.subscription_status;
-  const periodEnd = profile?.current_period_end;
+  const isActive        = profile?.membership_status === "active";
+  const isGrace         = profile?.membership_status === "accepted";
+  const currentTier     = profile?.membership_tier;
+  const subStatus       = profile?.subscription_status;
+  const periodEnd       = profile?.current_period_end;
   const hasSubscription = !!profile?.stripe_customer_id;
 
   const currentPlanLabel =
-    currentTier === "platinum_card" ? "Platinum"
+    currentTier === "platinum_card"     ? "Platinum"
     : currentTier === "founding_member" ? "Founding Member"
-    : currentTier === "committee_member" ? "Committee"
+    : currentTier === "committee_member"? "Committee"
     : "Gold";
 
   const handleManageSubscription = async () => {
@@ -120,15 +261,7 @@ export default function BillingScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
-
-      {/* Nav */}
-      <View style={styles.nav}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={20} color={colors.dark} />
-        </Pressable>
-        <Text style={styles.navTitle}>Membership Plans</Text>
-        <View style={{ width: 36 }} />
-      </View>
+      <NavBar onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
@@ -141,33 +274,21 @@ export default function BillingScreen() {
             : "Select the plan that fits how you use HomeQuarters."}
         </Text>
 
-        {/* ── Billing interval toggle ── */}
+        {/* Billing interval toggle */}
         <View style={styles.intervalToggle}>
           <Pressable
             onPress={() => setBillingInterval("monthly")}
-            style={[
-              styles.intervalBtn,
-              billingInterval === "monthly" && styles.intervalBtnActive,
-            ]}
+            style={[styles.intervalBtn, billingInterval === "monthly" && styles.intervalBtnActive]}
           >
-            <Text style={[
-              styles.intervalBtnText,
-              billingInterval === "monthly" && styles.intervalBtnTextActive,
-            ]}>
+            <Text style={[styles.intervalBtnText, billingInterval === "monthly" && styles.intervalBtnTextActive]}>
               Monthly
             </Text>
           </Pressable>
           <Pressable
             onPress={() => setBillingInterval("annual")}
-            style={[
-              styles.intervalBtn,
-              billingInterval === "annual" && styles.intervalBtnActive,
-            ]}
+            style={[styles.intervalBtn, billingInterval === "annual" && styles.intervalBtnActive]}
           >
-            <Text style={[
-              styles.intervalBtnText,
-              billingInterval === "annual" && styles.intervalBtnTextActive,
-            ]}>
+            <Text style={[styles.intervalBtnText, billingInterval === "annual" && styles.intervalBtnTextActive]}>
               Annual
             </Text>
             <View style={styles.saveBadge}>
@@ -176,7 +297,7 @@ export default function BillingScreen() {
           </Pressable>
         </View>
 
-        {/* ── Subscription status chip (if has Stripe subscription) ── */}
+        {/* Subscription status chip */}
         {hasSubscription && subStatus && (
           <View style={[styles.statusRow, { borderColor: (SUB_STATUS_COLORS[subStatus] ?? colors.stone) + "33" }]}>
             <View style={[styles.statusDot, { backgroundColor: SUB_STATUS_COLORS[subStatus] ?? colors.stone }]} />
@@ -191,7 +312,7 @@ export default function BillingScreen() {
           </View>
         )}
 
-        {/* ── GOLD CARD ── */}
+        {/* Gold card */}
         <Pressable
           onPress={() => setSelected("gold")}
           style={[
@@ -252,7 +373,7 @@ export default function BillingScreen() {
           )}
         </Pressable>
 
-        {/* ── PLATINUM CARD ── */}
+        {/* Platinum card */}
         <Pressable
           onPress={() => setSelected("platinum")}
           style={[styles.card, styles.platCard, selected === "platinum" && styles.platSelected]}
@@ -332,7 +453,6 @@ export default function BillingScreen() {
       {/* Sticky CTA */}
       <View style={styles.footer}>
         {isOnSelectedPlan && hasSubscription ? (
-          // On this plan and has a Stripe subscription → show manage button
           <Pressable
             onPress={handleManageSubscription}
             disabled={loadingPortal}
@@ -348,12 +468,10 @@ export default function BillingScreen() {
             )}
           </Pressable>
         ) : isOnSelectedPlan ? (
-          // On this plan but no Stripe record (founding/committee/manually set)
           <View style={styles.managePill}>
             <Text style={styles.managePillText}>✓ You're on this plan · Contact us to make changes</Text>
           </View>
         ) : (
-          // Not on this plan - direct user to website (App Store 3.1.1 compliant)
           <View style={styles.websiteBox}>
             <Ionicons name="globe-outline" size={15} color={colors.stone} style={{ marginTop: 1 }} />
             <Text style={styles.websiteText}>
@@ -364,7 +482,6 @@ export default function BillingScreen() {
           </View>
         )}
 
-        {/* Manage subscription link if on a different plan but has subscription */}
         {hasSubscription && !isOnSelectedPlan && (
           <Pressable onPress={handleManageSubscription} disabled={loadingPortal}>
             <Text style={styles.manageLink}>
@@ -380,6 +497,18 @@ export default function BillingScreen() {
     </View>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Root export — platform gate
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function BillingScreen() {
+  return Platform.OS === "ios" ? <IOSBillingScreen /> : <AndroidBillingScreen />;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
@@ -425,7 +554,84 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // ── Subscription status chip ──
+  // ── iOS-specific ──────────────────────────────────────────────────────────
+  iosStatusCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+    marginBottom: 16,
+    gap: 6,
+  },
+  iosStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  iosStatusTier: {
+    color: colors.dark,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  iosStatusDetail: {
+    color: colors.stone,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  iosInfoCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    marginBottom: 16,
+    alignItems: "flex-start",
+  },
+  iosInfoTitle: {
+    color: colors.dark,
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 8,
+  },
+  iosInfoBody: {
+    color: colors.stone,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  iosInfoUrl: {
+    color: colors.dark,
+    fontWeight: "700",
+  },
+  iosFeaturesCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 20,
+    marginBottom: 16,
+    gap: 14,
+  },
+  iosFeaturesTitle: {
+    color: colors.dark,
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: 0.1,
+    marginBottom: 2,
+  },
+  iosFeatureRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  iosFeatureText: {
+    color: colors.stone,
+    fontSize: 13,
+    lineHeight: 19,
+    flex: 1,
+  },
+
+  // ── Subscription status chip (Android) ───────────────────────────────────
   statusRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -449,7 +655,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
 
-  // ── Plan cards ──
+  // ── Plan cards (Android) ──────────────────────────────────────────────────
   card: {
     borderRadius: 20,
     borderWidth: 2,
@@ -464,7 +670,6 @@ const styles = StyleSheet.create({
   platSelected: {
     borderColor: "rgba(232,232,232,0.55)",
   },
-
   currentBadge: {
     position: "absolute",
     top: 16,
@@ -493,51 +698,27 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.5,
   },
-
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     marginBottom: 14,
   },
-  tierDot: { width: 10, height: 10, borderRadius: 5 },
+  tierDot:  { width: 10, height: 10, borderRadius: 5 },
   tierName: { fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
-  tierTag: { fontSize: 12, fontWeight: "500", marginTop: 1 },
-
+  tierTag:  { fontSize: 12, fontWeight: "500", marginTop: 1 },
   priceWrap: { flexDirection: "row", alignItems: "baseline", gap: 2 },
-  price: { fontSize: 26, fontWeight: "800", letterSpacing: -0.5 },
+  price:    { fontSize: 26, fontWeight: "800", letterSpacing: -0.5 },
   pricePer: { fontSize: 13, fontWeight: "500" },
-
   tierDesc: { fontSize: 13, lineHeight: 21, marginBottom: 18 },
-
   featureList: { gap: 10, marginBottom: 16 },
-  featureRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  featureRow:  { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   featureText: { fontSize: 13, lineHeight: 19, flex: 1 },
-
-  esimPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.09)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 16,
-  },
-  esimPillText: {
-    color: "rgba(255,255,255,0.5)",
-    fontSize: 11,
-    fontWeight: "500",
-    letterSpacing: 0.2,
-  },
-
   selectedRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
   selectedText: { fontSize: 13, fontWeight: "600" },
+  annualEquiv: { fontSize: 10, fontWeight: "500", marginTop: 1 },
 
-  // ── Billing interval toggle ──
+  // ── Billing interval toggle (Android) ────────────────────────────────────
   intervalToggle: {
     flexDirection: "row",
     backgroundColor: colors.sand,
@@ -562,14 +743,8 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
   },
-  intervalBtnText: {
-    color: colors.stone,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  intervalBtnTextActive: {
-    color: colors.dark,
-  },
+  intervalBtnText:       { color: colors.stone, fontSize: 13, fontWeight: "600" },
+  intervalBtnTextActive: { color: colors.dark },
   saveBadge: {
     backgroundColor: colors.gold,
     borderRadius: 6,
@@ -582,11 +757,6 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.3,
   },
-  annualEquiv: {
-    fontSize: 10,
-    fontWeight: "500",
-    marginTop: 1,
-  },
 
   billingNote: {
     color: colors.stone,
@@ -597,7 +767,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  // ── Footer ──
+  // ── Footer ────────────────────────────────────────────────────────────────
   footer: {
     paddingHorizontal: 20,
     paddingTop: 12,
@@ -606,22 +776,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     gap: 10,
-  },
-  ctaBtn: {
-    backgroundColor: colors.gold,
-    borderRadius: 100,
-    paddingVertical: 16,
-    paddingHorizontal: 28,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  ctaBtnText: {
-    color: colors.dark,
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0.2,
   },
   manageBtn: {
     backgroundColor: colors.sand,
