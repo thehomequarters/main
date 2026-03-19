@@ -126,9 +126,9 @@ export default function SavedTab() {
       </View>
 
       {/* Content */}
-      <View style={{ paddingHorizontal: 20 }}>
+      <View>
         {loading ? null : savedVenues.length === 0 ? (
-          <View style={{ alignItems: "center", marginTop: 60, gap: 16 }}>
+          <View style={{ alignItems: "center", marginTop: 60, gap: 16, paddingHorizontal: 20 }}>
             <View
               style={{
                 width: 72,
@@ -179,6 +179,7 @@ export default function SavedTab() {
                   : undefined
               }
               tags={venue.tags}
+              city={venue.city}
               onPress={() => router.push(`/venue/${venue.id}`)}
               variant="list"
               venueId={venue.id}

@@ -323,7 +323,7 @@ export default function HomeTab() {
             )}
 
             {/* All Venues */}
-            <View style={{ paddingHorizontal: 20 }}>
+            <View>
               <Text
                 style={{
                   color: colors.stone,
@@ -332,6 +332,7 @@ export default function HomeTab() {
                   textTransform: "uppercase",
                   letterSpacing: 2.5,
                   marginBottom: 16,
+                  paddingHorizontal: 20,
                 }}
               >
                 All Venues
@@ -350,6 +351,7 @@ export default function HomeTab() {
                       : undefined
                   }
                   tags={venue.tags}
+                  city={venue.city}
                   onPress={() => router.push(`/venue/${venue.id}`)}
                   variant="list"
                   venueId={venue.id}
