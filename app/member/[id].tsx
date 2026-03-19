@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Linking,
+  Dimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -30,7 +31,8 @@ import * as Haptics from "expo-haptics";
 import { colors, fonts } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { Profile, Connection, Venue, Recommendation } from "@/lib/database.types";
-import { RecommendationCard } from "@/components/RecommendationCard";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 // ── Button press helpers ──────────────────────────────────────────────────────
 
@@ -66,30 +68,23 @@ export default function MemberProfileScreen() {
   const [actionLoading, setActionLoading] = useState(false);
   const [visitedVenues, setVisitedVenues] = useState<Venue[]>([]);
   const [memberRecs, setMemberRecs] = useState<Recommendation[]>([]);
+  const [recVenues, setRecVenues] = useState<Record<string, Venue>>({});
 
   // ── Animation values ──────────────────────────────────────────────────────
 
-  // Group 1 — avatar
-  const avatarOpacity  = useRef(new Animated.Value(0)).current;
-  const avatarScale    = useRef(new Animated.Value(0.84)).current;
+  const heroOpacity    = useRef(new Animated.Value(0)).current;
+  const heroScale      = useRef(new Animated.Value(1.04)).current;
 
-  // Group 2 — name + title + badge
   const nameOpacity    = useRef(new Animated.Value(0)).current;
   const nameTranslate  = useRef(new Animated.Value(12)).current;
 
-  // Group 3 — meta + bio + stats + locked
   const detailOpacity  = useRef(new Animated.Value(0)).current;
   const detailTranslate = useRef(new Animated.Value(10)).current;
 
-  // Group 4 — action buttons
   const actionsOpacity = useRef(new Animated.Value(0)).current;
 
-  // Group 5 — divider + content sections
   const sectionsOpacity   = useRef(new Animated.Value(0)).current;
   const sectionsTranslate = useRef(new Animated.Value(16)).current;
-
-  // Elevated member: breathing gold halo behind avatar
-  const ringPulse = useRef(new Animated.Value(0.15)).current;
 
   // CTA button press scales
   const connectScale = useRef(new Animated.Value(1)).current;
@@ -116,15 +111,27 @@ export default function MemberProfileScreen() {
             setConnection({ id: cSnap.docs[0].id, ...cSnap.docs[0].data() } as Connection);
           }
         }
-        const [visitsSnap, recsSnap] = await Promise.all([
-          getDocs(query(collection(db, "venue_visits"), where("member_id", "==", id))),
-          getDocs(query(collection(db, "recommendations"), where("author_id", "==", id), orderBy("created_at", "desc"))),
-        ]);
-        setMemberRecs(recsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation));
-        const venueIds = [...new Set(visitsSnap.docs.map((d: any) => d.data().venue_id as string))];
-        if (venueIds.length > 0) {
-          const venueDocs = await Promise.all(venueIds.map((vid) => getDoc(doc(db, "venues", vid))));
-          setVisitedVenues(venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue));
+        // Fetch venue visits and recommendations separately so one failure doesn't block the other
+        try {
+          const [visitsSnap, recsSnap] = await Promise.all([
+            getDocs(query(collection(db, "venue_visits"), where("member_id", "==", id))),
+            getDocs(query(collection(db, "recommendations"), where("author_id", "==", id), orderBy("created_at", "desc"))),
+          ]);
+          const recs = recsSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
+          setMemberRecs(recs);
+          const visitVenueIds = [...new Set(visitsSnap.docs.map((d: any) => d.data().venue_id as string))];
+          const recVenueIds = [...new Set(recs.map((r) => r.venue_id))];
+          const allVenueIds = [...new Set([...visitVenueIds, ...recVenueIds])];
+          if (allVenueIds.length > 0) {
+            const venueDocs = await Promise.all(allVenueIds.map((vid) => getDoc(doc(db, "venues", vid))));
+            const allVenues = venueDocs.filter((d) => d.exists()).map((d) => ({ id: d.id, ...d.data() }) as Venue);
+            setVisitedVenues(allVenues.filter((v) => visitVenueIds.includes(v.id)));
+            const venueMap: Record<string, Venue> = {};
+            allVenues.forEach((v) => { venueMap[v.id] = v; });
+            setRecVenues(venueMap);
+          }
+        } catch {
+          // Silently fail for recs/venues — not critical
         }
       } catch (e) {
         console.warn("loadMember:", e);
@@ -141,19 +148,17 @@ export default function MemberProfileScreen() {
     if (loading || !member) return;
 
     Animated.parallel([
-      // Avatar: spring scale + fade
-      Animated.spring(avatarScale, {
-        toValue: 1,
-        tension: 55,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(avatarOpacity, {
+      Animated.timing(heroOpacity, {
         toValue: 1,
         duration: 380,
         useNativeDriver: true,
       }),
-      // Name row: fade + rise
+      Animated.spring(heroScale, {
+        toValue: 1,
+        tension: 55,
+        friction: 9,
+        useNativeDriver: true,
+      }),
       Animated.timing(nameOpacity, {
         toValue: 1,
         duration: 440,
@@ -166,7 +171,6 @@ export default function MemberProfileScreen() {
         delay: 110,
         useNativeDriver: true,
       }),
-      // Detail block: fade + rise
       Animated.timing(detailOpacity, {
         toValue: 1,
         duration: 440,
@@ -179,14 +183,12 @@ export default function MemberProfileScreen() {
         delay: 230,
         useNativeDriver: true,
       }),
-      // Action buttons: fade
       Animated.timing(actionsOpacity, {
         toValue: 1,
         duration: 400,
         delay: 370,
         useNativeDriver: true,
       }),
-      // Sections: fade + rise
       Animated.timing(sectionsOpacity, {
         toValue: 1,
         duration: 500,
@@ -200,30 +202,6 @@ export default function MemberProfileScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Gold halo pulse for founding / committee members
-    const elevated =
-      member.membership_tier === "founding_member" ||
-      member.membership_tier === "committee_member";
-
-    if (elevated) {
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(ringPulse, {
-            toValue: 1,
-            duration: 2200,
-            useNativeDriver: true,
-          }),
-          Animated.timing(ringPulse, {
-            toValue: 0.15,
-            duration: 2200,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      loop.start();
-      return () => loop.stop();
-    }
   }, [loading, member]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -300,6 +278,14 @@ export default function MemberProfileScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/discover" as any);
+    }
+  };
+
   // ── Guards ────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -325,49 +311,73 @@ export default function MemberProfileScreen() {
   const isMasked    = member.profile_visibility === "connections" && !isConnected && !isSelf;
   const isElevated  = member.membership_tier === "founding_member" || member.membership_tier === "committee_member";
 
+  // ── Unified feed items (visited venues + recommendations merged by venue) ──
+  const feedItemsMap = new Map<string, {
+    venueId: string;
+    venueName: string;
+    imageUri: string | null;
+    isVisited: boolean;
+    isRecommended: boolean;
+  }>();
+  visitedVenues.forEach((venue) => {
+    feedItemsMap.set(venue.id, {
+      venueId: venue.id,
+      venueName: venue.name,
+      imageUri: venue.image_url ?? venue.image_urls?.[0] ?? null,
+      isVisited: true,
+      isRecommended: false,
+    });
+  });
+  memberRecs.forEach((rec) => {
+    const venue = recVenues[rec.venue_id];
+    const imageUri = venue?.image_url ?? venue?.image_urls?.[0] ?? null;
+    if (feedItemsMap.has(rec.venue_id)) {
+      feedItemsMap.get(rec.venue_id)!.isRecommended = true;
+    } else {
+      feedItemsMap.set(rec.venue_id, {
+        venueId: rec.venue_id,
+        venueName: rec.venue_name,
+        imageUri,
+        isVisited: false,
+        isRecommended: true,
+      });
+    }
+  });
+  const feedItems = Array.from(feedItemsMap.values());
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <View style={styles.root}>
-
-      {/* Floating back button */}
-      <Pressable onPress={() => router.back()} style={styles.backBtn}>
-        <Ionicons name="arrow-back" size={18} color={colors.dark} />
-      </Pressable>
-
       <ScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
 
-        {/* ── Hero ──────────────────────────────────────────────────────── */}
-        <View style={styles.hero}>
-
-          {/* Avatar with optional halo ring */}
-          <View style={styles.avatarContainer}>
-
-            {/* Breathing gold halo — only visible for elevated members */}
-            {isElevated && (
-              <Animated.View style={[styles.avatarHalo, { opacity: ringPulse }]} />
+        {/* ── Hero photo — full width square ───────────────────────────── */}
+        <View style={styles.heroContainer}>
+          <Animated.View style={[styles.heroImageWrap, { opacity: heroOpacity, transform: [{ scale: heroScale }] }]}>
+            {!isMasked && member.avatar_url ? (
+              <Image
+                source={{ uri: member.avatar_url }}
+                style={styles.heroImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.heroImage, styles.heroFallback]}>
+                <Text style={styles.heroInitials}>{initials.toUpperCase()}</Text>
+              </View>
             )}
+          </Animated.View>
 
-            {/* Avatar ring */}
-            <Animated.View
-              style={[
-                styles.avatarRing,
-                isElevated && styles.avatarRingGold,
-                { opacity: avatarOpacity, transform: [{ scale: avatarScale }] },
-              ]}
-            >
-              {!isMasked && member.avatar_url ? (
-                <Image source={{ uri: member.avatar_url }} style={styles.avatar} />
-              ) : (
-                <View style={[styles.avatar, styles.avatarFallback]}>
-                  <Text style={styles.avatarInitials}>{initials.toUpperCase()}</Text>
-                </View>
-              )}
-            </Animated.View>
-          </View>
+          {/* Floating back button over the hero */}
+          <Pressable onPress={handleBack} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={18} color={colors.dark} />
+          </Pressable>
+        </View>
+
+        {/* ── Profile info ─────────────────────────────────────────────── */}
+        <View style={styles.infoBlock}>
 
           {/* Name + committee badge */}
           <Animated.View
@@ -382,11 +392,11 @@ export default function MemberProfileScreen() {
                 : `${member.first_name} ${member.last_name}`}
             </Text>
             {!isMasked && member.membership_tier === "committee_member" && (
-              <Ionicons name="checkmark-circle" size={22} color="#4F8EF7" />
+              <Ionicons name="checkmark-circle" size={22} color="#4F8EF7" style={{ marginTop: 6 }} />
             )}
           </Animated.View>
 
-          {/* Title + role badge — same animation group as name */}
+          {/* Title + role badge */}
           <Animated.View
             style={[
               styles.nameSub,
@@ -394,9 +404,9 @@ export default function MemberProfileScreen() {
             ]}
           >
             {!isMasked && member.title ? (
-              <Text style={styles.title}>{member.title}</Text>
+              <Text style={styles.titleText}>{member.title}</Text>
             ) : isMasked ? (
-              <Text style={styles.title}>HQ Member</Text>
+              <Text style={styles.titleText}>HQ Member</Text>
             ) : null}
 
             {!isMasked && isElevated && (
@@ -408,7 +418,7 @@ export default function MemberProfileScreen() {
             )}
           </Animated.View>
 
-          {/* Meta + bio + stats + locked */}
+          {/* Meta + bio + locked */}
           <Animated.View
             style={[
               styles.detailBlock,
@@ -524,7 +534,7 @@ export default function MemberProfileScreen() {
           }}
         >
 
-          {/* Interests — pressable tags with haptic */}
+          {/* Interests */}
           {!isMasked && !member.hide_interests && (member.interests?.length ?? 0) > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Interests</Text>
@@ -550,40 +560,71 @@ export default function MemberProfileScreen() {
             </View>
           )}
 
-          {/* Places — venue chips with haptic */}
+          {/* ── Places & Recommendations — unified Instagram-style grid ── */}
           {!isMasked &&
             !member.hide_venue_log &&
-            (visitedVenues.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
+            (feedItems.length > 0 || (member.custom_places?.length ?? 0) > 0) && (
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>Places</Text>
+                <View style={styles.sectionLabelRow}>
+                  <Text style={styles.sectionLabel}>Places</Text>
+                  {feedItems.length > 0 && (
+                    <View style={styles.recBadge}>
+                      <Text style={styles.recBadgeText}>{feedItems.length}</Text>
+                    </View>
+                  )}
+                </View>
 
-                {visitedVenues.length > 0 && (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={{ marginHorizontal: -20 }}
-                    contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
-                  >
-                    {visitedVenues.map((venue) => (
+                {feedItems.length > 0 && (
+                  <View style={styles.feedGrid}>
+                    {feedItems.map((item) => (
                       <Pressable
-                        key={venue.id}
+                        key={item.venueId}
                         onPress={() => {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          router.push(`/venue/${venue.id}` as any);
+                          router.push(`/venue/${item.venueId}` as any);
                         }}
-                        style={({ pressed }) => [styles.venueChip, pressed && styles.venueChipPressed]}
+                        style={({ pressed }) => [styles.feedCell, pressed && { opacity: 0.82 }]}
                       >
-                        {venue.logo_url ? (
-                          <Image source={{ uri: venue.logo_url }} style={styles.venueChipLogo} />
-                        ) : null}
-                        <Text style={styles.venueChipText}>{venue.name}</Text>
+                        {item.imageUri ? (
+                          <Image
+                            source={{ uri: item.imageUri }}
+                            style={styles.feedCellImage}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={[styles.feedCellImage, styles.feedCellPlaceholder]}>
+                            <Ionicons name="storefront-outline" size={24} color={colors.stone} />
+                          </View>
+                        )}
+
+                        {/* Bottom gradient label */}
+                        <View style={styles.feedCellOverlay}>
+                          <Text style={styles.feedCellName} numberOfLines={2}>
+                            {item.venueName}
+                          </Text>
+                        </View>
+
+                        {/* Top-right badges */}
+                        <View style={styles.feedCellBadges}>
+                          {item.isVisited && (
+                            <View style={styles.feedBadge}>
+                              <Ionicons name="location" size={9} color="#fff" />
+                            </View>
+                          )}
+                          {item.isRecommended && (
+                            <View style={[styles.feedBadge, styles.feedBadgeRec]}>
+                              <Ionicons name="star" size={9} color="#fff" />
+                            </View>
+                          )}
+                        </View>
                       </Pressable>
                     ))}
-                  </ScrollView>
+                  </View>
                 )}
 
+                {/* Custom (non-HQ) places as tags below the grid */}
                 {(member.custom_places?.length ?? 0) > 0 && (
-                  <View style={[styles.tags, visitedVenues.length > 0 ? { marginTop: 12 } : {}]}>
+                  <View style={[styles.tags, feedItems.length > 0 ? { marginTop: 14 } : {}]}>
                     {member.custom_places!.map((place) => (
                       <View key={place} style={styles.tag}>
                         <Text style={styles.tagText}>{place}</Text>
@@ -594,27 +635,7 @@ export default function MemberProfileScreen() {
               </View>
             )}
 
-          {/* Recommendations */}
-          {!isMasked && memberRecs.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionLabelRow}>
-                <Text style={styles.sectionLabel}>Recommendations</Text>
-                <View style={styles.recBadge}>
-                  <Text style={styles.recBadgeText}>{memberRecs.length}</Text>
-                </View>
-              </View>
-              {memberRecs.map((rec) => (
-                <RecommendationCard
-                  key={rec.id}
-                  rec={rec}
-                  showVenue
-                  onPress={() => router.push(`/venue/${rec.venue_id}` as any)}
-                />
-              ))}
-            </View>
-          )}
-
-          {/* Social links — haptic + icon tiles */}
+          {/* Online links — no branded icons */}
           {!isMasked &&
             !member.hide_social_links &&
             (member.instagram_handle || member.linkedin_handle) && (
@@ -630,15 +651,13 @@ export default function MemberProfileScreen() {
                     style={({ pressed }) => [styles.socialRow, pressed && styles.socialRowPressed]}
                   >
                     <View style={styles.socialIconWrap}>
-                      <Ionicons name="logo-instagram" size={16} color="#C13584" />
+                      <Ionicons name="link-outline" size={15} color={colors.stone} />
                     </View>
-                    <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={13}
-                      color={colors.stone}
-                      style={{ marginLeft: "auto" }}
-                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.socialPlatform}>Instagram</Text>
+                      <Text style={styles.socialHandle}>@{member.instagram_handle}</Text>
+                    </View>
+                    <Ionicons name="arrow-forward" size={13} color={colors.stone} />
                   </Pressable>
                 )}
 
@@ -658,21 +677,19 @@ export default function MemberProfileScreen() {
                     ]}
                   >
                     <View style={styles.socialIconWrap}>
-                      <Ionicons name="logo-linkedin" size={16} color="#0A66C2" />
+                      <Ionicons name="link-outline" size={15} color={colors.stone} />
                     </View>
-                    <Text style={styles.socialHandle}>
-                      {member.linkedin_handle!.startsWith("http")
-                        ? member.linkedin_handle!
-                            .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "")
-                            .replace(/\/$/, "") || "LinkedIn"
-                        : member.linkedin_handle}
-                    </Text>
-                    <Ionicons
-                      name="arrow-forward"
-                      size={13}
-                      color={colors.stone}
-                      style={{ marginLeft: "auto" }}
-                    />
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.socialPlatform}>LinkedIn</Text>
+                      <Text style={styles.socialHandle}>
+                        {member.linkedin_handle!.startsWith("http")
+                          ? member.linkedin_handle!
+                              .replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/, "")
+                              .replace(/\/$/, "") || "LinkedIn"
+                          : member.linkedin_handle}
+                      </Text>
+                    </View>
+                    <Ionicons name="arrow-forward" size={13} color={colors.stone} />
                   </Pressable>
                 )}
               </View>
@@ -680,7 +697,7 @@ export default function MemberProfileScreen() {
 
         </Animated.View>
 
-        {/* Member code — subtle signature at the bottom */}
+        {/* Member code */}
         <Animated.Text style={[styles.code, { opacity: sectionsOpacity }]}>
           {member.member_code}
         </Animated.Text>
@@ -704,7 +721,40 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // ── Back button — floating ────────────────────────────────────────────────
+  scroll: {
+    paddingBottom: 56,
+    alignItems: "center",
+  },
+
+  // ── Hero image — full width square ────────────────────────────────────────
+  heroContainer: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH, // square
+    position: "relative",
+    backgroundColor: colors.sand,
+  },
+  heroImageWrap: {
+    width: "100%",
+    height: "100%",
+  },
+  heroImage: {
+    width: "100%",
+    height: "100%",
+  },
+  heroFallback: {
+    backgroundColor: colors.sand,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  heroInitials: {
+    color: colors.dark,
+    fontSize: 80,
+    fontFamily: fonts.display,
+    letterSpacing: 2,
+    opacity: 0.4,
+  },
+
+  // ── Back button — floats over hero ────────────────────────────────────────
   backBtn: {
     position: "absolute",
     top: Platform.OS === "ios" ? 56 : 40,
@@ -713,102 +763,52 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.92)",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "rgba(0,0,0,0.08)",
     justifyContent: "center",
     alignItems: "center",
-  },
-
-  scroll: {
-    paddingTop: Platform.OS === "ios" ? 110 : 96,
-    paddingBottom: 56,
-    alignItems: "center",
-  },
-
-  // ── Hero ──────────────────────────────────────────────────────────────────
-  hero: {
-    width: "100%",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-
-  // Avatar
-  avatarContainer: {
-    width: 148,
-    height: 148,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  avatarHalo: {
-    position: "absolute",
-    width: 168,
-    height: 168,
-    borderRadius: 84,
-    backgroundColor: "rgba(201,168,76,0.18)",
-  },
-  avatarRing: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 3,
-    borderColor: colors.border,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.09,
-    shadowRadius: 14,
-    elevation: 5,
-    overflow: "hidden",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  avatarRingGold: {
-    borderColor: colors.gold,
-  },
-  avatar: {
+
+  // ── Profile info block ────────────────────────────────────────────────────
+  infoBlock: {
     width: "100%",
-    height: "100%",
-    borderRadius: 70,
-  },
-  avatarFallback: {
-    backgroundColor: colors.sand,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarInitials: {
-    color: colors.dark,
-    fontSize: 44,
-    fontFamily: fonts.display,
-    letterSpacing: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 28,
+    alignItems: "flex-start",
   },
 
   // Name
   nameRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 8,
     marginBottom: 4,
   },
   name: {
     color: colors.ink,
-    fontSize: 36,
+    fontSize: 32,
     fontFamily: fonts.display,
     letterSpacing: 0.3,
-    textAlign: "center",
+    flex: 1,
   },
   nameSub: {
-    alignItems: "center",
     width: "100%",
   },
-  title: {
+  titleText: {
     color: colors.stone,
     fontSize: 14,
     fontFamily: fonts.medium,
-    textAlign: "center",
     marginBottom: 12,
   },
   roleBadge: {
-    alignSelf: "center",
+    alignSelf: "flex-start",
     backgroundColor: colors.goldLight,
     borderWidth: 1,
     borderColor: "rgba(201,168,76,0.30)",
@@ -827,14 +827,13 @@ const styles = StyleSheet.create({
 
   // Detail block
   detailBlock: {
-    alignItems: "center",
     width: "100%",
   },
   metaRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   metaText: {
     color: colors.stone,
@@ -850,15 +849,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fonts.body,
     lineHeight: 24,
-    textAlign: "center",
-    marginBottom: 20,
-    paddingHorizontal: 8,
+    marginBottom: 16,
   },
   statsRow: {
     flexDirection: "row",
     alignItems: "baseline",
     gap: 5,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   statNum: {
     color: colors.dark,
@@ -874,7 +871,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: colors.white,
@@ -893,6 +890,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     width: "100%",
+    marginTop: 4,
   },
   actionBtnWrap: {
     flex: 1,
@@ -971,6 +969,104 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
 
+  // ── Instagram-style places & recs feed grid ───────────────────────────────
+  feedGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 2,
+    marginHorizontal: -2,
+  },
+  feedCell: {
+    width: (SCREEN_WIDTH - 40 - 4) / 3, // 3 columns with 2px gaps
+    aspectRatio: 1,
+    borderRadius: 3,
+    overflow: "hidden",
+    position: "relative",
+    backgroundColor: colors.sand,
+  },
+  feedCellImage: {
+    width: "100%",
+    height: "100%",
+  },
+  feedCellPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  feedCellOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 7,
+    paddingTop: 20,
+    paddingBottom: 7,
+    backgroundColor: "rgba(0,0,0,0.38)",
+  },
+  feedCellName: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontFamily: fonts.semibold,
+    lineHeight: 13,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  feedCellBadges: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    flexDirection: "column",
+    gap: 3,
+  },
+  feedBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  feedBadgeRec: {
+    backgroundColor: "rgba(201,168,76,0.85)",
+  },
+
+  // Legacy — keep for sectionLabelRow recBadge usage
+  recGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 2,
+  },
+  recGridCell: {
+    width: (SCREEN_WIDTH - 44) / 3,
+    aspectRatio: 1,
+    borderRadius: 4,
+    overflow: "hidden",
+    position: "relative",
+  },
+  recGridImage: {
+    width: "100%",
+    height: "100%",
+  },
+  recGridPlaceholder: {
+    backgroundColor: colors.sand,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  recGridLabel: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.42)",
+    paddingHorizontal: 6,
+    paddingVertical: 5,
+  },
+  recGridVenueName: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontFamily: fonts.semibold,
+  },
+
   // Tags
   tags: {
     flexDirection: "row",
@@ -989,7 +1085,6 @@ const styles = StyleSheet.create({
     opacity: 0.65,
     backgroundColor: colors.sand,
   },
-
   tagText: {
     color: colors.dark,
     fontSize: 13,
@@ -1047,14 +1142,20 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   socialIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: colors.white,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: colors.sand,
     borderWidth: 1,
     borderColor: colors.border,
     justifyContent: "center",
     alignItems: "center",
+  },
+  socialPlatform: {
+    color: colors.stone,
+    fontSize: 11,
+    fontFamily: fonts.medium,
+    marginBottom: 1,
   },
   socialHandle: {
     color: colors.dark,

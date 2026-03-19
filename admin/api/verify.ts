@@ -83,17 +83,22 @@ async function verifyHandler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Duplicate check: same member + deal + venue within 24 hours
+  // Use equality-only query to avoid requiring a composite index; filter by time in JS
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const dupeSnap = await db
     .collection("redemptions")
     .where("member_id", "==", data.member_id)
     .where("deal_id", "==", data.deal_id)
     .where("venue_id", "==", data.venue_id)
-    .where("redeemed_at", ">", since)
-    .limit(1)
+    .limit(10)
     .get();
 
-  if (!dupeSnap.empty) {
+  const isDupe = dupeSnap.docs.some((d) => {
+    const redeemedAt = d.data().redeemed_at as string | undefined;
+    return !!redeemedAt && redeemedAt > since;
+  });
+
+  if (isDupe) {
     return res.status(409).json({
       error: "This deal was already redeemed at this venue today.",
     });

@@ -263,7 +263,7 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
 
-          <Pressable onPress={() => router.back()} style={{ marginTop: 24 }}>
+          <Pressable onPress={() => router.push("/apply" as any)} style={{ marginTop: 24 }}>
             <Text
               style={{
                 color: colors.stone,

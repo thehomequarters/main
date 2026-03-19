@@ -179,13 +179,14 @@ export default function OnboardingScreen() {
         </Animated.View>
       )}
 
-      {/* Bottom controls — branding + dots + CTAs */}
-      <Animated.View style={[styles.bottomControls, { opacity: ctaOpacity }]}>
-        <Animated.View style={[styles.brandingBlock, { opacity: logoOpacity }]} pointerEvents="none">
-          <Text style={styles.logoText}>HQ</Text>
-          <Text style={styles.logoSubtext}>HOMEQUARTERS</Text>
-        </Animated.View>
+      {/* Top branding — logo + wordmark */}
+      <Animated.View style={[styles.brandingBlock, { opacity: logoOpacity }]} pointerEvents="none">
+        <Text style={styles.logoText}>HQ</Text>
+        <Text style={styles.logoSubtext}>HOMEQUARTERS</Text>
+      </Animated.View>
 
+      {/* Bottom controls — dots + CTAs */}
+      <Animated.View style={[styles.bottomControls, { opacity: ctaOpacity }]}>
         {/* Slide dots */}
         {slides.length > 1 && (
           <View style={styles.dots}>
@@ -258,8 +259,11 @@ const styles = StyleSheet.create({
     lineHeight: 42,
   },
   brandingBlock: {
+    position: "absolute",
+    top: 64,
+    left: 0,
+    right: 0,
     alignItems: "center",
-    marginBottom: 14,
     gap: 4,
   },
   logoText: {

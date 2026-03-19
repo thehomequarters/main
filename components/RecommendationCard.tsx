@@ -9,6 +9,7 @@ interface Props {
   /** Show venue name — useful on profile view where multiple venues appear */
   showVenue?: boolean;
   onPress?: () => void;
+  onAuthorPress?: () => void;
 }
 
 /** Relative time helper */
@@ -23,7 +24,7 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-export function RecommendationCard({ rec, showVenue = false, onPress }: Props) {
+export function RecommendationCard({ rec, showVenue = false, onPress, onAuthorPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
@@ -59,13 +60,16 @@ export function RecommendationCard({ rec, showVenue = false, onPress }: Props) {
 
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-            <Text style={{ color: colors.dark, fontSize: 13, fontFamily: fonts.semibold }}>
-              {rec.author_name}
-            </Text>
+            <Pressable onPress={onAuthorPress} disabled={!onAuthorPress}>
+              <Text style={{ color: colors.dark, fontSize: 13, fontFamily: fonts.semibold }}>
+                {rec.author_name}
+              </Text>
+            </Pressable>
             {rec.author_tier === "committee_member" && (
               <Ionicons name="checkmark-circle" size={13} color="#4F8EF7" />
             )}
           </View>
+
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             {showVenue && (
               <>

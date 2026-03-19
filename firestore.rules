@@ -217,6 +217,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ──── Recommendations ────
+    match /recommendations/{recommendationId} {
+      allow read: if isAuth();
+      allow create: if isActiveMember() &&
+        request.resource.data.author_id == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     // ──── Conversations ────
     match /conversations/{conversationId} {
       allow read: if isAuth() &&

@@ -445,11 +445,16 @@ export default function ConnectTab() {
             borderColor: colors.border,
             justifyContent: "center",
             alignItems: "center",
+            overflow: "hidden",
           }}
         >
-          <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
-            {(profile?.first_name?.[0] ?? "")}{(profile?.last_name?.[0] ?? "")}
-          </Text>
+          {profile?.avatar_url ? (
+            <Image source={{ uri: profile.avatar_url }} style={{ width: 40, height: 40 }} resizeMode="cover" />
+          ) : (
+            <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700" }}>
+              {(profile?.first_name?.[0] ?? "")}{(profile?.last_name?.[0] ?? "")}
+            </Text>
+          )}
         </Pressable>
         </View>
       </View>
@@ -523,17 +528,16 @@ export default function ConnectTab() {
                 borderColor: colors.border,
                 justifyContent: "center",
                 alignItems: "center",
+                overflow: "hidden",
               }}
             >
-              <Text
-                style={{
-                  color: colors.dark,
-                  fontSize: 12,
-                  fontWeight: "700",
-                }}
-              >
-                {initials}
-              </Text>
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={{ width: 36, height: 36 }} resizeMode="cover" />
+              ) : (
+                <Text style={{ color: colors.dark, fontSize: 12, fontWeight: "700" }}>
+                  {initials}
+                </Text>
+              )}
             </View>
             <Text
               style={{
@@ -1034,17 +1038,16 @@ export default function ConnectTab() {
                   borderColor: colors.border,
                   justifyContent: "center",
                   alignItems: "center",
+                  overflow: "hidden",
                 }}
               >
-                <Text
-                  style={{
-                    color: colors.dark,
-                    fontSize: 10,
-                    fontWeight: "700",
-                  }}
-                >
-                  {initials}
-                </Text>
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={{ width: 32, height: 32 }} resizeMode="cover" />
+                ) : (
+                  <Text style={{ color: colors.dark, fontSize: 10, fontWeight: "700" }}>
+                    {initials}
+                  </Text>
+                )}
               </View>
               <TextInput
                 value={newComment}
@@ -1155,7 +1158,7 @@ export default function ConnectTab() {
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8, marginBottom: 16 }}
+                contentContainerStyle={{ gap: 8, marginBottom: 16, alignItems: "flex-start" }}
               >
                 {TOPIC_OPTIONS.map((topic) => (
                   <Pressable

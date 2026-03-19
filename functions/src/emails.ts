@@ -7,6 +7,13 @@
 const BASE_URL = process.env.APP_BASE_URL ?? "https://thehomequarters.com";
 const UNSUBSCRIBE_URL = `${BASE_URL}/unsubscribe`;
 
+// Deep-link targets — universal links open the app directly when installed,
+// falling back to the web. Each path maps to an Expo Router screen.
+const DISCOVER_URL  = `${BASE_URL}/discover`;   // /(tabs)/discover
+const BILLING_URL   = `${BASE_URL}/billing`;    // /billing (plan selection)
+const NOMINATE_URL  = `${BASE_URL}/nominate`;   // /nominate (invite a member)
+const CONNECT_URL   = `${BASE_URL}/connect`;    // /(tabs)/connect (member directory)
+
 function wrap(content: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -316,7 +323,7 @@ export function friendAcceptedHtml(opts: {
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
       They&rsquo;re now a full member of HomeQuarters. Thank you for your recommendation - the quality of our community is built on the trust of people like you.
     </p>
-    ${ctaButton("Open HomeQuarters", BASE_URL)}
+    ${ctaButton("Find them on Connect", CONNECT_URL)}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
       Your vouching record reflects the strength and character of your network. We appreciate your contribution to the community.
@@ -349,7 +356,7 @@ export function inviteeAppliedHtml(opts: {
     <p style="margin:0 0 28px;color:#9A8E82;font-size:14px;line-height:22px;">
       Their application is now with the membership committee. You&rsquo;ve already counted as one of their vouches by virtue of your invitation. You can also vouch for them directly in the app using their application code.
     </p>
-    ${ctaButton("Open HomeQuarters", BASE_URL)}
+    ${ctaButton("Open Discover", DISCOVER_URL)}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
       Thank you for introducing great people to the community. Your invitation reflects your trust in this person.
@@ -546,7 +553,7 @@ export function welcomeDiscoverNudgeHtml(opts: { firstName: string }): string {
     <p style="margin:0 0 28px;color:#9A8E82;font-size:13px;line-height:21px;">
       Open the app, tap <strong style="color:#1C1C1E;">Discover</strong>, and share something - anything. The community will be glad you did.
     </p>
-    ${ctaButton("Post on Discover", BASE_URL)}
+    ${ctaButton("Post on Discover", DISCOVER_URL)}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
       Not sure what to post? Share a place you love, a photo from your travels, or simply introduce yourself. There&rsquo;s no wrong answer here.
@@ -566,7 +573,7 @@ Your first post is waiting. Open the app, tap Discover, and share something. A p
 
 The community will be glad you did.
 
-${BASE_URL}
+${DISCOVER_URL}
 
 HomeQuarters`;
 }
@@ -625,7 +632,7 @@ export function membershipAcceptedHtml(opts: {
     </p>
 
     <!-- Membership CTA -->
-    ${ctaButton("Choose your plan", `${BASE_URL}/membership`, "#C9A84C")}
+    ${ctaButton("Choose your plan", BILLING_URL, "#C9A84C")}
 
     ${goldDivider()}
 
@@ -682,7 +689,7 @@ Welcome to HomeQuarters. Your application has been approved.
 
 You have 30 free days to explore the app before your membership begins. When you're ready, choose a plan - your support is what keeps this community, the app, and our partner venues growing.
 
-Choose your plan: ${BASE_URL}/membership
+Choose your plan: ${BILLING_URL}
 
 WHY YOUR MEMBERSHIP MATTERS
 - Supports our growing member community
@@ -780,7 +787,7 @@ export function graceReminderHtml(opts: {
 
     ${GRACE_VALUE_BLOCK}
 
-    ${ctaButton("Choose your plan", `${BASE_URL}/membership`, "#C9A84C")}
+    ${ctaButton("Choose your plan", BILLING_URL, "#C9A84C")}
 
     ${goldDivider()}
 
@@ -818,7 +825,7 @@ Your membership supports:
 - New features and product improvements
 - Bringing more partner venues on board
 
-Choose your plan: ${BASE_URL}/membership
+Choose your plan: ${BILLING_URL}
 
 ${closing}
 
@@ -857,7 +864,7 @@ export function paymentConfirmedHtml(opts: {
     ${ctaButton("Open HomeQuarters", BASE_URL)}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
-      Questions about billing? Visit Account &rsaquo; Billing in the app, or reply to this email. You can manage or cancel your subscription at any time.
+      Questions about billing? <a href="${BILLING_URL}" style="color:#1C1C1E;font-weight:600;">Visit Billing</a> in the app, or reply to this email. You can manage or cancel your subscription at any time.
     </p>
   `;
   return wrap(body);
@@ -1040,7 +1047,7 @@ export function welcomeInviteNudgeHtml(opts: { firstName: string }): string {
         </td>
       </tr>
     </table>
-    ${ctaButton("Nominate a member", BASE_URL)}
+    ${ctaButton("Nominate a member", NOMINATE_URL)}
     ${goldDivider()}
     <p style="margin:0;color:#9A8E82;font-size:13px;line-height:21px;">
       Your nomination is a personal endorsement — it means you&rsquo;re vouching for this person. Only invite people you genuinely believe would add to the community.
@@ -1063,7 +1070,7 @@ HOW TO INVITE SOMEONE
 
 Your nomination is a personal endorsement. Only invite people you genuinely believe belong here.
 
-Open the app: ${BASE_URL}
+Open the app: ${NOMINATE_URL}
 
 HomeQuarters`;
 }

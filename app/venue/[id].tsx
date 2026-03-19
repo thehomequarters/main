@@ -10,6 +10,7 @@ import {
   Linking,
   Share,
   Platform,
+  Alert,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from "react-native";
@@ -53,7 +54,7 @@ const PLACEHOLDER_IMAGES: Record<string, string> = {
 export default function VenueDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const isGrace = profile?.membership_status === "accepted";
   const [venue, setVenue] = useState<Venue | null>(null);
@@ -102,21 +103,25 @@ export default function VenueDetailScreen() {
 
   // Live recommendations listener
   useEffect(() => {
-    if (!id) return;
+    if (!id || !user?.uid) return;
     const q = query(
       collection(db, "recommendations"),
       where("venue_id", "==", id),
       orderBy("created_at", "desc")
     );
-    const unsub = onSnapshot(q, (snap) => {
-      const recs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
-      setRecommendations(recs);
-      if (profile?.id) {
-        setHasRecommended(recs.some((r) => r.author_id === profile.id));
-      }
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const recs = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Recommendation);
+        setRecommendations(recs);
+        if (profile?.id) {
+          setHasRecommended(recs.some((r) => r.author_id === profile.id));
+        }
+      },
+      (err) => console.warn("recommendations snapshot error:", err)
+    );
     return unsub;
-  }, [id, profile?.id]);
+  }, [id, user?.uid, profile?.id]);
 
   const handleSubmitRecommendation = async () => {
     if (!profile || !venue) return;
@@ -143,8 +148,9 @@ export default function VenueDetailScreen() {
       setRecImageUri(null);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       toast("Recommendation added!");
-    } catch {
-      toast("Failed to submit. Please try again.", "error");
+    } catch (e) {
+      console.error("handleSubmitRecommendation error:", e);
+      Alert.alert("Error", "Failed to submit recommendation. Please try again.");
     } finally {
       setRecSubmitting(false);
     }
@@ -726,53 +732,52 @@ export default function VenueDetailScreen() {
 
             {/* Recommend button */}
             <Pressable
-              onPress={() => setShowRecModal(true)}
+              onPress={() => isGrace ? router.push("/activate") : setShowRecModal(true)}
               style={{
                 flex: 1,
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 7,
+                gap: 5,
                 backgroundColor: hasRecommended ? "rgba(201,168,76,0.08)" : colors.white,
                 borderRadius: 12,
                 borderWidth: 1,
                 borderColor: hasRecommended ? "rgba(201,168,76,0.35)" : colors.border,
                 paddingVertical: 13,
+                paddingHorizontal: 6,
+                overflow: "hidden",
               }}
             >
               <Ionicons name="star" size={16} color={hasRecommended ? "#C9A84C" : colors.dark} />
-              <Text style={{ color: hasRecommended ? "#C9A84C" : colors.dark, fontSize: 13, fontWeight: "600" }}>
+              <Text
+                numberOfLines={1}
+                style={{ color: hasRecommended ? "#C9A84C" : colors.dark, fontSize: hasRecommended ? 12 : 13, fontWeight: "600", flexShrink: 1 }}
+              >
                 {hasRecommended ? "Recommended" : "Recommend"}
               </Text>
             </Pressable>
           </View>
 
-          {/* Recommendations section */}
-          <View style={{ marginBottom: 32 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-              <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" }}>
-                Member Recommendations
-              </Text>
-              {recommendations.length > 0 && (
+          {/* Recommendations section — hidden when empty */}
+          {recommendations.length > 0 && (
+            <View style={{ marginBottom: 32 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                <Text style={{ color: colors.dark, fontSize: 13, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" }}>
+                  Member Recommendations
+                </Text>
                 <View style={{ backgroundColor: "rgba(201,168,76,0.10)", borderRadius: 20, borderWidth: 1, borderColor: "rgba(201,168,76,0.25)", paddingHorizontal: 10, paddingVertical: 4 }}>
                   <Text style={{ color: "#C9A84C", fontSize: 12, fontWeight: "700" }}>{recommendations.length}</Text>
                 </View>
-              )}
-            </View>
-
-            {recommendations.length === 0 ? (
-              <View style={{ backgroundColor: colors.white, borderRadius: 14, borderWidth: 1, borderColor: colors.border, padding: 20, alignItems: "center" }}>
-                <Ionicons name="star-outline" size={28} color={colors.border} style={{ marginBottom: 10 }} />
-                <Text style={{ color: colors.stone, fontSize: 13, textAlign: "center" }}>
-                  No recommendations yet.{"\n"}Be the first to recommend this venue.
-                </Text>
               </View>
-            ) : (
-              recommendations.map((rec) => (
-                <RecommendationCard key={rec.id} rec={rec} />
-              ))
-            )}
-          </View>
+              {recommendations.map((rec) => (
+                <RecommendationCard
+                  key={rec.id}
+                  rec={rec}
+                  onAuthorPress={() => router.push(`/member/${rec.author_id}` as any)}
+                />
+              ))}
+            </View>
+          )}
 
         </View>
       </ScrollView>
@@ -796,8 +801,8 @@ export default function VenueDetailScreen() {
             <Text style={{ color: colors.dark, fontSize: 16, fontWeight: "700" }}>Recommend</Text>
             <Pressable
               onPress={handleSubmitRecommendation}
-              disabled={recSubmitting || (!recText.trim() && !recImageUri)}
-              style={{ opacity: recSubmitting || (!recText.trim() && !recImageUri) ? 0.4 : 1 }}
+              disabled={recSubmitting}
+              style={{ opacity: recSubmitting ? 0.4 : 1 }}
             >
               {recSubmitting
                 ? <ActivityIndicator size="small" color={colors.dark} />

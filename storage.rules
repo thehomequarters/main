@@ -35,6 +35,22 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
 
+    // ──── Group chat images ────
+    match /group_chat/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // ──── Recommendation images ────
+    match /recommendations/{fileName} {
+      allow read: if isAuth();
+      allow write: if isAuth()
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
     // ──── Admin media uploads ────
     // Public read so hosted URLs work in the app and on the web.
     // Write requires auth + 20 MB limit + images only.
