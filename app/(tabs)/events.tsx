@@ -36,7 +36,7 @@ const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
 ];
 
 export default function EventsTab() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [events, setEvents] = useState<HQEvent[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingCounts, setBookingCounts] = useState<Record<string, number>>(
@@ -54,9 +54,18 @@ export default function EventsTab() {
       where("is_active", "==", true)
     );
     const eventsSnap = await getDocs(eventsQuery);
+    const myHomeland = profile?.homeland;
     const eventList = eventsSnap.docs
       .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
-      .sort((a, b) => a.date.localeCompare(b.date));
+      .sort((a, b) => {
+        // Homeland-matching events float to the top within date order
+        if (myHomeland) {
+          const aMatch = (a.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+          const bMatch = (b.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+          if (aMatch !== bMatch) return aMatch - bMatch;
+        }
+        return a.date.localeCompare(b.date);
+      });
     setEvents(eventList);
 
     // Fetch current user's bookings
@@ -81,7 +90,7 @@ export default function EventsTab() {
     setBookingCounts(counts);
 
     setLoading(false);
-  }, [user?.uid]);
+  }, [user?.uid, profile?.homeland]);
 
   useEffect(() => {
     fetchEvents();
@@ -233,7 +242,9 @@ export default function EventsTab() {
             marginTop: 4,
           }}
         >
-          Discover what's happening in Harare
+          {profile?.homeland
+            ? `Events for the ${profile.homeland} diaspora & beyond`
+            : "Discover events across the community"}
         </Text>
       </View>
 

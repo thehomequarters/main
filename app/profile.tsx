@@ -10,6 +10,8 @@ import {
   Platform,
   Image,
   ActivityIndicator,
+  Modal,
+  FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, updateDoc } from "firebase/firestore";
@@ -19,6 +21,7 @@ import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickImage, uploadAvatar } from "@/lib/storage";
 import type { MemberIndustry } from "@/lib/database.types";
+import { HOMELANDS } from "@/app/apply";
 
 const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
   { key: "creative", label: "Creative" },
@@ -91,6 +94,8 @@ export default function ProfileScreen() {
   const [title, setTitle] = useState(profile?.title ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [city, setCity] = useState(profile?.city ?? "");
+  const [homeland, setHomeland] = useState(profile?.homeland ?? "");
+  const [showHomelandPicker, setShowHomelandPicker] = useState(false);
   const [industry, setIndustry] = useState<MemberIndustry | null>(
     profile?.industry ?? null
   );
@@ -133,6 +138,7 @@ export default function ProfileScreen() {
     title !== (profile?.title ?? "") ||
     bio !== (profile?.bio ?? "") ||
     city !== (profile?.city ?? "") ||
+    homeland !== (profile?.homeland ?? "") ||
     industry !== (profile?.industry ?? null) ||
     interestsText !== (profile?.interests ?? []).join(", ");
 
@@ -157,6 +163,7 @@ export default function ProfileScreen() {
         title: title.trim() || null,
         bio: bio.trim() || null,
         city: city.trim() || null,
+        homeland: homeland || null,
         industry: industry,
         interests: interests,
       });
@@ -365,7 +372,7 @@ export default function ProfileScreen() {
           <FieldInput
             value={phone}
             onChangeText={setPhone}
-            placeholder="+263 77 000 0000"
+            placeholder="+44 7700 000000"
             keyboardType="phone-pad"
           />
 
@@ -442,8 +449,29 @@ export default function ProfileScreen() {
           <FieldInput
             value={city}
             onChangeText={setCity}
-            placeholder="e.g. Harare"
+            placeholder="e.g. London, New York, Lagos"
           />
+
+          <FieldLabel label="HOMELAND" />
+          <Pressable
+            onPress={() => setShowHomelandPicker(true)}
+            style={{
+              backgroundColor: colors.dark,
+              borderRadius: 10,
+              padding: 14,
+              borderWidth: 1,
+              borderColor: colors.darkBorder,
+              marginBottom: 16,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={{ color: homeland ? colors.white : colors.grey, fontSize: 15 }}>
+              {homeland || "Select your homeland"}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={colors.grey} />
+          </Pressable>
 
           <FieldLabel label="INDUSTRY" />
           <ScrollView
@@ -546,6 +574,75 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      {/* Homeland Picker Modal */}
+      <Modal
+        visible={showHomelandPicker}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowHomelandPicker(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}
+          onPress={() => setShowHomelandPicker(false)}
+        >
+          <Pressable
+            style={{
+              backgroundColor: colors.dark,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              maxHeight: "70%",
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View
+              style={{
+                paddingHorizontal: 20,
+                paddingTop: 20,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.darkBorder,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ color: colors.white, fontSize: 18, fontWeight: "700" }}>
+                Select homeland
+              </Text>
+              <Pressable onPress={() => setShowHomelandPicker(false)}>
+                <Ionicons name="close" size={22} color={colors.grey} />
+              </Pressable>
+            </View>
+            <FlatList
+              data={HOMELANDS}
+              keyExtractor={(item) => item}
+              contentContainerStyle={{ paddingBottom: 40 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    setHomeland(item);
+                    setShowHomelandPicker(false);
+                  }}
+                  style={{
+                    paddingVertical: 16,
+                    paddingHorizontal: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.darkBorder,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.white, fontSize: 15 }}>{item}</Text>
+                  {homeland === item && (
+                    <Ionicons name="checkmark" size={18} color={colors.gold} />
+                  )}
+                </Pressable>
+              )}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

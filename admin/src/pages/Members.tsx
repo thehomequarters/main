@@ -19,6 +19,7 @@ interface Profile {
   membership_status: "pending" | "active" | "rejected";
   title: string | null;
   city: string | null;
+  homeland: string | null;
   industry: string | null;
   created_at: string;
 }
@@ -180,6 +181,9 @@ export default function Members() {
                   </div>
                   <div className="text-gray-500 text-xs mt-0.5 truncate">
                     {member.email}
+                    {member.homeland && (
+                      <span className="text-amber-400/70"> · {member.homeland}</span>
+                    )}
                     {member.city && ` · ${member.city}`}
                     {member.industry && ` · ${member.industry}`}
                   </div>

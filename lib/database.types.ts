@@ -30,6 +30,7 @@ export interface Profile {
   title: string | null;
   bio: string | null;
   city: string | null;
+  homeland: string | null;
   industry: MemberIndustry | null;
   interests: string[];
 }
@@ -49,6 +50,7 @@ export interface Venue {
   image_url: string | null;
   is_active: boolean;
   created_at: string;
+  homeland_tags: string[];
 }
 
 export interface Deal {
@@ -74,6 +76,7 @@ export interface HQEvent {
   capacity: number;
   is_active: boolean;
   created_at: string;
+  homeland_tags: string[];
 }
 
 export interface Booking {

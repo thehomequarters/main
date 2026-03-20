@@ -151,7 +151,7 @@ export default function ConnectTab() {
         author_name: `${profile.first_name} ${profile.last_name}`,
         author_initials: initials.toUpperCase(),
         author_title: profile.title || "HQ Member",
-        author_city: profile.city || "Harare",
+        author_city: profile.city || "",
         content: newPostContent.trim(),
         topic: newPostTopic,
         color: topicOption?.color || "#A0A0A0",

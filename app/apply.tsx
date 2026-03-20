@@ -8,12 +8,29 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
+
+export const HOMELANDS = [
+  "Algeria", "Angola", "Antigua & Barbuda", "Bahamas", "Barbados", "Botswana",
+  "Burkina Faso", "Burundi", "Cameroon", "Cape Verde", "Central African Republic",
+  "Chad", "Comoros", "Congo (DRC)", "Congo (Republic)", "Côte d'Ivoire",
+  "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia",
+  "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+  "Jamaica", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi",
+  "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia",
+  "Niger", "Nigeria", "Rwanda", "São Tomé & Príncipe", "Senegal",
+  "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan",
+  "Tanzania", "Togo", "Trinidad & Tobago", "Tunisia", "Uganda",
+  "Zambia", "Zimbabwe",
+];
 
 export default function ApplyScreen() {
   const router = useRouter();
@@ -22,11 +39,18 @@ export default function ApplyScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
+  const [homeland, setHomeland] = useState("");
+  const [showHomelandPicker, setShowHomelandPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       Alert.alert("Required Fields", "Please fill in your name and email.");
+      return;
+    }
+
+    if (!homeland) {
+      Alert.alert("Required Fields", "Please select your homeland.");
       return;
     }
 
@@ -56,6 +80,7 @@ export default function ApplyScreen() {
         avatar_url: null,
         member_code: code,
         membership_status: "pending",
+        homeland: homeland,
         created_at: new Date().toISOString(),
       });
 
@@ -69,6 +94,17 @@ export default function ApplyScreen() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const inputStyle = {
+    backgroundColor: colors.dark,
+    borderWidth: 1,
+    borderColor: colors.darkBorder,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    color: colors.white,
+    fontSize: 15,
   };
 
   return (
@@ -121,8 +157,8 @@ export default function ApplyScreen() {
             marginBottom: 40,
           }}
         >
-          HomeQuarters is a private community for the diaspora. Membership is by
-          application only.
+          HomeQuarters is a private members' club for the global diaspora.
+          Membership is by application only.
         </Text>
 
         {/* Form */}
@@ -134,17 +170,7 @@ export default function ApplyScreen() {
               value={firstName}
               onChangeText={setFirstName}
               autoCapitalize="words"
-              style={{
-                flex: 1,
-                backgroundColor: colors.dark,
-                borderWidth: 1,
-                borderColor: colors.darkBorder,
-                borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                color: colors.white,
-                fontSize: 15,
-              }}
+              style={{ flex: 1, ...inputStyle }}
             />
             <TextInput
               placeholder="Last name"
@@ -152,17 +178,7 @@ export default function ApplyScreen() {
               value={lastName}
               onChangeText={setLastName}
               autoCapitalize="words"
-              style={{
-                flex: 1,
-                backgroundColor: colors.dark,
-                borderWidth: 1,
-                borderColor: colors.darkBorder,
-                borderRadius: 10,
-                paddingHorizontal: 16,
-                paddingVertical: 16,
-                color: colors.white,
-                fontSize: 15,
-              }}
+              style={{ flex: 1, ...inputStyle }}
             />
           </View>
 
@@ -174,16 +190,7 @@ export default function ApplyScreen() {
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
+            style={inputStyle}
           />
 
           <TextInput
@@ -194,16 +201,7 @@ export default function ApplyScreen() {
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
+            style={inputStyle}
           />
 
           <TextInput
@@ -212,17 +210,29 @@ export default function ApplyScreen() {
             value={phone}
             onChangeText={setPhone}
             keyboardType="phone-pad"
-            style={{
-              backgroundColor: colors.dark,
-              borderWidth: 1,
-              borderColor: colors.darkBorder,
-              borderRadius: 10,
-              paddingHorizontal: 16,
-              paddingVertical: 16,
-              color: colors.white,
-              fontSize: 15,
-            }}
+            style={inputStyle}
           />
+
+          {/* Homeland Picker */}
+          <Pressable
+            onPress={() => setShowHomelandPicker(true)}
+            style={{
+              ...inputStyle,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text
+              style={{
+                color: homeland ? colors.white : colors.grey,
+                fontSize: 15,
+              }}
+            >
+              {homeland || "Select your homeland"}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={colors.grey} />
+          </Pressable>
         </View>
 
         {/* Submit Button */}
@@ -250,7 +260,7 @@ export default function ApplyScreen() {
           </Text>
         </Pressable>
 
-        {/* Login link for returning members */}
+        {/* Login link */}
         <Pressable
           onPress={() => router.push("/login")}
           style={{ marginTop: 24 }}
@@ -267,6 +277,77 @@ export default function ApplyScreen() {
           </Text>
         </Pressable>
       </ScrollView>
+
+      {/* Homeland Picker Modal */}
+      <Modal
+        visible={showHomelandPicker}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowHomelandPicker(false)}
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}
+          onPress={() => setShowHomelandPicker(false)}
+        >
+          <Pressable
+            style={{
+              backgroundColor: colors.dark,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              maxHeight: "70%",
+            }}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View
+              style={{
+                paddingHorizontal: 20,
+                paddingTop: 20,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.darkBorder,
+              }}
+            >
+              <Text
+                style={{ color: colors.white, fontSize: 18, fontWeight: "700" }}
+              >
+                Select your homeland
+              </Text>
+              <Text style={{ color: colors.grey, fontSize: 13, marginTop: 4 }}>
+                Where are you originally from?
+              </Text>
+            </View>
+            <FlatList
+              data={HOMELANDS}
+              keyExtractor={(item) => item}
+              contentContainerStyle={{ paddingBottom: 40 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    setHomeland(item);
+                    setShowHomelandPicker(false);
+                  }}
+                  style={{
+                    paddingVertical: 16,
+                    paddingHorizontal: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.darkBorder,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: colors.white, fontSize: 15 }}>
+                    {item}
+                  </Text>
+                  {homeland === item && (
+                    <Ionicons name="checkmark" size={18} color={colors.gold} />
+                  )}
+                </Pressable>
+              )}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

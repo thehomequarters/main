@@ -6,7 +6,7 @@ const VENUES = [
   {
     name: "The Boma",
     description:
-      "Iconic Harare restaurant serving traditional Zimbabwean cuisine with a modern twist. Known for their sadza ne nyama, oxtail stew, and rooftop views of the city.",
+      "Iconic restaurant serving traditional Southern African cuisine with a modern twist. Known for their slow-cooked stews, grilled meats, and rooftop views of the city.",
     category: "restaurant",
     city: "Harare",
     country: "Zimbabwe",
@@ -18,6 +18,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     name: "Amanzi Restaurant",
@@ -34,11 +35,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe", "South Africa"],
   },
   {
     name: "Pariah State",
     description:
-      "Harare's coolest cocktail bar and creative hub. Craft cocktails, local art on the walls, and a killer weekend DJ lineup spinning Afrobeats and amapiano.",
+      "A vibrant cocktail bar and creative hub. Craft cocktails, local art on the walls, and a killer weekend DJ lineup spinning Afrobeats and amapiano.",
     category: "bar",
     city: "Harare",
     country: "Zimbabwe",
@@ -50,11 +52,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     name: "Gava's Restaurant",
     description:
-      "A Harare institution for over two decades. Serving generous portions of traditional Shona dishes alongside South African braai platters in a warm, family-friendly setting.",
+      "A warm institution for over two decades. Generous portions of traditional Southern African dishes in a family-friendly setting beloved by the community.",
     category: "restaurant",
     city: "Harare",
     country: "Zimbabwe",
@@ -66,11 +69,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe", "South Africa"],
   },
   {
     name: "Kaldora's Coffee",
     description:
-      "Specialty Zimbabwean coffee roasters in Avondale. Single-origin beans from Chipinge and Honde Valley, homemade scones, and a quiet courtyard perfect for work.",
+      "Specialty coffee roasters sourcing single-origin beans from across the continent. Homemade scones and a quiet courtyard — the perfect spot for work.",
     category: "cafe",
     city: "Harare",
     country: "Zimbabwe",
@@ -82,11 +86,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     name: "Shoko Festival Lounge",
     description:
-      "Year-round creative space and bar inspired by the famous SHOKO Festival. Live music, spoken word, and Harare's most eclectic cocktail menu.",
+      "Year-round creative space and bar celebrating global music culture. Live music, spoken word, and an eclectic cocktail menu that keeps the crowd coming back.",
     category: "bar",
     city: "Harare",
     country: "Zimbabwe",
@@ -98,11 +103,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     name: "Chang Thai",
     description:
-      "Harare's favourite Thai restaurant. Authentic flavours, fresh ingredients, and a serene garden setting in the heart of Borrowdale.",
+      "A favourite Thai restaurant bringing authentic South-East Asian flavours. Fresh ingredients and a serene garden setting — always a reliable choice.",
     category: "restaurant",
     city: "Harare",
     country: "Zimbabwe",
@@ -114,11 +120,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
     is_active: true,
+    homeland_tags: [],
   },
   {
     name: "Maarera Wellness",
     description:
-      "Holistic wellness studio offering yoga, meditation, and traditional healing sessions. Find your balance in a beautiful Msasa woodland setting.",
+      "Holistic wellness studio offering yoga, meditation, and healing sessions. Find your balance in a serene woodland setting away from the city noise.",
     category: "experience",
     city: "Harare",
     country: "Zimbabwe",
@@ -130,11 +137,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     name: "Vibe Cafe",
     description:
-      "All-day brunch spot and bakery in Avondale. Fresh juices, stuffed croissants, and the best flat white in Harare. A must for weekend mornings.",
+      "All-day brunch spot and bakery. Fresh juices, stuffed croissants, and a flat white that regulars swear by. A must for weekend mornings.",
     category: "cafe",
     city: "Harare",
     country: "Zimbabwe",
@@ -146,11 +154,12 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     name: "The Sunday Market",
     description:
-      "Weekly curated market with live music, food trucks, local designers, and craft beer. Every Sunday at Borrowdale Racecourse — the place to be.",
+      "Weekly curated market with live music, food trucks, local designers, and craft beer. Every Sunday — the place to be for the whole community.",
     category: "experience",
     city: "Harare",
     country: "Zimbabwe",
@@ -162,6 +171,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     is_active: true,
+    homeland_tags: ["Zimbabwe"],
   },
 ];
 
@@ -294,11 +304,12 @@ const EVENTS: Array<{
   image_url: string;
   category: EventCategory;
   capacity: number;
+  homeland_tags: string[];
 }> = [
   {
     title: "Sundowner Sessions",
     description:
-      "Weekly DJ set on the rooftop with Harare's finest selectors spinning Afrobeats, amapiano, and deep house as the sun goes down. Complimentary welcome drink for HQ members.",
+      "Weekly DJ set on the rooftop with selectors spinning Afrobeats, amapiano, and deep house as the sun goes down. Complimentary welcome drink for HQ members.",
     venue: "Pariah State",
     date: "2026-03-06",
     time: "17:00",
@@ -307,11 +318,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80",
     category: "music",
     capacity: 80,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     title: "Farm-to-Table Dinner",
     description:
-      "An intimate five-course dinner showcasing the best seasonal produce from Zimbabwean farms. Chef Tari presents a menu that celebrates local flavours with modern technique.",
+      "An intimate five-course dinner showcasing the best seasonal produce from local farms. A menu that celebrates regional flavours with modern technique.",
     venue: "Amanzi Restaurant",
     date: "2026-03-07",
     time: "19:00",
@@ -320,11 +332,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
     category: "dining",
     capacity: 30,
+    homeland_tags: ["Zimbabwe", "South Africa"],
   },
   {
     title: "Morning Yoga in the Gardens",
     description:
-      "Start your Saturday with a rejuvenating vinyasa flow session in the msasa woodland gardens. Mats provided. All levels welcome. Herbal tea served afterwards.",
+      "Start your Saturday with a rejuvenating vinyasa flow session in the woodland gardens. Mats provided. All levels welcome. Herbal tea served afterwards.",
     venue: "Maarera Wellness",
     date: "2026-03-07",
     time: "07:00",
@@ -333,6 +346,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80",
     category: "wellness",
     capacity: 25,
+    homeland_tags: [],
   },
   {
     title: "Creatives Connect Mixer",
@@ -346,11 +360,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80",
     category: "social",
     capacity: 60,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     title: "Wine & Canvas Night",
     description:
-      "Guided painting session paired with South African wines. No experience needed — just bring your creativity. Take home your masterpiece at the end of the evening.",
+      "Guided painting session paired with curated wines. No experience needed — just bring your creativity. Take home your masterpiece at the end of the evening.",
     venue: "Pariah State",
     date: "2026-03-10",
     time: "18:30",
@@ -359,11 +374,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=800&q=80",
     category: "arts",
     capacity: 25,
+    homeland_tags: [],
   },
   {
     title: "Saturday Jazz Brunch",
     description:
-      "Live jazz trio accompanies a lavish brunch spread featuring Zimbabwean and continental dishes. Free-flowing mimosas for HQ members.",
+      "Live jazz trio accompanies a lavish brunch spread featuring local and continental dishes. Free-flowing mimosas for HQ members.",
     venue: "Amanzi Restaurant",
     date: "2026-03-14",
     time: "10:00",
@@ -372,11 +388,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800&q=80",
     category: "dining",
     capacity: 50,
+    homeland_tags: ["Zimbabwe", "South Africa"],
   },
   {
     title: "Spoken Word Evening",
     description:
-      "An evening of powerful spoken word performances from Zimbabwe's most exciting poets. Open mic slots available — sign up at the door.",
+      "An evening of powerful spoken word performances from the community's most exciting poets. Open mic slots available — sign up at the door.",
     venue: "Shoko Festival Lounge",
     date: "2026-03-14",
     time: "19:00",
@@ -385,11 +402,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&q=80",
     category: "arts",
     capacity: 70,
+    homeland_tags: ["Zimbabwe"],
   },
   {
     title: "HQ Members' Braai",
     description:
-      "Our signature social braai bringing HQ members together for an afternoon of good food, good music, and great company. Families welcome.",
+      "Our signature social bringing HQ members together for an afternoon of good food, good music, and great company. All are welcome.",
     venue: "The Sunday Market",
     date: "2026-03-15",
     time: "12:00",
@@ -398,6 +416,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
     category: "social",
     capacity: 100,
+    homeland_tags: ["Zimbabwe", "South Africa"],
   },
   {
     title: "Meditation & Sound Bath",
@@ -411,11 +430,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80",
     category: "wellness",
     capacity: 20,
+    homeland_tags: [],
   },
   {
     title: "Amapiano Night",
     description:
-      "Harare's biggest amapiano night returns. Two rooms, four DJs, one unforgettable vibe. Dress code: smart casual. No cover for HQ members.",
+      "The diaspora's favourite party night returns. Two rooms, four DJs, one unforgettable vibe. Dress code: smart casual. No cover for HQ members.",
     venue: "Shoko Festival Lounge",
     date: "2026-03-21",
     time: "21:00",
@@ -424,11 +444,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1571266028243-e4733b0f0bb0?w=800&q=80",
     category: "music",
     capacity: 120,
+    homeland_tags: ["Zimbabwe", "South Africa"],
   },
   {
     title: "Coffee Cupping Workshop",
     description:
-      "Learn to taste and evaluate specialty Zimbabwean coffee with our head roaster. Discover the difference between Chipinge and Honde Valley beans.",
+      "Learn to taste and evaluate specialty African coffee with our head roaster. Discover the difference between single-origin beans from different regions.",
     venue: "Kaldora's Coffee",
     date: "2026-03-22",
     time: "09:00",
@@ -437,11 +458,12 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
     category: "dining",
     capacity: 15,
+    homeland_tags: ["Zimbabwe"],
   },
   {
-    title: "Photography Walk: Old Harare",
+    title: "Photography Walk: City Centre",
     description:
-      "Guided photography walk through Harare's historic centre. Capture the architecture, street life, and hidden gems of the city with fellow creatives.",
+      "Guided photography walk through the city's historic centre. Capture the architecture, street life, and hidden gems with fellow creatives.",
     venue: "The Boma",
     date: "2026-03-28",
     time: "08:00",
@@ -450,6 +472,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80",
     category: "arts",
     capacity: 20,
+    homeland_tags: ["Zimbabwe"],
   },
 ];
 
@@ -468,9 +491,9 @@ const SEED_POSTS: Array<{
     author_name: "Tanya Moyo",
     author_initials: "TM",
     author_title: "Photographer & Visual Artist",
-    author_city: "Harare",
+    author_city: "London",
     content:
-      "Looking for a creative collaborator for a photography series documenting Harare's music scene. Need someone with video editing skills — happy to share credits and revenue. DM me if interested!",
+      "Looking for a creative collaborator for a photography series documenting diaspora music scenes across Europe. Need someone with video editing skills — happy to share credits and revenue. DM me if interested!",
     topic: "collaboration",
     color: "#C9A84C",
     likes: 24,
@@ -504,9 +527,9 @@ const SEED_POSTS: Array<{
     author_name: "Kuda Masiiwa",
     author_initials: "KM",
     author_title: "Software Developer",
-    author_city: "Harare",
+    author_city: "Amsterdam",
     content:
-      "Just moved back to Harare after 5 years in Cape Town. Excited to reconnect with the creative scene here. Looking to meet other tech and design people — coffee this week?",
+      "Just moved to Amsterdam after years in London. Excited to reconnect with the diaspora community here. Looking to meet other tech and design people — coffee this week?",
     topic: "general",
     color: "#A0A0A0",
     likes: 38,
@@ -516,21 +539,21 @@ const SEED_POSTS: Array<{
     author_name: "Nyasha Tafirenyika",
     author_initials: "NT",
     author_title: "Brand Strategist",
-    author_city: "Harare",
+    author_city: "Johannesburg",
     content:
-      "Running a free workshop on personal branding for creatives next week at Shoko. Limited to 20 people. HQ members get priority. Who's interested?",
+      "Running a free workshop on personal branding for creatives next week. Limited to 20 people. HQ members get priority. Who's interested?",
     topic: "collaboration",
     color: "#C9A84C",
     likes: 52,
     comments: 23,
   },
   {
-    author_name: "Chenai Mutasa",
-    author_initials: "CM",
+    author_name: "Adaeze Obi",
+    author_initials: "AO",
     author_title: "Interior Designer",
-    author_city: "Harare",
+    author_city: "Lagos",
     content:
-      "Best coffee spots in Borrowdale? Just moved to the area and need my morning fix sorted. Bonus points if they have good wifi for working!",
+      "Best coffee spots in your city for remote work? Building a list of HQ-approved spaces around the world. Drop your faves below!",
     topic: "recommendation",
     color: "#7B68EE",
     likes: 16,
@@ -540,7 +563,7 @@ const SEED_POSTS: Array<{
     author_name: "Tapiwa Murisa",
     author_initials: "TM",
     author_title: "Graphic Designer",
-    author_city: "Harare",
+    author_city: "Toronto",
     content:
       "Need a graphic designer for an event poster? I'm offering discounted rates for fellow HQ members this month. Portfolio in my profile — check it out.",
     topic: "collaboration",
@@ -570,8 +593,8 @@ const GROUPS = [
     member_count: 234,
   },
   {
-    name: "Foodies Harare",
-    description: "Discover the best food spots, share recipes, and organize dinners together.",
+    name: "Foodies Club",
+    description: "Discover the best food spots, share recipes, and organise dinners together.",
     icon: "restaurant-outline",
     member_count: 187,
   },

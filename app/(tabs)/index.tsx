@@ -43,6 +43,7 @@ export default function HomeTab() {
   const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
 
   const fetchVenues = useCallback(async () => {
+    const myHomeland = profile?.homeland;
     try {
       const venuesQuery = query(
         collection(db, "venues"),
@@ -65,9 +66,15 @@ export default function HomeTab() {
         venueList.push({ ...venueData, deals });
       }
 
-      venueList.sort(
-        (a, b) => (b.created_at || "").localeCompare(a.created_at || "")
-      );
+      // Homeland-tagged venues first, then by date
+      venueList.sort((a, b) => {
+        if (myHomeland) {
+          const aMatch = (a.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+          const bMatch = (b.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+          if (aMatch !== bMatch) return aMatch - bMatch;
+        }
+        return (b.created_at || "").localeCompare(a.created_at || "");
+      });
       setVenues(venueList);
 
       const eventsQuery = query(
@@ -77,7 +84,14 @@ export default function HomeTab() {
       const eventsSnap = await getDocs(eventsQuery);
       const eventList = eventsSnap.docs
         .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
-        .sort((a, b) => a.date.localeCompare(b.date))
+        .sort((a, b) => {
+          if (myHomeland) {
+            const aMatch = (a.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+            const bMatch = (b.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+            if (aMatch !== bMatch) return aMatch - bMatch;
+          }
+          return a.date.localeCompare(b.date);
+        })
         .slice(0, 4);
       setUpcomingEvents(eventList);
     } catch (e: any) {
@@ -85,7 +99,7 @@ export default function HomeTab() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [profile?.homeland]);
 
   useEffect(() => {
     fetchVenues();
@@ -313,7 +327,10 @@ export default function HomeTab() {
       {/* Featured Venues */}
       {featuredVenues.length > 0 && (
         <View style={{ marginBottom: 32 }}>
-          <SectionHeader title="Featured Venues" actionLabel="See All" />
+          <SectionHeader
+            title={profile?.homeland ? `${profile.homeland} & Beyond` : "Featured Venues"}
+            actionLabel="See All"
+          />
           <FlatList
             horizontal
             data={featuredVenues}

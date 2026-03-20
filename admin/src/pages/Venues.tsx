@@ -24,7 +24,20 @@ interface Venue {
   image_url: string | null;
   is_active: boolean;
   created_at: string;
+  homeland_tags: string[];
 }
+
+const HOMELANDS = [
+  "Algeria", "Angola", "Antigua & Barbuda", "Bahamas", "Barbados", "Botswana",
+  "Burkina Faso", "Burundi", "Cameroon", "Cape Verde", "Congo (DRC)", "Congo (Republic)",
+  "Côte d'Ivoire", "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Eswatini",
+  "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+  "Jamaica", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi", "Mali",
+  "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia", "Niger", "Nigeria",
+  "Rwanda", "Senegal", "Sierra Leone", "Somalia", "South Africa", "South Sudan",
+  "Sudan", "Tanzania", "Togo", "Trinidad & Tobago", "Tunisia", "Uganda",
+  "Zambia", "Zimbabwe",
+];
 
 interface Deal {
   id: string;
@@ -41,12 +54,13 @@ const EMPTY_VENUE = {
   name: "",
   description: "",
   category: "restaurant",
-  city: "Harare",
-  country: "Zimbabwe",
+  city: "",
+  country: "",
   address: "",
   phone: "",
   menu_url: "",
   image_url: "",
+  homeland_tags: [] as string[],
 };
 
 export default function Venues() {
@@ -104,6 +118,7 @@ export default function Venues() {
         latitude: 0,
         longitude: 0,
         is_active: true,
+        homeland_tags: form.homeland_tags,
       };
 
       if (editingVenue) {
@@ -191,6 +206,7 @@ export default function Venues() {
       phone: venue.phone ?? "",
       menu_url: venue.menu_url ?? "",
       image_url: venue.image_url ?? "",
+      homeland_tags: venue.homeland_tags ?? [],
     });
     setShowForm(true);
   };
@@ -305,6 +321,38 @@ export default function Venues() {
                 placeholder="Image URL (optional)"
                 className="w-full bg-black border border-dark-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-gold/50"
               />
+              {/* Homeland Tags */}
+              <div>
+                <p className="text-gray-400 text-xs font-medium mb-2">
+                  Homeland tags — which diaspora communities does this venue serve?
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {HOMELANDS.map((h) => {
+                    const selected = form.homeland_tags.includes(h);
+                    return (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            homeland_tags: selected
+                              ? form.homeland_tags.filter((t) => t !== h)
+                              : [...form.homeland_tags, h],
+                          })
+                        }
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                          selected
+                            ? "bg-gold/15 border-gold/40 text-gold"
+                            : "bg-transparent border-dark-border text-gray-500 hover:text-white hover:border-gray-500"
+                        }`}
+                      >
+                        {h}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">
@@ -372,6 +420,11 @@ export default function Venues() {
                   </div>
                   <div className="text-gray-600 text-xs mt-0.5">
                     {venuDeals.length} deal{venuDeals.length !== 1 ? "s" : ""}
+                    {venue.homeland_tags && venue.homeland_tags.length > 0 && (
+                      <span className="ml-2 text-gold/60">
+                        · {venue.homeland_tags.join(", ")}
+                      </span>
+                    )}
                   </div>
                 </div>
 

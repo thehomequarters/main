@@ -55,9 +55,19 @@ export default function DiscoverTab() {
       where("membership_status", "==", "active")
     );
     const profilesSnap = await getDocs(profilesQuery);
+    const myHomeland = myProfile?.homeland;
     const memberList = profilesSnap.docs
       .map((d) => ({ id: d.id, ...d.data() }) as Profile)
-      .filter((m) => m.id !== user?.uid);
+      .filter((m) => m.id !== user?.uid)
+      .sort((a, b) => {
+        // Same-homeland members float to the top
+        if (myHomeland) {
+          const aScore = a.homeland === myHomeland ? 0 : 1;
+          const bScore = b.homeland === myHomeland ? 0 : 1;
+          if (aScore !== bScore) return aScore - bScore;
+        }
+        return 0;
+      });
     setMembers(memberList);
 
     // Fetch existing connections (outbound)
@@ -91,7 +101,7 @@ export default function DiscoverTab() {
     }
 
     setLoading(false);
-  }, [user?.uid]);
+  }, [user?.uid, myProfile?.homeland]);
 
   useEffect(() => {
     fetchMembers();
@@ -216,11 +226,11 @@ export default function DiscoverTab() {
     ? members.filter((m) => m.industry === selectedIndustry)
     : members;
 
-  // Count unique industries
+  // Count unique industries and homelands
   const industryCount = new Set(
     members.map((m) => m.industry).filter(Boolean)
   ).size;
-  const cityCount = new Set(members.map((m) => m.city).filter(Boolean)).size;
+  const homelandCount = new Set(members.map((m) => m.homeland).filter(Boolean)).size;
 
   if (loading) {
     return (
@@ -287,7 +297,9 @@ export default function DiscoverTab() {
             marginTop: 4,
           }}
         >
-          Find and connect with fellow members
+          {myProfile?.homeland
+            ? `Members from ${myProfile.homeland} & beyond`
+            : "Find and connect with fellow members"}
         </Text>
       </View>
 
@@ -369,7 +381,7 @@ export default function DiscoverTab() {
           <Text
             style={{ color: colors.white, fontSize: 24, fontWeight: "800" }}
           >
-            {cityCount || "—"}
+            {homelandCount || "—"}
           </Text>
           <Text
             style={{
@@ -379,7 +391,7 @@ export default function DiscoverTab() {
               fontWeight: "500",
             }}
           >
-            {cityCount === 1 ? "City" : "Cities"}
+            {homelandCount === 1 ? "Homeland" : "Homelands"}
           </Text>
         </View>
       </View>
@@ -692,7 +704,7 @@ export default function DiscoverTab() {
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 10,
-                    marginBottom: 10,
+                    marginBottom: 6,
                   }}
                 >
                   {member.city && (
@@ -715,11 +727,7 @@ export default function DiscoverTab() {
                   )}
                   {member.industry && (
                     <>
-                      <Text
-                        style={{ color: colors.darkBorder, fontSize: 11 }}
-                      >
-                        ·
-                      </Text>
+                      <Text style={{ color: colors.darkBorder, fontSize: 11 }}>·</Text>
                       <Text
                         style={{
                           color: colors.gold,
@@ -733,6 +741,48 @@ export default function DiscoverTab() {
                     </>
                   )}
                 </View>
+
+                {/* Homeland tag */}
+                {member.homeland && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <View
+                      style={{
+                        backgroundColor:
+                          member.homeland === myProfile?.homeland
+                            ? "rgba(201, 168, 76, 0.12)"
+                            : "rgba(160, 160, 160, 0.08)",
+                        borderRadius: 6,
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 4,
+                      }}
+                    >
+                      <Ionicons
+                        name="flag-outline"
+                        size={10}
+                        color={member.homeland === myProfile?.homeland ? colors.gold : colors.grey}
+                      />
+                      <Text
+                        style={{
+                          color: member.homeland === myProfile?.homeland ? colors.gold : colors.grey,
+                          fontSize: 10,
+                          fontWeight: "500",
+                        }}
+                      >
+                        {member.homeland}
+                      </Text>
+                    </View>
+                  </View>
+                )}
 
                 {/* Interests */}
                 {member.interests && member.interests.length > 0 && (
@@ -850,7 +900,7 @@ export default function DiscoverTab() {
             }}
           >
             {members.length === 0
-              ? "No other members yet. Invite friends to join HQ!"
+              ? "No other members yet. Invite fellow diaspora to join HQ!"
               : "No members found in this industry."}
           </Text>
         </View>
