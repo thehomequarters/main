@@ -351,6 +351,85 @@
     .footer-copy { font-size: 11px; color: rgba(255,255,255,0.2); }
 
     /* ── RESPONSIVE ── */
+    /* ── FAQ ── */
+    .faq { background: var(--dark); }
+    .faq-inner { max-width: 720px; margin: 0 auto; }
+    .faq-list { margin-top: 40px; display: flex; flex-direction: column; gap: 2px; }
+    .faq-item {
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .faq-q {
+      width: 100%; text-align: left; background: none; border: none;
+      padding: 20px 0; cursor: pointer; font-family: inherit;
+      font-size: 15px; font-weight: 700; color: var(--white);
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 16px; transition: color .2s;
+    }
+    .faq-q:hover { color: var(--gold); }
+    .faq-q::after {
+      content: '+'; font-size: 20px; font-weight: 300;
+      color: rgba(255,255,255,0.3); flex-shrink: 0; transition: transform .3s, color .2s;
+    }
+    .faq-q[aria-expanded="true"]::after { transform: rotate(45deg); color: var(--gold); }
+    .faq-a {
+      overflow: hidden; max-height: 0;
+      transition: max-height .35s ease, padding .35s ease;
+    }
+    .faq-a.open { max-height: 400px; padding-bottom: 20px; }
+    .faq-a p {
+      font-size: 14px; line-height: 1.75; color: rgba(255,255,255,0.5);
+    }
+
+    /* ── PARTNER WITH US ── */
+    .partners-join {
+      background: #0E0E0E;
+      padding: 100px 48px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .partners-join-inner {
+      max-width: 1000px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: flex-start;
+    }
+    .pj-heading {
+      font-size: clamp(26px, 3.5vw, 38px); font-weight: 800;
+      color: var(--white); letter-spacing: -0.5px;
+      margin-bottom: 16px; line-height: 1.15;
+    }
+    .pj-sub {
+      font-size: 14px; line-height: 1.75; color: rgba(255,255,255,0.45);
+      margin-bottom: 32px;
+    }
+    .pj-benefits { display: flex; flex-direction: column; gap: 16px; }
+    .pj-benefit { display: flex; align-items: flex-start; gap: 12px; }
+    .pj-benefit-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); flex-shrink: 0; margin-top: 7px;
+    }
+    .pj-benefit p { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.55); margin: 0; }
+    .pj-form-title { font-size: 18px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+    .pj-form-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 24px; line-height: 1.6; }
+    .partners-join input, .partners-join textarea, .partners-join select {
+      width: 100%; padding: 13px 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; font-size: 14px;
+      font-family: inherit; outline: none;
+      transition: border-color .2s;
+    }
+    .partners-join input::placeholder, .partners-join textarea::placeholder { color: rgba(255,255,255,0.3); }
+    .partners-join input:focus, .partners-join textarea:focus, .partners-join select:focus { border-color: rgba(201,168,76,0.5); }
+    .partners-join textarea { resize: vertical; }
+    .pj-submit {
+      background: var(--gold); color: var(--dark);
+      border: none; border-radius: 100px;
+      padding: 14px 40px; font-size: 14px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: opacity .2s;
+    }
+    .pj-submit:hover { opacity: 0.85; }
+    @media (max-width: 768px) {
+      .partners-join { padding: 64px 24px; }
+      .partners-join-inner { grid-template-columns: 1fr; gap: 48px; }
+    }
+
     @media (max-width: 768px) {
       nav { padding: 16px 24px; }
       .nav-links { display: none; }
@@ -362,6 +441,7 @@
       .plans-grid { grid-template-columns: 1fr; }
       .form-row { grid-template-columns: 1fr; }
       footer { padding: 40px 24px; }
+      .faq { padding: 64px 24px; }
     }
   </style>
 </head>
@@ -373,6 +453,8 @@
     <div class="nav-links">
       <a href="#features">About</a>
       <a href="#rules">House Rules</a>
+      <a href="#faq">FAQ</a>
+      <a href="#partners-join">Partners</a>
       <a href="#apply">Apply</a>
     </div>
     <a href="#apply" class="nav-cta">Apply</a>
@@ -383,7 +465,7 @@
     <div class="hero-content">
       <div class="hero-eyebrow" id="cms-hero-eyebrow">A private members' community</div>
       <h1><span id="cms-hero-line1">Built for the diaspora.</span><br><em id="cms-hero-line2">By invitation only.</em></h1>
-      <p id="cms-hero-body">HomeQuarters brings together a curated community of Zimbabweans in the UK. Membership is by invitation from a current member. Applications are rarely considered.</p>
+      <p id="cms-hero-body">HomeQuarters is a private members' club for the diaspora. We bring together curated communities from across Africa and beyond — connecting members with the best venues, restaurants, and events in the UK, tailored to your people. Membership is by invitation only.</p>
       <div class="hero-btns">
         <a href="#" class="store-btn ios-app-btn">
           <svg viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
@@ -436,9 +518,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2 id="cms-f1-headline">Discover exclusive deals at top UK venues.</h2>
-        <p id="cms-f1-p1">Access members-only pricing at restaurants, bars, and lounges across the UK.</p>
-        <p id="cms-f1-p2">Exceptional offers you won't find anywhere else - from dozens of top-tier venues.</p>
+        <h2 id="cms-f1-headline">The best venues, curated for your diaspora.</h2>
+        <p id="cms-f1-p1">Access members-only pricing at handpicked restaurants, bars, and lounges across the UK — selected specifically for your community.</p>
+        <p id="cms-f1-p2">Exceptional offers you won't find anywhere else, from quality venues that understand your culture.</p>
       </div>
     </div>
 
@@ -459,9 +541,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2 id="cms-f2-headline">Membership is by invitation.</h2>
-        <p id="cms-f2-p1">Access to HomeQuarters requires a personal invitation from a current member. Invitations are non-transferable and strictly confidential.</p>
-        <p id="cms-f2-p2">On rare occasions, outstanding applications without a code are reviewed. If you believe you're a fit, you're welcome to apply below.</p>
+        <h2 id="cms-f2-headline">Your community, in one place.</h2>
+        <p id="cms-f2-p1">Connect with members from your diaspora community — attend exclusive events, discover like-minded people, and build real friendships with those who share your roots.</p>
+        <p id="cms-f2-p2">Membership is by invitation from a current member. On rare occasions, outstanding applications are reviewed directly.</p>
       </div>
     </div>
 
@@ -483,9 +565,9 @@
         </div>
       </div>
       <div class="feature-copy">
-        <h2 id="cms-f3-headline">Access restaurants, clubs, and more with Platinum.</h2>
-        <p id="cms-f3-p1">Upgrade to Platinum for £15/mo. For members heading back to Zimbabwe - unlock the best of Harare.</p>
-        <p id="cms-f3-p2">It's optional and you can cancel anytime.</p>
+        <h2 id="cms-f3-headline">Unlock your homeland with Platinum.</h2>
+        <p id="cms-f3-p1">Upgrade to Platinum for £15/mo and get access to curated venues back home — restaurants, clubs, and lounges in your home country.</p>
+        <p id="cms-f3-p2">Currently available for Zimbabwe, with more destinations coming soon. Optional — cancel anytime.</p>
       </div>
     </div>
 
@@ -582,6 +664,121 @@
       </div>
 
       <p class="rules-footer">These rules apply equally to all membership tiers. Last updated March 2026.</p>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <div class="faq-inner">
+      <div class="rules-eyebrow">Got Questions</div>
+      <h2 class="rules-heading">Frequently Asked.</h2>
+      <p class="rules-sub">Everything you need to know about HomeQuarters.</p>
+      <div class="faq-list">
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">What is HomeQuarters?</button>
+          <div class="faq-a">
+            <p>HomeQuarters is a private members' club built for diaspora communities. We curate access to the best venues, restaurants, and events in the UK — tailored to specific diaspora groups — and give members a place to connect with people who share their roots.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Which diaspora communities does HQ serve?</button>
+          <div class="faq-a">
+            <p>HomeQuarters is built to serve multiple diaspora communities. Our first community is Zimbabweans in the UK, with more communities launching soon. Each community gets its own curated set of venues, events, and connections.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">How do I become a member?</button>
+          <div class="faq-a">
+            <p>Membership is by invitation from an existing member. If you receive an invitation code, download the app and apply directly. On rare occasions, outstanding applications without a code are reviewed — you can submit one below.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">What do I get as a member?</button>
+          <div class="faq-a">
+            <p>Gold members get access to exclusive deals and discounts at curated partner venues across the UK, invitations to members-only events, and the ability to connect and discover other members from your community. Platinum members additionally unlock a curated network of venues back in their home country.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">What is the Platinum tier?</button>
+          <div class="faq-a">
+            <p>Platinum is an optional add-on for £15/month that gives you access to curated venues in your home country — restaurants, lounges, and clubs selected for quality. Currently available for Zimbabwe (Harare, Bulawayo, Vic Falls), with more destinations rolling out soon.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Can I nominate a friend?</button>
+          <div class="faq-a">
+            <p>Yes. As an active member you can nominate people you genuinely know and vouch for. Invitations are personal — your reputation is attached to every nomination you make.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">How do venue deals work?</button>
+          <div class="faq-a">
+            <p>When you visit a partner venue, open the app and use your member QR code to redeem the deal. Offers vary by venue — discounts, priority access, complimentary items, and more. Each benefit is for personal use only and cannot be shared or resold.</p>
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Is my information kept private?</button>
+          <div class="faq-a">
+            <p>Absolutely. HomeQuarters operates on a strict confidentiality principle. Member profiles are only visible to other verified members, and your personal information is never shared externally. See our <a href="/privacy" style="color:var(--gold);">Privacy Policy</a> for full details.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARTNER WITH US -->
+  <section class="partners-join" id="partners-join">
+    <div class="partners-join-inner">
+      <div class="pj-left">
+        <div class="rules-eyebrow" style="color:var(--gold);">For Venues &amp; Businesses</div>
+        <h2 class="pj-heading">Partner with HomeQuarters.</h2>
+        <p class="pj-sub">We connect exceptional venues and businesses with a highly engaged, curated diaspora membership. Our members are loyal, high-intent, and actively looking for quality experiences.</p>
+        <div class="pj-benefits">
+          <div class="pj-benefit">
+            <div class="pj-benefit-dot"></div>
+            <p>Direct access to verified, engaged diaspora members across the UK</p>
+          </div>
+          <div class="pj-benefit">
+            <div class="pj-benefit-dot"></div>
+            <p>Feature your venue, deals, and events in the app and members' feed</p>
+          </div>
+          <div class="pj-benefit">
+            <div class="pj-benefit-dot"></div>
+            <p>QR-based redemption — easy tracking with zero friction</p>
+          </div>
+          <div class="pj-benefit">
+            <div class="pj-benefit-dot"></div>
+            <p>Be part of a trusted community brand that members genuinely love</p>
+          </div>
+        </div>
+      </div>
+      <div class="pj-right">
+        <h3 class="pj-form-title">Get in touch</h3>
+        <p class="pj-form-sub">Tell us about your venue or business and we'll be in touch.</p>
+        <form id="partnerForm">
+          <div class="form-row">
+            <input type="text" name="business_name" placeholder="Business name" required style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;" />
+            <input type="text" name="contact_name" placeholder="Your name" required style="background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;" />
+          </div>
+          <input type="email" name="email" placeholder="Email address" required style="width:100%;margin-bottom:12px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;" />
+          <select name="type" required style="width:100%;margin-bottom:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:13px 16px;font-size:14px;color:rgba(255,255,255,0.7);font-family:inherit;outline:none;">
+            <option value="" disabled selected>Type of business</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="bar">Bar / Lounge</option>
+            <option value="experience">Experience / Activity</option>
+            <option value="event">Events &amp; Ticketing</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea name="message" placeholder="Briefly describe your venue and what you'd like to offer members." style="width:100%;min-height:100px;margin-bottom:12px;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#fff;"></textarea>
+          <button type="submit" class="pj-submit" id="partnerSubmitBtn">Send Enquiry</button>
+          <p id="partnerError" style="display:none;margin-top:12px;color:#ef5350;font-size:13px;text-align:center;"></p>
+        </form>
+        <div id="partnerSuccess" style="display:none;text-align:center;padding:32px 0;">
+          <p style="color:var(--gold);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin:0 0 12px;">ENQUIRY RECEIVED</p>
+          <p style="color:#fff;font-size:20px;font-weight:800;margin:0 0 12px;">Thank you.</p>
+          <p style="color:rgba(255,255,255,0.5);font-size:14px;line-height:22px;margin:0;">We'll review your details and be in touch soon.</p>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -716,10 +913,75 @@
     })();
   </script>
 
+  <!-- FAQ ACCORDION -->
+  <script>
+    (function() {
+      document.querySelectorAll('.faq-q').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var expanded = this.getAttribute('aria-expanded') === 'true';
+          document.querySelectorAll('.faq-q').forEach(function(b) {
+            b.setAttribute('aria-expanded', 'false');
+            var a = b.nextElementSibling;
+            if (a) a.classList.remove('open');
+          });
+          if (!expanded) {
+            this.setAttribute('aria-expanded', 'true');
+            var ans = this.nextElementSibling;
+            if (ans) ans.classList.add('open');
+          }
+        });
+      });
+    })();
+  </script>
+
+  <!-- PARTNER FORM -->
+  <script>
+    document.getElementById('partnerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var btn = document.getElementById('partnerSubmitBtn');
+      var errEl = document.getElementById('partnerError');
+      var form = e.target;
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      errEl.style.display = 'none';
+      var data = {
+        business_name: form.business_name.value,
+        contact_name: form.contact_name.value,
+        email: form.email.value,
+        type: form.type.value,
+        message: form.message.value,
+      };
+      try {
+        var res = await fetch('/api/partnerEnquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        if (res.ok) {
+          form.style.display = 'none';
+          document.getElementById('partnerSuccess').style.display = 'block';
+        } else {
+          var json = await res.json().catch(function() { return {}; });
+          errEl.textContent = json.error || 'Something went wrong. Please try again.';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Send Enquiry';
+        }
+      } catch (err) {
+        errEl.textContent = 'Network error. Please check your connection and try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Send Enquiry';
+      }
+    });
+  </script>
+
   <!-- FOOTER -->
   <footer>
     <div class="footer-links">
       <a href="#apply">Apply</a>
+      <a href="#faq">FAQ</a>
+      <a href="#partners-join">Partners</a>
       <a href="mailto:hello@thehomequarters.com">Contact</a>
       <a href="/terms">Terms</a>
       <a href="/privacy">Privacy</a>
