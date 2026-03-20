@@ -25,6 +25,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EventCard } from "@/components/EventCard";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import type { HQEvent, Booking, EventCategory } from "@/lib/database.types";
+import { homelandsMatch } from "@/lib/homelands";
 
 const EVENT_CATEGORIES: { key: EventCategory | null; label: string }[] = [
   { key: null, label: "All" },
@@ -54,14 +55,13 @@ export default function EventsTab() {
       where("is_active", "==", true)
     );
     const eventsSnap = await getDocs(eventsQuery);
-    const myHomeland = profile?.homeland;
+    const myHomelands = profile?.homelands ?? [];
     const eventList = eventsSnap.docs
       .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
       .sort((a, b) => {
-        // Homeland-matching events float to the top within date order
-        if (myHomeland) {
-          const aMatch = (a.homeland_tags || []).includes(myHomeland) ? 0 : 1;
-          const bMatch = (b.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+        if (myHomelands.length) {
+          const aMatch = homelandsMatch(myHomelands, a.homeland_tags ?? []) ? 0 : 1;
+          const bMatch = homelandsMatch(myHomelands, b.homeland_tags ?? []) ? 0 : 1;
           if (aMatch !== bMatch) return aMatch - bMatch;
         }
         return a.date.localeCompare(b.date);
@@ -90,7 +90,7 @@ export default function EventsTab() {
     setBookingCounts(counts);
 
     setLoading(false);
-  }, [user?.uid, profile?.homeland]);
+  }, [user?.uid, profile?.homelands]);
 
   useEffect(() => {
     fetchEvents();
@@ -242,8 +242,8 @@ export default function EventsTab() {
             marginTop: 4,
           }}
         >
-          {profile?.homeland
-            ? `Events for the ${profile.homeland} diaspora & beyond`
+          {(profile?.homelands ?? []).length > 0
+            ? "Events for your community & beyond"
             : "Discover events across the community"}
         </Text>
       </View>

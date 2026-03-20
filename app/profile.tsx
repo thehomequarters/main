@@ -3,6 +3,7 @@ import {
   View,
   Text,
   ScrollView,
+  SectionList,
   TextInput,
   Pressable,
   Alert,
@@ -11,7 +12,6 @@ import {
   Image,
   ActivityIndicator,
   Modal,
-  FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { doc, updateDoc } from "firebase/firestore";
@@ -21,7 +21,11 @@ import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { pickImage, uploadAvatar } from "@/lib/storage";
 import type { MemberIndustry } from "@/lib/database.types";
-import { HOMELANDS } from "@/app/apply";
+import {
+  HOMELAND_REGIONS,
+  getRegionForCountry,
+  homelandsLabel,
+} from "@/lib/homelands";
 
 const INDUSTRIES: { key: MemberIndustry; label: string }[] = [
   { key: "creative", label: "Creative" },
@@ -94,7 +98,7 @@ export default function ProfileScreen() {
   const [title, setTitle] = useState(profile?.title ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [city, setCity] = useState(profile?.city ?? "");
-  const [homeland, setHomeland] = useState(profile?.homeland ?? "");
+  const [homelands, setHomelands] = useState<string[]>(profile?.homelands ?? []);
   const [showHomelandPicker, setShowHomelandPicker] = useState(false);
   const [industry, setIndustry] = useState<MemberIndustry | null>(
     profile?.industry ?? null
@@ -138,7 +142,7 @@ export default function ProfileScreen() {
     title !== (profile?.title ?? "") ||
     bio !== (profile?.bio ?? "") ||
     city !== (profile?.city ?? "") ||
-    homeland !== (profile?.homeland ?? "") ||
+    JSON.stringify(homelands) !== JSON.stringify(profile?.homelands ?? []) ||
     industry !== (profile?.industry ?? null) ||
     interestsText !== (profile?.interests ?? []).join(", ");
 
@@ -163,7 +167,7 @@ export default function ProfileScreen() {
         title: title.trim() || null,
         bio: bio.trim() || null,
         city: city.trim() || null,
-        homeland: homeland || null,
+        homelands,
         industry: industry,
         interests: interests,
       });
@@ -452,7 +456,7 @@ export default function ProfileScreen() {
             placeholder="e.g. London, New York, Lagos"
           />
 
-          <FieldLabel label="HOMELAND" />
+          <FieldLabel label="HOMELANDS" />
           <Pressable
             onPress={() => setShowHomelandPicker(true)}
             style={{
@@ -461,17 +465,43 @@ export default function ProfileScreen() {
               padding: 14,
               borderWidth: 1,
               borderColor: colors.darkBorder,
-              marginBottom: 16,
+              marginBottom: homelands.length > 0 ? 8 : 16,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ color: homeland ? colors.white : colors.grey, fontSize: 15 }}>
-              {homeland || "Select your homeland"}
+            <Text style={{ color: homelands.length ? colors.white : colors.grey, fontSize: 15 }}>
+              {homelands.length ? homelandsLabel(homelands) : "Where are you from?"}
             </Text>
             <Ionicons name="chevron-down" size={16} color={colors.grey} />
           </Pressable>
+          {homelands.length > 0 && (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+              {homelands.map((h) => (
+                <Pressable
+                  key={h}
+                  onPress={() =>
+                    setHomelands((prev) => prev.filter((x) => x !== h))
+                  }
+                  style={{
+                    backgroundColor: "rgba(201, 168, 76, 0.12)",
+                    borderWidth: 1,
+                    borderColor: "rgba(201, 168, 76, 0.3)",
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "600" }}>{h}</Text>
+                  <Ionicons name="close" size={12} color={colors.gold} />
+                </Pressable>
+              ))}
+            </View>
+          )}
 
           <FieldLabel label="INDUSTRY" />
           <ScrollView
@@ -590,7 +620,7 @@ export default function ProfileScreen() {
               backgroundColor: colors.dark,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
-              maxHeight: "70%",
+              maxHeight: "80%",
             }}
             onPress={(e) => e.stopPropagation()}
           >
@@ -598,7 +628,7 @@ export default function ProfileScreen() {
               style={{
                 paddingHorizontal: 20,
                 paddingTop: 20,
-                paddingBottom: 12,
+                paddingBottom: 14,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.darkBorder,
                 flexDirection: "row",
@@ -606,39 +636,100 @@ export default function ProfileScreen() {
                 justifyContent: "space-between",
               }}
             >
-              <Text style={{ color: colors.white, fontSize: 18, fontWeight: "700" }}>
-                Select homeland
-              </Text>
+              <View>
+                <Text style={{ color: colors.white, fontSize: 18, fontWeight: "700" }}>
+                  Select homelands
+                </Text>
+                <Text style={{ color: colors.grey, fontSize: 12, marginTop: 2 }}>
+                  Pick as many as you like.
+                </Text>
+              </View>
               <Pressable onPress={() => setShowHomelandPicker(false)}>
-                <Ionicons name="close" size={22} color={colors.grey} />
+                <Ionicons name="checkmark-circle" size={28} color={colors.gold} />
               </Pressable>
             </View>
-            <FlatList
-              data={HOMELANDS}
+
+            <SectionList
+              sections={HOMELAND_REGIONS.map((r) => ({ title: r.region, data: r.countries }))}
               keyExtractor={(item) => item}
-              contentContainerStyle={{ paddingBottom: 40 }}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setHomeland(item);
-                    setShowHomelandPicker(false);
-                  }}
-                  style={{
-                    paddingVertical: 16,
-                    paddingHorizontal: 20,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.darkBorder,
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ color: colors.white, fontSize: 15 }}>{item}</Text>
-                  {homeland === item && (
-                    <Ionicons name="checkmark" size={18} color={colors.gold} />
-                  )}
-                </Pressable>
-              )}
+              stickySectionHeadersEnabled={false}
+              contentContainerStyle={{ paddingBottom: 48 }}
+              renderSectionHeader={({ section }) => {
+                const isSelected = homelands.includes(section.title);
+                return (
+                  <Pressable
+                    onPress={() =>
+                      setHomelands((prev) =>
+                        prev.includes(section.title)
+                          ? prev.filter((h) => h !== section.title)
+                          : [...prev, section.title]
+                      )
+                    }
+                    style={{
+                      paddingHorizontal: 20,
+                      paddingVertical: 12,
+                      marginTop: 4,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      backgroundColor: isSelected
+                        ? "rgba(201, 168, 76, 0.06)"
+                        : "transparent",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? colors.gold : colors.white,
+                        fontSize: 14,
+                        fontWeight: "700",
+                      }}
+                    >
+                      {section.title}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color={colors.gold} />
+                    )}
+                  </Pressable>
+                );
+              }}
+              renderItem={({ item }) => {
+                const isSelected = homelands.includes(item);
+                return (
+                  <Pressable
+                    onPress={() =>
+                      setHomelands((prev) => {
+                        if (prev.includes(item)) return prev.filter((h) => h !== item);
+                        const next = [...prev, item];
+                        const region = getRegionForCountry(item);
+                        if (region && !next.includes(region)) next.push(region);
+                        return next;
+                      })
+                    }
+                    style={{
+                      paddingHorizontal: 36,
+                      paddingVertical: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "rgba(255,255,255,0.04)",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? colors.gold : colors.grey,
+                        fontSize: 14,
+                        fontWeight: isSelected ? "600" : "400",
+                      }}
+                    >
+                      {item}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={15} color={colors.gold} />
+                    )}
+                  </Pressable>
+                );
+              }}
             />
           </Pressable>
         </Pressable>

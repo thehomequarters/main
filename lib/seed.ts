@@ -18,7 +18,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     name: "Amanzi Restaurant",
@@ -35,7 +35,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe", "South Africa"],
+    homeland_tags: ["Zimbabwe", "South Africa", "Southern Africa"],
   },
   {
     name: "Pariah State",
@@ -52,7 +52,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     name: "Gava's Restaurant",
@@ -86,7 +86,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     name: "Shoko Festival Lounge",
@@ -103,7 +103,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1470337458703-46ad1756a187?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     name: "Chang Thai",
@@ -137,7 +137,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     name: "Vibe Cafe",
@@ -154,7 +154,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     name: "The Sunday Market",
@@ -171,7 +171,7 @@ const VENUES = [
     image_url:
       "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80",
     is_active: true,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
 ];
 
@@ -318,7 +318,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&q=80",
     category: "music",
     capacity: 80,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     title: "Farm-to-Table Dinner",
@@ -360,7 +360,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80",
     category: "social",
     capacity: 60,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     title: "Wine & Canvas Night",
@@ -402,7 +402,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=800&q=80",
     category: "arts",
     capacity: 70,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     title: "HQ Members' Braai",
@@ -458,7 +458,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
     category: "dining",
     capacity: 15,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
   {
     title: "Photography Walk: City Centre",
@@ -472,7 +472,7 @@ const EVENTS: Array<{
       "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&q=80",
     category: "arts",
     capacity: 20,
-    homeland_tags: ["Zimbabwe"],
+    homeland_tags: ["Zimbabwe", "Southern Africa"],
   },
 ];
 

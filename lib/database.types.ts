@@ -30,7 +30,7 @@ export interface Profile {
   title: string | null;
   bio: string | null;
   city: string | null;
-  homeland: string | null;
+  homelands: string[];
   industry: MemberIndustry | null;
   interests: string[];
 }

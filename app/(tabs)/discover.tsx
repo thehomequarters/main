@@ -24,6 +24,7 @@ import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { SkeletonLoader } from "@/components/SkeletonLoader";
 import type { Profile, Connection, MemberIndustry } from "@/lib/database.types";
+import { expandHomelands, homelandsLabel } from "@/lib/homelands";
 
 const INDUSTRY_FILTERS: { key: MemberIndustry | null; label: string }[] = [
   { key: null, label: "All" },
@@ -55,16 +56,16 @@ export default function DiscoverTab() {
       where("membership_status", "==", "active")
     );
     const profilesSnap = await getDocs(profilesQuery);
-    const myHomeland = myProfile?.homeland;
+    const myExpanded = expandHomelands(myProfile?.homelands ?? []);
     const memberList = profilesSnap.docs
       .map((d) => ({ id: d.id, ...d.data() }) as Profile)
       .filter((m) => m.id !== user?.uid)
       .sort((a, b) => {
-        // Same-homeland members float to the top
-        if (myHomeland) {
-          const aScore = a.homeland === myHomeland ? 0 : 1;
-          const bScore = b.homeland === myHomeland ? 0 : 1;
-          if (aScore !== bScore) return aScore - bScore;
+        // Members with any homeland overlap float to the top
+        if (myExpanded.length) {
+          const aMatch = (a.homelands ?? []).some((h) => myExpanded.includes(h)) ? 0 : 1;
+          const bMatch = (b.homelands ?? []).some((h) => myExpanded.includes(h)) ? 0 : 1;
+          if (aMatch !== bMatch) return aMatch - bMatch;
         }
         return 0;
       });
@@ -101,7 +102,7 @@ export default function DiscoverTab() {
     }
 
     setLoading(false);
-  }, [user?.uid, myProfile?.homeland]);
+  }, [user?.uid, myProfile?.homelands]);
 
   useEffect(() => {
     fetchMembers();
@@ -230,7 +231,9 @@ export default function DiscoverTab() {
   const industryCount = new Set(
     members.map((m) => m.industry).filter(Boolean)
   ).size;
-  const homelandCount = new Set(members.map((m) => m.homeland).filter(Boolean)).size;
+  const homelandCount = new Set(
+    members.flatMap((m) => m.homelands ?? []).filter(Boolean)
+  ).size;
 
   if (loading) {
     return (
@@ -297,8 +300,8 @@ export default function DiscoverTab() {
             marginTop: 4,
           }}
         >
-          {myProfile?.homeland
-            ? `Members from ${myProfile.homeland} & beyond`
+          {(myProfile?.homelands ?? []).length > 0
+            ? `Members from your community & beyond`
             : "Find and connect with fellow members"}
         </Text>
       </View>
@@ -742,47 +745,50 @@ export default function DiscoverTab() {
                   )}
                 </View>
 
-                {/* Homeland tag */}
-                {member.homeland && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 4,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <View
-                      style={{
-                        backgroundColor:
-                          member.homeland === myProfile?.homeland
-                            ? "rgba(201, 168, 76, 0.12)"
-                            : "rgba(160, 160, 160, 0.08)",
-                        borderRadius: 6,
-                        paddingHorizontal: 8,
-                        paddingVertical: 3,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 4,
-                      }}
-                    >
-                      <Ionicons
-                        name="flag-outline"
-                        size={10}
-                        color={member.homeland === myProfile?.homeland ? colors.gold : colors.grey}
-                      />
-                      <Text
-                        style={{
-                          color: member.homeland === myProfile?.homeland ? colors.gold : colors.grey,
-                          fontSize: 10,
-                          fontWeight: "500",
-                        }}
-                      >
-                        {member.homeland}
-                      </Text>
+                {/* Homeland tags */}
+                {(member.homelands ?? []).length > 0 && (() => {
+                  const myExpanded = expandHomelands(myProfile?.homelands ?? []);
+                  const sharedHomelands = (member.homelands ?? []).filter((h) =>
+                    myExpanded.includes(h)
+                  );
+                  const hasMatch = sharedHomelands.length > 0;
+                  const display = hasMatch ? sharedHomelands : (member.homelands ?? []).slice(0, 2);
+                  return (
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginBottom: 8 }}>
+                      {display.map((h) => (
+                        <View
+                          key={h}
+                          style={{
+                            backgroundColor: hasMatch
+                              ? "rgba(201, 168, 76, 0.12)"
+                              : "rgba(160, 160, 160, 0.08)",
+                            borderRadius: 6,
+                            paddingHorizontal: 8,
+                            paddingVertical: 3,
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 4,
+                          }}
+                        >
+                          <Ionicons
+                            name="flag-outline"
+                            size={10}
+                            color={hasMatch ? colors.gold : colors.grey}
+                          />
+                          <Text
+                            style={{
+                              color: hasMatch ? colors.gold : colors.grey,
+                              fontSize: 10,
+                              fontWeight: "500",
+                            }}
+                          >
+                            {h}
+                          </Text>
+                        </View>
+                      ))}
                     </View>
-                  </View>
-                )}
+                  );
+                })()}
 
                 {/* Interests */}
                 {member.interests && member.interests.length > 0 && (

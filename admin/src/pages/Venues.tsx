@@ -27,16 +27,14 @@ interface Venue {
   homeland_tags: string[];
 }
 
-const HOMELANDS = [
-  "Algeria", "Angola", "Antigua & Barbuda", "Bahamas", "Barbados", "Botswana",
-  "Burkina Faso", "Burundi", "Cameroon", "Cape Verde", "Congo (DRC)", "Congo (Republic)",
-  "Côte d'Ivoire", "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Eswatini",
-  "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-  "Jamaica", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi", "Mali",
-  "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia", "Niger", "Nigeria",
-  "Rwanda", "Senegal", "Sierra Leone", "Somalia", "South Africa", "South Sudan",
-  "Sudan", "Tanzania", "Togo", "Trinidad & Tobago", "Tunisia", "Uganda",
-  "Zambia", "Zimbabwe",
+const HOMELAND_REGIONS = [
+  { region: "Southern Africa", countries: ["Botswana", "Eswatini", "Lesotho", "Malawi", "Mozambique", "Namibia", "South Africa", "Zambia", "Zimbabwe"] },
+  { region: "West Africa", countries: ["Benin", "Burkina Faso", "Cape Verde", "Côte d'Ivoire", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Liberia", "Mali", "Mauritania", "Niger", "Nigeria", "Senegal", "Sierra Leone", "Togo"] },
+  { region: "East Africa", countries: ["Burundi", "Djibouti", "Eritrea", "Ethiopia", "Kenya", "Rwanda", "Somalia", "South Sudan", "Sudan", "Tanzania", "Uganda"] },
+  { region: "Central Africa", countries: ["Cameroon", "Central African Republic", "Chad", "Congo (DRC)", "Congo (Republic)", "Equatorial Guinea", "Gabon", "São Tomé & Príncipe"] },
+  { region: "North Africa", countries: ["Algeria", "Egypt", "Libya", "Morocco", "Tunisia"] },
+  { region: "Indian Ocean Islands", countries: ["Comoros", "Madagascar", "Mauritius", "Seychelles"] },
+  { region: "Caribbean & Americas", countries: ["Antigua & Barbuda", "Bahamas", "Barbados", "Guyana", "Haiti", "Jamaica", "Suriname", "Trinidad & Tobago"] },
 ];
 
 interface Deal {
@@ -323,32 +321,53 @@ export default function Venues() {
               />
               {/* Homeland Tags */}
               <div>
-                <p className="text-gray-400 text-xs font-medium mb-2">
+                <p className="text-gray-400 text-xs font-medium mb-3">
                   Homeland tags — which diaspora communities does this venue serve?
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {HOMELANDS.map((h) => {
-                    const selected = form.homeland_tags.includes(h);
+                <div className="space-y-3">
+                  {HOMELAND_REGIONS.map(({ region, countries }) => {
+                    const regionSelected = form.homeland_tags.includes(region);
+                    const toggle = (item: string) =>
+                      setForm({
+                        ...form,
+                        homeland_tags: form.homeland_tags.includes(item)
+                          ? form.homeland_tags.filter((t) => t !== item)
+                          : [...form.homeland_tags, item],
+                      });
                     return (
-                      <button
-                        key={h}
-                        type="button"
-                        onClick={() =>
-                          setForm({
-                            ...form,
-                            homeland_tags: selected
-                              ? form.homeland_tags.filter((t) => t !== h)
-                              : [...form.homeland_tags, h],
-                          })
-                        }
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                          selected
-                            ? "bg-gold/15 border-gold/40 text-gold"
-                            : "bg-transparent border-dark-border text-gray-500 hover:text-white hover:border-gray-500"
-                        }`}
-                      >
-                        {h}
-                      </button>
+                      <div key={region}>
+                        {/* Region header — tappable */}
+                        <button
+                          type="button"
+                          onClick={() => toggle(region)}
+                          className={`text-xs font-bold uppercase tracking-wider mb-1.5 px-2 py-1 rounded transition-colors ${
+                            regionSelected
+                              ? "text-gold bg-gold/10"
+                              : "text-gray-500 hover:text-white"
+                          }`}
+                        >
+                          {region} {regionSelected ? "✓" : ""}
+                        </button>
+                        <div className="flex flex-wrap gap-1.5 pl-2">
+                          {countries.map((c) => {
+                            const sel = form.homeland_tags.includes(c);
+                            return (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => toggle(c)}
+                                className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                  sel
+                                    ? "bg-gold/15 border-gold/40 text-gold"
+                                    : "bg-transparent border-dark-border text-gray-500 hover:text-white hover:border-gray-500"
+                                }`}
+                              >
+                                {c}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>

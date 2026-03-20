@@ -5,11 +5,11 @@ import {
   TextInput,
   Pressable,
   ScrollView,
+  SectionList,
   KeyboardAvoidingView,
   Platform,
   Alert,
   Modal,
-  FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
@@ -17,20 +17,11 @@ import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { colors } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-
-export const HOMELANDS = [
-  "Algeria", "Angola", "Antigua & Barbuda", "Bahamas", "Barbados", "Botswana",
-  "Burkina Faso", "Burundi", "Cameroon", "Cape Verde", "Central African Republic",
-  "Chad", "Comoros", "Congo (DRC)", "Congo (Republic)", "Côte d'Ivoire",
-  "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea", "Eswatini", "Ethiopia",
-  "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
-  "Jamaica", "Kenya", "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi",
-  "Mali", "Mauritania", "Mauritius", "Morocco", "Mozambique", "Namibia",
-  "Niger", "Nigeria", "Rwanda", "São Tomé & Príncipe", "Senegal",
-  "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan",
-  "Tanzania", "Togo", "Trinidad & Tobago", "Tunisia", "Uganda",
-  "Zambia", "Zimbabwe",
-];
+import {
+  HOMELAND_REGIONS,
+  getRegionForCountry,
+  homelandsLabel,
+} from "@/lib/homelands";
 
 export default function ApplyScreen() {
   const router = useRouter();
@@ -39,21 +30,34 @@ export default function ApplyScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [homeland, setHomeland] = useState("");
-  const [showHomelandPicker, setShowHomelandPicker] = useState(false);
+  const [homelands, setHomelands] = useState<string[]>([]);
+  const [showPicker, setShowPicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const toggleHomeland = (item: string) => {
+    setHomelands((prev) => {
+      if (prev.includes(item)) {
+        return prev.filter((h) => h !== item);
+      }
+      const next = [...prev, item];
+      // Auto-add parent region when a country is selected
+      const region = getRegionForCountry(item);
+      if (region && !next.includes(region)) {
+        next.push(region);
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = async () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
       Alert.alert("Required Fields", "Please fill in your name and email.");
       return;
     }
-
-    if (!homeland) {
-      Alert.alert("Required Fields", "Please select your homeland.");
+    if (homelands.length === 0) {
+      Alert.alert("Required Fields", "Please select at least one homeland.");
       return;
     }
-
     if (password.length < 6) {
       Alert.alert("Password", "Password must be at least 6 characters.");
       return;
@@ -61,17 +65,14 @@ export default function ApplyScreen() {
 
     setSubmitting(true);
     try {
-      // Create user with Firebase Auth
       const { user } = await createUserWithEmailAndPassword(
         auth,
         email.trim().toLowerCase(),
         password
       );
 
-      // Generate member code
       const code = `HQ-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-      // Create profile in Firestore
       await setDoc(doc(db, "profiles", user.uid), {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -80,7 +81,7 @@ export default function ApplyScreen() {
         avatar_url: null,
         member_code: code,
         membership_status: "pending",
-        homeland: homeland,
+        homelands,
         created_at: new Date().toISOString(),
       });
 
@@ -107,6 +108,11 @@ export default function ApplyScreen() {
     fontSize: 15,
   };
 
+  const sections = HOMELAND_REGIONS.map((r) => ({
+    title: r.region,
+    data: r.countries,
+  }));
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.black }}
@@ -121,7 +127,6 @@ export default function ApplyScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* HQ Logo */}
         <Text
           style={{
             color: colors.gold,
@@ -135,7 +140,6 @@ export default function ApplyScreen() {
           HQ
         </Text>
 
-        {/* Headline */}
         <Text
           style={{
             color: colors.white,
@@ -161,7 +165,6 @@ export default function ApplyScreen() {
           Membership is by application only.
         </Text>
 
-        {/* Form */}
         <View style={{ gap: 14 }}>
           <View style={{ flexDirection: "row", gap: 12 }}>
             <TextInput
@@ -213,29 +216,61 @@ export default function ApplyScreen() {
             style={inputStyle}
           />
 
-          {/* Homeland Picker */}
+          {/* Homeland picker trigger */}
           <Pressable
-            onPress={() => setShowHomelandPicker(true)}
+            onPress={() => setShowPicker(true)}
             style={{
               ...inputStyle,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
+              minHeight: 54,
             }}
           >
             <Text
               style={{
-                color: homeland ? colors.white : colors.grey,
+                color: homelands.length ? colors.white : colors.grey,
                 fontSize: 15,
+                flex: 1,
+                flexWrap: "wrap",
               }}
             >
-              {homeland || "Select your homeland"}
+              {homelands.length
+                ? homelandsLabel(homelands)
+                : "Where are you from?"}
             </Text>
-            <Ionicons name="chevron-down" size={16} color={colors.grey} />
+            <Ionicons name="chevron-down" size={16} color={colors.grey} style={{ marginLeft: 8 }} />
           </Pressable>
+
+          {/* Selected homeland pills */}
+          {homelands.length > 0 && (
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+              {homelands.map((h) => (
+                <Pressable
+                  key={h}
+                  onPress={() => toggleHomeland(h)}
+                  style={{
+                    backgroundColor: "rgba(201, 168, 76, 0.12)",
+                    borderWidth: 1,
+                    borderColor: "rgba(201, 168, 76, 0.3)",
+                    borderRadius: 20,
+                    paddingHorizontal: 12,
+                    paddingVertical: 5,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5,
+                  }}
+                >
+                  <Text style={{ color: colors.gold, fontSize: 12, fontWeight: "600" }}>
+                    {h}
+                  </Text>
+                  <Ionicons name="close" size={12} color={colors.gold} />
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
 
-        {/* Submit Button */}
         <Pressable
           onPress={handleSubmit}
           disabled={submitting}
@@ -260,18 +295,8 @@ export default function ApplyScreen() {
           </Text>
         </Pressable>
 
-        {/* Login link */}
-        <Pressable
-          onPress={() => router.push("/login")}
-          style={{ marginTop: 24 }}
-        >
-          <Text
-            style={{
-              color: colors.grey,
-              fontSize: 13,
-              textAlign: "center",
-            }}
-          >
+        <Pressable onPress={() => router.push("/login")} style={{ marginTop: 24 }}>
+          <Text style={{ color: colors.grey, fontSize: 13, textAlign: "center" }}>
             Already a member?{" "}
             <Text style={{ color: colors.gold }}>Sign in</Text>
           </Text>
@@ -280,70 +305,118 @@ export default function ApplyScreen() {
 
       {/* Homeland Picker Modal */}
       <Modal
-        visible={showHomelandPicker}
+        visible={showPicker}
         animationType="slide"
         transparent
-        onRequestClose={() => setShowHomelandPicker(false)}
+        onRequestClose={() => setShowPicker(false)}
       >
         <Pressable
           style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" }}
-          onPress={() => setShowHomelandPicker(false)}
+          onPress={() => setShowPicker(false)}
         >
           <Pressable
             style={{
               backgroundColor: colors.dark,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
-              maxHeight: "70%",
+              maxHeight: "80%",
             }}
             onPress={(e) => e.stopPropagation()}
           >
+            {/* Header */}
             <View
               style={{
                 paddingHorizontal: 20,
                 paddingTop: 20,
-                paddingBottom: 12,
+                paddingBottom: 14,
                 borderBottomWidth: 1,
                 borderBottomColor: colors.darkBorder,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <Text
-                style={{ color: colors.white, fontSize: 18, fontWeight: "700" }}
-              >
-                Select your homeland
-              </Text>
-              <Text style={{ color: colors.grey, fontSize: 13, marginTop: 4 }}>
-                Where are you originally from?
-              </Text>
+              <View>
+                <Text style={{ color: colors.white, fontSize: 18, fontWeight: "700" }}>
+                  Select your homelands
+                </Text>
+                <Text style={{ color: colors.grey, fontSize: 12, marginTop: 2 }}>
+                  Pick as many as you like. Selecting a country adds its region too.
+                </Text>
+              </View>
+              <Pressable onPress={() => setShowPicker(false)}>
+                <Ionicons name="checkmark-circle" size={28} color={colors.gold} />
+              </Pressable>
             </View>
-            <FlatList
-              data={HOMELANDS}
+
+            <SectionList
+              sections={sections}
               keyExtractor={(item) => item}
-              contentContainerStyle={{ paddingBottom: 40 }}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => {
-                    setHomeland(item);
-                    setShowHomelandPicker(false);
-                  }}
-                  style={{
-                    paddingVertical: 16,
-                    paddingHorizontal: 20,
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.darkBorder,
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text style={{ color: colors.white, fontSize: 15 }}>
-                    {item}
-                  </Text>
-                  {homeland === item && (
-                    <Ionicons name="checkmark" size={18} color={colors.gold} />
-                  )}
-                </Pressable>
-              )}
+              stickySectionHeadersEnabled={false}
+              contentContainerStyle={{ paddingBottom: 48 }}
+              renderSectionHeader={({ section }) => {
+                const isSelected = homelands.includes(section.title);
+                return (
+                  <Pressable
+                    onPress={() => toggleHomeland(section.title)}
+                    style={{
+                      paddingHorizontal: 20,
+                      paddingVertical: 12,
+                      marginTop: 4,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      backgroundColor: isSelected
+                        ? "rgba(201, 168, 76, 0.06)"
+                        : "transparent",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? colors.gold : colors.white,
+                        fontSize: 14,
+                        fontWeight: "700",
+                        letterSpacing: 0.4,
+                      }}
+                    >
+                      {section.title}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color={colors.gold} />
+                    )}
+                  </Pressable>
+                );
+              }}
+              renderItem={({ item }) => {
+                const isSelected = homelands.includes(item);
+                return (
+                  <Pressable
+                    onPress={() => toggleHomeland(item)}
+                    style={{
+                      paddingHorizontal: 36,
+                      paddingVertical: 12,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      borderBottomWidth: 1,
+                      borderBottomColor: "rgba(255,255,255,0.04)",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: isSelected ? colors.gold : colors.grey,
+                        fontSize: 14,
+                        fontWeight: isSelected ? "600" : "400",
+                      }}
+                    >
+                      {item}
+                    </Text>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={15} color={colors.gold} />
+                    )}
+                  </Pressable>
+                );
+              }}
             />
           </Pressable>
         </Pressable>

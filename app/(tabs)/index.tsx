@@ -21,6 +21,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/constants/theme";
 import type { Venue, Deal, HQEvent } from "@/lib/database.types";
+import { homelandsMatch } from "@/lib/homelands";
 import { MembershipCard } from "@/components/MembershipCard";
 import { VenueCard } from "@/components/VenueCard";
 import { EventCard } from "@/components/EventCard";
@@ -43,7 +44,7 @@ export default function HomeTab() {
   const [upcomingEvents, setUpcomingEvents] = useState<HQEvent[]>([]);
 
   const fetchVenues = useCallback(async () => {
-    const myHomeland = profile?.homeland;
+    const myHomelands = profile?.homelands ?? [];
     try {
       const venuesQuery = query(
         collection(db, "venues"),
@@ -66,11 +67,11 @@ export default function HomeTab() {
         venueList.push({ ...venueData, deals });
       }
 
-      // Homeland-tagged venues first, then by date
+      // Homeland-matching venues first, then by date
       venueList.sort((a, b) => {
-        if (myHomeland) {
-          const aMatch = (a.homeland_tags || []).includes(myHomeland) ? 0 : 1;
-          const bMatch = (b.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+        if (myHomelands.length) {
+          const aMatch = homelandsMatch(myHomelands, a.homeland_tags ?? []) ? 0 : 1;
+          const bMatch = homelandsMatch(myHomelands, b.homeland_tags ?? []) ? 0 : 1;
           if (aMatch !== bMatch) return aMatch - bMatch;
         }
         return (b.created_at || "").localeCompare(a.created_at || "");
@@ -85,9 +86,9 @@ export default function HomeTab() {
       const eventList = eventsSnap.docs
         .map((d) => ({ id: d.id, ...d.data() }) as HQEvent)
         .sort((a, b) => {
-          if (myHomeland) {
-            const aMatch = (a.homeland_tags || []).includes(myHomeland) ? 0 : 1;
-            const bMatch = (b.homeland_tags || []).includes(myHomeland) ? 0 : 1;
+          if (myHomelands.length) {
+            const aMatch = homelandsMatch(myHomelands, a.homeland_tags ?? []) ? 0 : 1;
+            const bMatch = homelandsMatch(myHomelands, b.homeland_tags ?? []) ? 0 : 1;
             if (aMatch !== bMatch) return aMatch - bMatch;
           }
           return a.date.localeCompare(b.date);
@@ -99,7 +100,7 @@ export default function HomeTab() {
     } finally {
       setLoading(false);
     }
-  }, [profile?.homeland]);
+  }, [profile?.homelands]);
 
   useEffect(() => {
     fetchVenues();
@@ -328,7 +329,7 @@ export default function HomeTab() {
       {featuredVenues.length > 0 && (
         <View style={{ marginBottom: 32 }}>
           <SectionHeader
-            title={profile?.homeland ? `${profile.homeland} & Beyond` : "Featured Venues"}
+            title={(profile?.homelands ?? []).length > 0 ? "Your Community Picks" : "Featured Venues"}
             actionLabel="See All"
           />
           <FlatList
