@@ -355,6 +355,13 @@
     .faq { background: var(--dark); }
     .faq-inner { max-width: 720px; margin: 0 auto; }
     .faq-list { margin-top: 40px; display: flex; flex-direction: column; gap: 2px; }
+    .faq-category {
+      font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+      text-transform: uppercase; color: rgba(255,255,255,0.25);
+      padding: 32px 0 10px; margin-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .faq-category:first-child { border-top: none; padding-top: 0; margin-top: 0; }
     .faq-item {
       border-bottom: 1px solid rgba(255,255,255,0.07);
     }
@@ -673,55 +680,143 @@
       <div class="rules-eyebrow">Got Questions</div>
       <h2 class="rules-heading">Frequently Asked.</h2>
       <p class="rules-sub">Everything you need to know about HomeQuarters.</p>
+
       <div class="faq-list">
+
+        <div class="faq-category">Membership</div>
+
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">What is HomeQuarters?</button>
           <div class="faq-a">
-            <p>HomeQuarters is a private members' club built for diaspora communities. We curate access to the best venues, restaurants, and events in the UK — tailored to specific diaspora groups — and give members a place to connect with people who share their roots.</p>
+            <p>HomeQuarters is a private members' club for the diaspora. We curate access to the best venues, restaurants, and events in the UK — tailored to specific diaspora communities — and give members a place to connect with people who share their roots.</p>
           </div>
         </div>
+
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Which diaspora communities does HQ serve?</button>
           <div class="faq-a">
-            <p>HomeQuarters is built to serve multiple diaspora communities. Our first community is Zimbabweans in the UK, with more communities launching soon. Each community gets its own curated set of venues, events, and connections.</p>
+            <p>HomeQuarters is built to serve multiple diaspora communities. Our first is Zimbabweans in the UK, with more communities launching soon. Each community gets its own curated set of venues, events, and connections.</p>
           </div>
         </div>
+
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">How do I become a member?</button>
           <div class="faq-a">
-            <p>Membership is by invitation from an existing member. If you receive an invitation code, download the app and apply directly. On rare occasions, outstanding applications without a code are reviewed — you can submit one below.</p>
+            <p>Membership is by invitation from a current active member. If you have an invitation code, download the app on iOS and tap Apply to begin. Your application is reviewed by the membership committee and you'll receive an email once there's an update. On rare occasions, exceptional applications without a code are considered — you can submit one on this page.</p>
           </div>
         </div>
+
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">What do I get as a member?</button>
+          <button class="faq-q" aria-expanded="false">Why is there an invitation and application process?</button>
           <div class="faq-a">
-            <p>Gold members get access to exclusive deals and discounts at curated partner venues across the UK, invitations to members-only events, and the ability to connect and discover other members from your community. Platinum members additionally unlock a curated network of venues back in their home country.</p>
+            <p>We work with venues and businesses that don't offer deals to the general public. The process exists to ensure members are a genuine fit for the community and uphold the values of HomeQuarters. Quality over quantity — always.</p>
           </div>
         </div>
+
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">What is the Platinum tier?</button>
+          <button class="faq-q" aria-expanded="false">What is Gold Membership?</button>
           <div class="faq-a">
-            <p>Platinum is an optional add-on for £15/month that gives you access to curated venues in your home country — restaurants, lounges, and clubs selected for quality. Currently available for Zimbabwe (Harare, Bulawayo, Vic Falls), with more destinations rolling out soon.</p>
+            <p>Gold is the standard HQ membership. It gives you access to exclusive deals and discounts at curated partner venues across the UK, invitations to members-only events, and the ability to connect and discover other members from your community.</p>
           </div>
         </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">What is Platinum Membership?</button>
+          <div class="faq-a">
+            <p>Platinum is an optional add-on (£15/month) that includes everything in Gold, plus access to a curated network of top venues back in your home country — restaurants, lounges, and clubs selected for quality. Currently available for Zimbabwe (Harare, Bulawayo, Vic Falls), with more destinations coming soon.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Will my Platinum membership auto-renew?</button>
+          <div class="faq-a">
+            <p>Yes. Platinum renews monthly. You can cancel at any time from the Billing section in the app — there are no cancellation fees and your access continues until the end of the billing period.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">How long is my membership valid?</button>
+          <div class="faq-a">
+            <p>Gold membership does not expire as long as your account remains in good standing. Platinum is subscription-based and remains active while your payments are up to date. HomeQuarters reserves the right to suspend or terminate membership in line with the House Rules.</p>
+          </div>
+        </div>
+
         <div class="faq-item">
           <button class="faq-q" aria-expanded="false">Can I nominate a friend?</button>
           <div class="faq-a">
-            <p>Yes. As an active member you can nominate people you genuinely know and vouch for. Invitations are personal — your reputation is attached to every nomination you make.</p>
+            <p>Yes. As an active member you can nominate people you genuinely know and vouch for. Invitations are non-transferable and confidential — your reputation is attached to every nomination you make.</p>
           </div>
         </div>
+
+        <div class="faq-category">Offers &amp; Venues</div>
+
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">How do venue deals work?</button>
+          <button class="faq-q" aria-expanded="false">How do I redeem an HQ offer?</button>
           <div class="faq-a">
-            <p>When you visit a partner venue, open the app and use your member QR code to redeem the deal. Offers vary by venue — discounts, priority access, complimentary items, and more. Each benefit is for personal use only and cannot be shared or resold.</p>
+            <p>Open the app, navigate to the venue or deal, and tap Redeem to generate your member QR code. Show this to venue staff when asking for your bill or at the door. Do not redeem until you're ready — codes are time-limited once activated.</p>
           </div>
         </div>
+
         <div class="faq-item">
-          <button class="faq-q" aria-expanded="false">Is my information kept private?</button>
+          <button class="faq-q" aria-expanded="false">Do I need to book in advance?</button>
           <div class="faq-a">
-            <p>Absolutely. HomeQuarters operates on a strict confidentiality principle. Member profiles are only visible to other verified members, and your personal information is never shared externally. See our <a href="/privacy" style="color:var(--gold);">Privacy Policy</a> for full details.</p>
+            <p>It varies by venue. Many partners accept walk-ins, but some require you to call ahead and mention you're an HQ member. Always check the venue's profile in the app before visiting — if a booking is required and you arrive without one, the venue may not be able to honour the offer.</p>
           </div>
         </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Are offers valid on all menus?</button>
+          <div class="faq-a">
+            <p>HQ offers apply to the à la carte menu unless stated otherwise in the venue listing. Set menus, tasting menus, and special event menus are typically excluded. Check each venue's deal details in the app for the exact terms.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Do my guests also benefit from the offer?</button>
+          <div class="faq-a">
+            <p>Yes — offers cover you and your guests up to the maximum party size shown on the venue's listing. Check the venue profile for the guest limit before you arrive.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">Can I share or transfer my member QR code?</button>
+          <div class="faq-a">
+            <p>No. Member benefits are strictly for personal use. Do not share, screenshot, or resell your QR code. One redemption per benefit per visit, unless the offer states otherwise. Misuse may result in membership suspension.</p>
+          </div>
+        </div>
+
+        <div class="faq-category">Conduct</div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">When can membership be suspended or terminated?</button>
+          <div class="faq-a">
+            <p>HomeQuarters fosters a community of respect, warmth, and trust. Conduct that falls short of these values — including rudeness to venue staff, harassment of other members, abuse of benefits, or anything that damages the reputation of the community — may result in immediate suspension or permanent revocation, regardless of membership tier. Access is a privilege, not a right.</p>
+          </div>
+        </div>
+
+        <div class="faq-category">Contact</div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">I had a problem redeeming an offer.</button>
+          <div class="faq-a">
+            <p>We're sorry to hear that. Let us know what happened and we'll do our best to resolve it. Email us at <a href="mailto:hello@thehomequarters.com" style="color:var(--gold);">hello@thehomequarters.com</a>.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">I found a bug or have an issue with the app.</button>
+          <div class="faq-a">
+            <p>Please get in touch at <a href="mailto:hello@thehomequarters.com" style="color:var(--gold);">hello@thehomequarters.com</a> with a description of the issue and we'll look into it promptly.</p>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-q" aria-expanded="false">I run a venue or brand and want to collaborate.</button>
+          <div class="faq-a">
+            <p>We'd love to hear from you. Fill in the partner enquiry form below or email us at <a href="mailto:hello@thehomequarters.com" style="color:var(--gold);">hello@thehomequarters.com</a>.</p>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
